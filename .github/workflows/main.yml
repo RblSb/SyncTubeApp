@@ -1,0 +1,82 @@
+name: CI
+
+on: [push]
+
+jobs:
+  # Set up Flutter for all other tasks.
+  setup:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        # os: [ubuntu-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            flutter_path: /opt/hostedtoolcache/flutter
+          # - os: macos-latest
+          #   flutter_path: /Users/runner/hostedtoolcache/flutter
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v1
+        with:
+          path: ${{ matrix.flutter_path }}
+          key: ${{ runner.os }}-flutter
+
+      - uses: subosito/flutter-action@v1
+        with:
+          channel: 'stable'
+
+  build:
+    runs-on: ${{ matrix.os }}
+    needs: setup
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        # os: [ubuntu-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            flutter_path: /opt/hostedtoolcache/flutter
+          # - os: macos-latest
+          #   flutter_path: /Users/runner/hostedtoolcache/flutter
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Cache Flutter
+        id: cache-flutter
+        uses: actions/cache@v1
+        with:
+          path: ${{ matrix.flutter_path }}
+          key: ${{ runner.os }}-flutter
+
+      - uses: subosito/flutter-action@v1
+        with:
+          channel: 'stable'
+
+      - name: Create signing files
+        working-directory: ${{github.workspace}}
+        shell: bash
+        env:
+          KEY_FILE: ${{secrets.KEY_FILE}}
+          KEY_PROPS: ${{secrets.KEY_PROPS}}
+        run: |
+          echo $KEY_FILE | base64 --decode > android/release.jks
+          echo $KEY_PROPS > android/key.properties
+
+      - name: Build
+        working-directory: ${{github.workspace}}
+        run: |
+          flutter build apk --target-platform=android-arm
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: app-release.apk
+          path: ${{github.workspace}}/build/app/outputs/apk/release/app-release.apk
