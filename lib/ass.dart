@@ -25,7 +25,7 @@ List<Caption> _parseCaptionsFromAssString(String file) {
   final List<String> lines = LineSplitter.split(file).toList();
   bool eventStart = false;
   bool formatFound = false;
-  Map<String, int> ids;
+  Map<String, int> ids = {};
   var captionNumber = 1;
   for (final String rawLine in lines) {
     final line = rawLine.trim();
@@ -48,13 +48,13 @@ List<Caption> _parseCaptionsFromAssString(String file) {
       list[list.length - 1] += el;
     }
     list = list.map((e) => e.trim()).toList();
-    var text = list[ids['Text']];
+    var text = list[ids['Text']!];
     text = text.replaceAll(_blockTags, '');
     text = text.replaceAll(_tags, '');
     final caption = Caption(
       number: captionNumber,
-      start: _parseAssTimestamp(list[ids['Start']]),
-      end: _parseAssTimestamp(list[ids['End']]),
+      start: _parseAssTimestamp(list[ids['Start']!]),
+      end: _parseAssTimestamp(list[ids['End']!]),
       text: text,
     );
     captions.add(caption);
@@ -65,7 +65,7 @@ List<Caption> _parseCaptionsFromAssString(String file) {
 
 Duration _parseAssTimestamp(String timestampString) {
   if (!_assTimeStamp.hasMatch(timestampString)) {
-    return null;
+    return const Duration();
   }
   final List<String> commaSections = timestampString.split('.');
   final List<String> hoursMinutesSeconds = commaSections[0].split(':');

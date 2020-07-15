@@ -6,7 +6,7 @@ import 'package:video_player/video_player.dart';
 import 'package:SyncTube/models/player.dart';
 
 class VideoPlayerScreen extends StatelessWidget {
-  VideoPlayerScreen({Key key}) : super(key: key);
+  VideoPlayerScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +24,7 @@ class VideoPlayerScreen extends StatelessWidget {
             return Align(
               alignment: Alignment.center,
               child: AspectRatio(
-                aspectRatio: player.controller.value.aspectRatio,
+                aspectRatio: player.controller?.value.aspectRatio ?? 16 / 9,
                 child: GestureDetector(
                   onPanDown: (_) {
                     player.toggleControls(true);
@@ -39,7 +39,7 @@ class VideoPlayerScreen extends StatelessWidget {
                     children: <Widget>[
                       VideoPlayer(player.controller),
                       ClosedCaption(
-                        text: player.controller.value.caption.text,
+                        text: player.controller?.value.caption.text,
                         textStyle: const TextStyle(fontSize: 16),
                       ),
                       if (player.showControls)
@@ -67,21 +67,20 @@ class VideoPlayerScreen extends StatelessWidget {
 
 class _PlayPauseOverlay extends StatelessWidget {
   const _PlayPauseOverlay({
-    Key key,
-    @required this.player,
+    Key? key,
+    required this.player,
   }) : super(key: key);
 
   final PlayerModel player;
 
   @override
   Widget build(BuildContext context) {
-    final controller = player.controller;
     return Stack(
       children: <Widget>[
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 50),
           reverseDuration: const Duration(milliseconds: 200),
-          child: controller.value.isPlaying
+          child: player.isPlaying()
               ? Container(
                   color: Colors.black38,
                   child: const Center(
@@ -104,11 +103,11 @@ class _PlayPauseOverlay extends StatelessWidget {
                 ),
         ),
         GestureDetector(onTap: () {
-          if (!controller.value.isPlaying) {
+          if (!player.isPlaying()) {
             // Timer(const Duration(milliseconds: 100), () {});
             player.toggleControls(false);
           }
-          player.userSetPlayerState(!controller.value.isPlaying);
+          player.userSetPlayerState(!player.isPlaying());
         }),
       ],
     );

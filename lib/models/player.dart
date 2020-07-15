@@ -10,18 +10,22 @@ import '../ass.dart';
 import '../wsdata.dart';
 
 class PlayerModel extends ChangeNotifier {
-  VideoPlayerController controller;
-  Future<void> initPlayerFuture;
+  VideoPlayerController? controller;
+  Future<void>? initPlayerFuture;
   final AppModel app;
   final PlaylistModel playlist;
 
   bool showControls = false;
-  Timer controlsTimer;
+  Timer? controlsTimer;
 
   PlayerModel(this.app, this.playlist);
 
   bool isVideoLoaded() {
-    return controller != null && controller.value.initialized;
+    return controller?.value.initialized ?? false;
+  }
+
+  bool isPlaying() {
+    return controller?.value.isPlaying ?? false;
   }
 
   void toggleControls(bool flag) {
@@ -32,24 +36,24 @@ class PlayerModel extends ChangeNotifier {
 
   Future<Duration> getPosition() async {
     if (!isVideoLoaded()) return Duration();
-    final posD = await controller.position;
+    final posD = await controller?.position;
     if (posD == null) return Duration();
     return posD;
   }
 
   void pause() async {
     if (!isVideoLoaded()) return;
-    await controller.pause();
+    await controller?.pause();
   }
 
   void play() async {
     if (!isVideoLoaded()) return;
-    await controller.play();
+    await controller?.play();
   }
 
   void seekTo(Duration duration) async {
     if (!isVideoLoaded()) return;
-    await controller.seekTo(duration);
+    await controller?.seekTo(duration);
   }
 
   double getDuration() {
@@ -71,9 +75,9 @@ class PlayerModel extends ChangeNotifier {
       url,
       closedCaptionFile: _loadCaptions(url),
     );
-    controller.addListener(notifyListeners);
-    initPlayerFuture = controller.initialize();
-    initPlayerFuture.whenComplete(() => prevController?.dispose());
+    controller?.addListener(notifyListeners);
+    initPlayerFuture = controller?.initialize();
+    initPlayerFuture?.whenComplete(() => prevController?.dispose());
     notifyListeners();
   }
 
@@ -81,7 +85,7 @@ class PlayerModel extends ChangeNotifier {
     if (url.contains('youtu')) url = await loadYoutubeVideo(url);
     final controller = VideoPlayerController.network(url);
     await controller.initialize();
-    final duration = controller.value.duration;
+    Duration? duration = controller.value.duration;
     controller.dispose();
     if (duration == null) return 0;
     return duration.inMilliseconds / 1000;
@@ -99,9 +103,9 @@ class PlayerModel extends ChangeNotifier {
 
     final matchName = RegExp(r'^(.+)\.(.+)');
     final decodedUrl = Uri.decodeFull(url);
-    var title = decodedUrl.substring(decodedUrl.lastIndexOf("/") + 1);
+    var title = decodedUrl.substring(decodedUrl.lastIndexOf('/') + 1);
     final isNameMatched = matchName.hasMatch(title);
-    if (isNameMatched) title = matchName.stringMatch(title);
+    if (isNameMatched) title = matchName.stringMatch(title)!;
     else title = 'Raw Video';
     return Future.value(title);
   }
@@ -112,7 +116,7 @@ class PlayerModel extends ChangeNotifier {
     return manifest.title;
   }
 
-  Future<ClosedCaptionFile> _loadCaptions(String url) async {
+  Future<ClosedCaptionFile?> _loadCaptions(String url) async {
     final i = url.lastIndexOf('.mp4');
     if (i == -1) return null;
     url = url.replaceFirst('.mp4', '.ass', i);
@@ -131,8 +135,8 @@ class PlayerModel extends ChangeNotifier {
 
   void sendPlayerState(bool state) async {
     if (!isVideoLoaded()) return;
-    if (!app.isLeader) return;
-    final posD = await controller.position;
+    if (!app.isLeader()) return;
+    final posD = await controller?.position ?? Duration();
     final time = posD.inMilliseconds / 1000;
     if (state) {
       app.send(WsData(
@@ -150,10 +154,8 @@ class PlayerModel extends ChangeNotifier {
   @override
   void dispose() async {
     print('PlayerModel disposed');
-    if (controller != null) {
-      await controller.dispose();
-      controller = null;
-    }
+    await controller?.dispose();
+    controller = null;
     super.dispose();
   }
 }

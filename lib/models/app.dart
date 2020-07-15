@@ -18,20 +18,18 @@ enum MainTab {
 }
 
 class AppModel extends ChangeNotifier {
-  IOWebSocketChannel channel;
-  StreamSubscription<dynamic> wsSubscription;
-  Stream broadcastStream;
-  PlaylistModel playlist;
-  PlayerModel player;
-  ChatModel chat;
+  late IOWebSocketChannel _channel;
+  late StreamSubscription<dynamic> _wsSubscription;
+  late PlaylistModel playlist;
+  late PlayerModel player;
+  late ChatModel chat;
   MainTab mainTab = MainTab.chat;
 
+  Client _personal = Client(name: 'Unknown', group: 0);
   List<Client> clients = [];
-  String clientName = '';
   bool isUnknownClient = true;
-  bool isLeader = false;
 
-  Timer getTimeTimer;
+  Timer? _getTimeTimer;
 
   int synchThreshold = 2;
 
@@ -39,24 +37,28 @@ class AppModel extends ChangeNotifier {
 
   AppModel(String url) {
     print('AppModel created');
-    channel = IOWebSocketChannel.connect(url);
-    wsSubscription = channel.stream.listen(onMessage);
+    _channel = IOWebSocketChannel.connect(url);
+    _wsSubscription = _channel.stream.listen(onMessage);
     playlist = PlaylistModel(this);
     player = PlayerModel(this, playlist);
     chat = ChatModel(this);
   }
 
   void send(WsData data) {
-    channel.sink.add(jsonEncode(data));
+    _channel.sink.add(jsonEncode(data));
   }
+
+  bool isAdmin() => _personal.isAdmin;
+
+  bool isLeader() => _personal.isLeader;
 
   void onMessage(dynamic json) {
     final data = WsData.fromJson(jsonDecode(json));
     switch (data.type) {
       case 'Connected':
-        final type = data.connected;
-        getTimeTimer?.cancel();
-        getTimeTimer =
+        final type = data.connected!;
+        _getTimeTimer?.cancel();
+        _getTimeTimer =
             Timer.periodic(Duration(seconds: synchThreshold), (Timer timer) {
           if (playlist.isEmpty()) return;
           send(WsData(type: 'GetTime'));
@@ -65,7 +67,7 @@ class AppModel extends ChangeNotifier {
         playlist.update(type.videoList);
         clients = type.clients;
         isUnknownClient = type.isUnknownClient;
-        clientName = type.clientName;
+        _personal = type.clients.firstWhere((client) => client.name == type.clientName);
         chat.setItems(
             type.history.map((e) => ChatItem(e.name, e.text)).toList());
         playlist.setPlaylistLock(type.isPlaylistOpen);
@@ -84,25 +86,25 @@ class AppModel extends ChangeNotifier {
       case 'Logout':
         break;
       case 'Message':
-        final type = data.message;
+        final type = data.message!;
         chat.addItem(ChatItem(type.clientName, type.text));
         break;
       case 'ServerMessage':
-        final type = data.serverMessage;
+        final type = data.serverMessage!;
         chat.addItem(ChatItem(type.textId, ''));
         break;
       case 'UpdateClients':
-        final type = data.updateClients;
+        final type = data.updateClients!;
         clients = type.clients;
         notifyListeners();
         break;
       case 'AddVideo':
-        final type = data.addVideo;
+        final type = data.addVideo!;
         playlist.addItem(type.item, type.atEnd);
         if (playlist.length == 1) player.loadVideo(0);
         break;
       case 'RemoveVideo':
-        final type = data.removeVideo;
+        final type = data.removeVideo!;
         final index = playlist.indexWhere((item) => item.url == type.url);
         if (index == -1) return;
         final isCurrent = playlist.getItem(playlist.pos).url == type.url;
@@ -113,7 +115,7 @@ class AppModel extends ChangeNotifier {
         if (playlist.isEmpty()) player.pause();
         break;
       case 'SkipVideo':
-        final type = data.skipVideo;
+        final type = data.skipVideo!;
         final url = type.url;
         final index = playlist.indexWhere((item) => item.url == url);
         if (index == -1) return;
@@ -132,8 +134,8 @@ class AppModel extends ChangeNotifier {
         break;
       case 'Pause':
         if (!player.isVideoLoaded()) return;
-        if (isLeader) return;
-        final type = data.pause;
+        if (_personal.isLeader) return;
+        final type = data.pause!;
         final ms = (type.time * 1000).round();
         player.pause();
         player.seekTo(
@@ -142,8 +144,8 @@ class AppModel extends ChangeNotifier {
         break;
       case 'Play':
         if (!player.isVideoLoaded()) return;
-        if (isLeader) return;
-        final type = data.play;
+        if (_personal.isLeader) return;
+        final type = data.play!;
         final ms = (type.time * 1000).round();
         player.seekTo(
           Duration(milliseconds: ms),
@@ -151,40 +153,39 @@ class AppModel extends ChangeNotifier {
         player.play();
         break;
       case 'GetTime':
-        final type = data.getTime;
-        if (type.paused == null) type.paused = false;
+        final type = data.getTime!;
         onTimeGet(type);
         break;
       case 'SetTime':
-        if (isLeader) return;
-        final type = data.setTime;
+        if (_personal.isLeader) return;
+        final type = data.setTime!;
         onTimeSet(type);
         break;
       case 'SetRate': // not yet available in library
         break;
       case 'Rewind':
         if (!player.isVideoLoaded()) return;
-        final type = data.rewind;
+        final type = data.rewind!;
         final ms = (type.time * 1000).round();
         player.seekTo(
           Duration(milliseconds: ms),
         );
         break;
       case 'SetLeader':
-        final type = data.setLeader;
-        isLeader = type.clientName == clientName;
+        final type = data.setLeader!;
+        _personal.isLeader = type.clientName == _personal.name;
         notifyListeners();
         break;
       case 'PlayItem':
-        final type = data.playItem;
+        final type = data.playItem!;
         player.loadVideo(type.pos);
         break;
       case 'SetNextItem':
-        final type = data.setNextItem;
+        final type = data.setNextItem!;
         playlist.setNextItem(type.pos);
         break;
       case 'ToggleItemType':
-        final type = data.toggleItemType;
+        final type = data.toggleItemType!;
         playlist.toggleItemType(type.pos);
         break;
       case 'ClearChat':
@@ -197,11 +198,11 @@ class AppModel extends ChangeNotifier {
       case 'ShufflePlaylist': // server-only
         break;
       case 'UpdatePlaylist':
-        final type = data.updatePlaylist;
+        final type = data.updatePlaylist!;
         playlist.update(type.videoList);
         break;
       case 'TogglePlaylistLock':
-        final type = data.togglePlaylistLock;
+        final type = data.togglePlaylistLock!;
         playlist.setPlaylistLock(type.isOpen);
         break;
       default:
@@ -214,7 +215,7 @@ class AppModel extends ChangeNotifier {
     final posD = await player.getPosition();
     final newTime = type.time;
     final time = posD.inMilliseconds / 1000;
-    if (isLeader) {
+    if (_personal.isLeader) {
       // if video is loading on leader
       // move other clients back in time
       if ((time - newTime).abs() < synchThreshold) return;
@@ -226,8 +227,8 @@ class AppModel extends ChangeNotifier {
     }
     final duration = player.getDuration();
     if (duration <= time + synchThreshold) return;
-    if (player.controller.value.isPlaying && type.paused) player.pause();
-    if (!player.controller.value.isPlaying && !type.paused) player.play();
+    if (player.isPlaying() && type.paused) player.pause();
+    if (!player.isPlaying() && !type.paused) player.play();
     if ((time - newTime).abs() < synchThreshold) return;
     final ms = (newTime * 1000).round();
     player.seekTo(
@@ -247,7 +248,7 @@ class AppModel extends ChangeNotifier {
   }
 
   void requestLeader() {
-    final name = isLeader ? '' : clientName;
+    final name = _personal.isLeader ? '' : _personal.name;
     send(WsData(
       type: 'SetLeader',
       setLeader: SetLeader(clientName: name),
@@ -310,9 +311,9 @@ class AppModel extends ChangeNotifier {
     print('AppModel disposed');
     player.dispose();
     playlist.dispose();
-    getTimeTimer?.cancel();
-    wsSubscription.cancel();
-    channel.sink.close(status.goingAway);
+    _getTimeTimer?.cancel();
+    _wsSubscription.cancel();
+    _channel.sink.close(status.goingAway);
     super.dispose();
   }
 }

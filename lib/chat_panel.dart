@@ -5,8 +5,8 @@ import 'color_scheme.dart';
 
 class ChatPanel extends StatelessWidget {
   const ChatPanel({
-    Key key,
-    @required this.app,
+    Key? key,
+    required this.app,
   }) : super(key: key);
 
   final AppModel app;
@@ -68,7 +68,7 @@ class ChatPanel extends StatelessWidget {
   Widget leaderButton(BuildContext context) {
     return OutlineButton(
       borderSide: BorderSide(
-        color: app.isLeader ? Theme.of(context).leaderActiveBorder : Theme.of(context).cardColor,
+        color: app.isLeader() ? Theme.of(context).leaderActiveBorder : Theme.of(context).cardColor,
       ),
       shape: OutlineInputBorder(
         borderRadius: BorderRadius.circular(15),

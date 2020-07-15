@@ -10,7 +10,7 @@ class ChatModel extends ChangeNotifier {
   final AppModel _app;
   List<ChatItem> _items = [];
   List<Emotes> _emotes = [];
-  RegExp emotesPattern;
+  RegExp? emotesPattern;
   UnmodifiableListView<ChatItem> get items => UnmodifiableListView(_items);
   UnmodifiableListView<Emotes> get emotes => UnmodifiableListView(_emotes);
 
@@ -43,7 +43,7 @@ class ChatModel extends ChangeNotifier {
   }
 
   void sendMessage(String text) {
-    if (text.startsWith("/")) {
+    if (text.startsWith('/')) {
       handleCommands(text.substring(1));
     }
     _app.send(WsData(
@@ -57,8 +57,7 @@ class ChatModel extends ChangeNotifier {
   void handleCommands(String text) {
     switch (text) {
       case 'clear':
-        // if (isAdmin())
-        _app.send(WsData(type: 'ClearChat'));
+        if (_app.isAdmin()) _app.send(WsData(type: 'ClearChat'));
         break;
       default:
     }

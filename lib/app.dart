@@ -10,15 +10,15 @@ import 'settings.dart';
 import 'video_player.dart';
 import 'wsdata.dart';
 import 'chat.dart';
-import 'color_scheme.dart';
+// import 'color_scheme.dart';
 
 typedef WsDataFunc = void Function(WsData data);
 
 class App extends StatefulWidget {
   App({
-    Key key,
-    @required this.name,
-    @required this.url,
+    Key? key,
+    required this.name,
+    required this.url,
   }) : super(key: key);
 
   final String name;
@@ -36,7 +36,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     super.initState();
   }
 
-  AppModel app;
+  late AppModel app;
 
   @override
   Widget build(BuildContext context) {
@@ -143,7 +143,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       removeFocus(context);
       return false;
     }
-    final dialog = await showDialog(
+    bool? dialog = await showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Are you sure?'),
@@ -252,10 +252,10 @@ class _AppState extends State<App> with WidgetsBindingObserver {
 }
 
 class Printer extends StatelessWidget {
-  const Printer({Key key, this.child}) : super(key: key);
-  final Widget child;
+  const Printer({Key? key, this.child}) : super(key: key);
+  final Widget? child;
   @override
-  Widget build(BuildContext context) {
+  Widget? build(BuildContext context) {
     print('child rebuilded');
     return child;
   }

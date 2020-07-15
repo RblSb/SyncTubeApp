@@ -18,7 +18,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.7.0 <3.0.0"
+  sdk: ">=2.9.0-21.0.dev <3.0.0"
 
 dependencies:
   flutter:
@@ -32,7 +32,7 @@ dependencies:
 
   web_socket_channel: 1.1.0
 
-  http: 0.12.1
+  http: 0.12.2
 
   youtube_explode_dart: 1.4.1+1
 

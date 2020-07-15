@@ -14,16 +14,16 @@ Open [workflow list](https://github.com/RblSb/SyncTubeApp/actions?query=is%3Asuc
 
 ### Development
 
-- Install [Flutter](https://flutter.dev/docs/get-started/install).
-- Install VSCode, [Dart](https://marketplace.visualstudio.com/items?itemName=Dart-Code.dart-code) and [Flutter](https://marketplace.visualstudio.com/items?itemName=Dart-Code.flutter) extensions.
+- Install [Flutter](https://flutter.dev/docs/development/tools/sdk/releases) (dev, 1.21.0-2.0+).
+- Install VSCode and [Flutter](https://marketplace.visualstudio.com/items?itemName=Dart-Code.flutter) extension.
 - Open project, connect device with usb, press F5 for debug build with hot-reload.
 
-For signed release build, create `android/release.jks` keystore and `android/key.properties` with:
+For signed release build, create `android/release.jks` [keystore](https://flutter.dev/docs/deployment/android#create-a-keystore) and `android/key.properties` with:
 ```
 storePassword=VALUE
 keyPassword=VALUE
 keyAlias=VALUE
-storeFile=FILE_PATH
+storeFile=release.jks
 ```
 
 And run: `flutter build apk`.

@@ -1,31 +1,31 @@
-import 'package:meta/meta.dart';
+// https://github.com/RblSb/SyncTube/blob/master/src/Types.hx
 
 class WsData {
-  String type;
-  Connected connected;
-  Login login;
-  Logout logout;
-  Message message;
-  ServerMessage serverMessage;
-  UpdateClients updateClients;
-  AddVideo addVideo;
-  RemoveVideo removeVideo;
-  RemoveVideo skipVideo;
-  Pause pause;
-  Pause play;
-  GetTime getTime;
-  Pause setTime;
-  SetRate setRate;
-  Pause rewind;
-  SetLeader setLeader;
-  PlayItem playItem;
-  PlayItem setNextItem;
-  PlayItem toggleItemType;
-  UpdatePlaylist updatePlaylist;
-  TogglePlaylistLock togglePlaylistLock;
+  late String type;
+  Connected? connected;
+  Login? login;
+  Logout? logout;
+  Message? message;
+  ServerMessage? serverMessage;
+  UpdateClients? updateClients;
+  AddVideo? addVideo;
+  RemoveVideo? removeVideo;
+  RemoveVideo? skipVideo;
+  Pause? pause;
+  Pause? play;
+  GetTime? getTime;
+  Pause? setTime;
+  SetRate? setRate;
+  Pause? rewind;
+  SetLeader? setLeader;
+  PlayItem? playItem;
+  PlayItem? setNextItem;
+  PlayItem? toggleItemType;
+  UpdatePlaylist? updatePlaylist;
+  TogglePlaylistLock? togglePlaylistLock;
 
   WsData(
-      {@required this.type,
+      {required this.type,
       this.connected,
       this.login,
       this.logout,
@@ -106,105 +106,104 @@ class WsData {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['type'] = this.type;
     if (this.connected != null) {
-      data['connected'] = this.connected.toJson();
+      data['connected'] = this.connected?.toJson();
     }
     if (this.login != null) {
-      data['login'] = this.login.toJson();
+      data['login'] = this.login?.toJson();
     }
     if (this.logout != null) {
-      data['logout'] = this.logout.toJson();
+      data['logout'] = this.logout?.toJson();
     }
     if (this.message != null) {
-      data['message'] = this.message.toJson();
+      data['message'] = this.message?.toJson();
     }
     if (this.serverMessage != null) {
-      data['serverMessage'] = this.serverMessage.toJson();
+      data['serverMessage'] = this.serverMessage?.toJson();
     }
     if (this.updateClients != null) {
-      data['updateClients'] = this.updateClients.toJson();
+      data['updateClients'] = this.updateClients?.toJson();
     }
     if (this.addVideo != null) {
-      data['addVideo'] = this.addVideo.toJson();
+      data['addVideo'] = this.addVideo?.toJson();
     }
     if (this.removeVideo != null) {
-      data['removeVideo'] = this.removeVideo.toJson();
+      data['removeVideo'] = this.removeVideo?.toJson();
     }
     if (this.skipVideo != null) {
-      data['skipVideo'] = this.skipVideo.toJson();
+      data['skipVideo'] = this.skipVideo?.toJson();
     }
     if (this.pause != null) {
-      data['pause'] = this.pause.toJson();
+      data['pause'] = this.pause?.toJson();
     }
     if (this.play != null) {
-      data['play'] = this.play.toJson();
+      data['play'] = this.play?.toJson();
     }
     if (this.getTime != null) {
-      data['getTime'] = this.getTime.toJson();
+      data['getTime'] = this.getTime?.toJson();
     }
     if (this.setTime != null) {
-      data['setTime'] = this.setTime.toJson();
+      data['setTime'] = this.setTime?.toJson();
     }
     if (this.setRate != null) {
-      data['setRate'] = this.setRate.toJson();
+      data['setRate'] = this.setRate?.toJson();
     }
     if (this.rewind != null) {
-      data['rewind'] = this.rewind.toJson();
+      data['rewind'] = this.rewind?.toJson();
     }
     if (this.setLeader != null) {
-      data['setLeader'] = this.setLeader.toJson();
+      data['setLeader'] = this.setLeader?.toJson();
     }
     if (this.playItem != null) {
-      data['playItem'] = this.playItem.toJson();
+      data['playItem'] = this.playItem?.toJson();
     }
     if (this.setNextItem != null) {
-      data['setNextItem'] = this.setNextItem.toJson();
+      data['setNextItem'] = this.setNextItem?.toJson();
     }
     if (this.toggleItemType != null) {
-      data['toggleItemType'] = this.toggleItemType.toJson();
+      data['toggleItemType'] = this.toggleItemType?.toJson();
     }
     if (this.updatePlaylist != null) {
-      data['updatePlaylist'] = this.updatePlaylist.toJson();
+      data['updatePlaylist'] = this.updatePlaylist?.toJson();
     }
     if (this.togglePlaylistLock != null) {
-      data['togglePlaylistLock'] = this.togglePlaylistLock.toJson();
+      data['togglePlaylistLock'] = this.togglePlaylistLock?.toJson();
     }
     return data;
   }
 }
 
 class Connected {
-  Config config;
-  List<History> history;
-  List<Client> clients;
-  bool isUnknownClient;
-  String clientName;
-  List<VideoList> videoList;
-  bool isPlaylistOpen;
-  int itemPos;
-  String globalIp;
+  late Config config;
+  late List<History> history;
+  late List<Client> clients;
+  late bool isUnknownClient;
+  late String clientName;
+  late List<VideoList> videoList;
+  late bool isPlaylistOpen;
+  late int itemPos;
+  late String globalIp;
 
   Connected(
-      {this.config,
-      this.history,
-      this.clients,
-      this.isUnknownClient,
-      this.clientName,
-      this.videoList,
-      this.isPlaylistOpen,
-      this.itemPos,
-      this.globalIp});
+      {required this.config,
+      required this.history,
+      required this.clients,
+      required this.isUnknownClient,
+      required this.clientName,
+      required this.videoList,
+      required this.isPlaylistOpen,
+      required this.itemPos,
+      required this.globalIp});
 
   Connected.fromJson(Map<String, dynamic> json) {
-    config =
-        json['config'] != null ? new Config.fromJson(json['config']) : null;
+    config = new Config.fromJson(json['config']);
     if (json['history'] != null) {
-      history = new List<History>();
+      history = [];
       json['history'].forEach((v) {
         history.add(new History.fromJson(v));
       });
     }
     if (json['clients'] != null) {
-      clients = new List<Client>();
+      clients = [];
       json['clients'].forEach((v) {
         clients.add(new Client.fromJson(v));
       });
@@ -212,7 +211,7 @@ class Connected {
     isUnknownClient = json['isUnknownClient'];
     clientName = json['clientName'];
     if (json['videoList'] != null) {
-      videoList = new List<VideoList>();
+      videoList = [];
       json['videoList'].forEach((v) {
         videoList.add(new VideoList.fromJson(v));
       });
@@ -224,20 +223,12 @@ class Connected {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.config != null) {
-      data['config'] = this.config.toJson();
-    }
-    if (this.history != null) {
-      data['history'] = this.history.map((v) => v.toJson()).toList();
-    }
-    if (this.clients != null) {
-      data['clients'] = this.clients.map((v) => v.toJson()).toList();
-    }
+    data['config'] = this.config.toJson();
+    data['history'] = this.history.map((v) => v.toJson()).toList();
+    data['clients'] = this.clients.map((v) => v.toJson()).toList();
     data['isUnknownClient'] = this.isUnknownClient;
     data['clientName'] = this.clientName;
-    if (this.videoList != null) {
-      data['videoList'] = this.videoList.map((v) => v.toJson()).toList();
-    }
+    data['videoList'] = this.videoList.map((v) => v.toJson()).toList();
     data['isPlaylistOpen'] = this.isPlaylistOpen;
     data['itemPos'] = this.itemPos;
     data['globalIp'] = this.globalIp;
@@ -246,38 +237,38 @@ class Connected {
 }
 
 class Config {
-  int port;
-  String channelName;
-  int maxLoginLength;
-  int maxMessageLength;
-  int serverChatHistory;
-  int totalVideoLimit;
-  int userVideoLimit;
-  bool localAdmins;
-  String templateUrl;
-  String youtubeApiKey;
-  Permissions permissions;
-  List<Emotes> emotes;
-  List<Filters> filters;
-  bool isVerbose;
-  String salt;
+  late int port;
+  late String channelName;
+  late int maxLoginLength;
+  late int maxMessageLength;
+  late int serverChatHistory;
+  late int totalVideoLimit;
+  late int userVideoLimit;
+  late bool localAdmins;
+  late String templateUrl;
+  late String youtubeApiKey;
+  late Permissions? permissions;
+  late List<Emotes> emotes;
+  late List<Filters> filters;
+  late bool? isVerbose;
+  late String? salt;
 
   Config(
-      {this.port,
-      this.channelName,
-      this.maxLoginLength,
-      this.maxMessageLength,
-      this.serverChatHistory,
-      this.totalVideoLimit,
-      this.userVideoLimit,
-      this.localAdmins,
-      this.templateUrl,
-      this.youtubeApiKey,
-      this.permissions,
-      this.emotes,
-      this.filters,
-      this.isVerbose,
-      this.salt});
+      {required this.port,
+      required this.channelName,
+      required this.maxLoginLength,
+      required this.maxMessageLength,
+      required this.serverChatHistory,
+      required this.totalVideoLimit,
+      required this.userVideoLimit,
+      required this.localAdmins,
+      required this.templateUrl,
+      required this.youtubeApiKey,
+      required this.permissions,
+      required this.emotes,
+      required this.filters,
+      required this.isVerbose,
+      required this.salt});
 
   Config.fromJson(Map<String, dynamic> json) {
     port = json['port'];
@@ -294,13 +285,13 @@ class Config {
         ? new Permissions.fromJson(json['permissions'])
         : null;
     if (json['emotes'] != null) {
-      emotes = new List<Emotes>();
+      emotes = [];
       json['emotes'].forEach((v) {
         emotes.add(new Emotes.fromJson(v));
       });
     }
     if (json['filters'] != null) {
-      filters = new List<Filters>();
+      filters = [];
       json['filters'].forEach((v) {
         filters.add(new Filters.fromJson(v));
       });
@@ -322,14 +313,12 @@ class Config {
     data['templateUrl'] = this.templateUrl;
     data['youtubeApiKey'] = this.youtubeApiKey;
     if (this.permissions != null) {
-      data['permissions'] = this.permissions.toJson();
+      data['permissions'] = this.permissions?.toJson();
     }
-    if (this.emotes != null) {
-      data['emotes'] = this.emotes.map((v) => v.toJson()).toList();
-    }
-    if (this.filters != null) {
-      data['filters'] = this.filters.map((v) => v.toJson()).toList();
-    }
+    data['emotes'] = this.emotes.map((v) => v.toJson()).toList();
+
+    data['filters'] = this.filters.map((v) => v.toJson()).toList();
+
     data['isVerbose'] = this.isVerbose;
     data['salt'] = this.salt;
     return data;
@@ -337,34 +326,39 @@ class Config {
 }
 
 class Permissions {
-  List<String> guest;
-  List<String> user;
-  List<String> leader;
-  List<String> admin;
+  late List<String> guest;
+  late List<String> user;
+  late List<String> leader;
+  late List<String> admin;
 
-  Permissions({this.guest, this.user, this.leader, this.admin});
+  Permissions({
+    required this.guest,
+    required this.user,
+    required this.leader,
+    required this.admin,
+  });
 
   Permissions.fromJson(Map<String, dynamic> json) {
     if (json['guest'] != null) {
-      guest = new List<String>();
+      guest = [];
       json['guest'].forEach((v) {
         guest.add(v);
       });
     }
     if (json['user'] != null) {
-      user = new List<String>();
+      user = [];
       json['user'].forEach((v) {
         user.add(v);
       });
     }
     if (json['leader'] != null) {
-      leader = new List<String>();
+      leader = [];
       json['leader'].forEach((v) {
         leader.add(v);
       });
     }
     if (json['admin'] != null) {
-      admin = new List<String>();
+      admin = [];
       json['admin'].forEach((v) {
         admin.add(v);
       });
@@ -373,27 +367,19 @@ class Permissions {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.guest != null) {
-      data['guest'] = this.guest;
-    }
-    if (this.user != null) {
-      data['user'] = this.user;
-    }
-    if (this.leader != null) {
-      data['leader'] = this.leader;
-    }
-    if (this.admin != null) {
-      data['admin'] = this.admin;
-    }
+    data['guest'] = this.guest;
+    data['user'] = this.user;
+    data['leader'] = this.leader;
+    data['admin'] = this.admin;
     return data;
   }
 }
 
 class Emotes {
-  String name;
-  String image;
+  late String name;
+  late String image;
 
-  Emotes({this.name, this.image});
+  Emotes({required this.name, required this.image});
 
   Emotes.fromJson(Map<String, dynamic> json) {
     name = json['name'];
@@ -409,12 +395,16 @@ class Emotes {
 }
 
 class Filters {
-  String name;
-  String regex;
-  String flags;
-  String replace;
+  late String name;
+  late String regex;
+  late String flags;
+  late String replace;
 
-  Filters({this.name, this.regex, this.flags, this.replace});
+  Filters(
+      {required this.name,
+      required this.regex,
+      required this.flags,
+      required this.replace});
 
   Filters.fromJson(Map<String, dynamic> json) {
     name = json['name'];
@@ -434,11 +424,11 @@ class Filters {
 }
 
 class History {
-  String text;
-  String name;
-  String time;
+  late String text;
+  late String name;
+  late String time;
 
-  History({this.text, this.name, this.time});
+  History({required this.text, required this.name, required this.time});
 
   History.fromJson(Map<String, dynamic> json) {
     text = json['text'];
@@ -456,14 +446,26 @@ class History {
 }
 
 class Client {
-  String name;
-  int group;
+  late String name;
+  late int group;
 
-  Client({this.name, this.group});
+  Client({required this.name, required this.group});
 
   Client.fromJson(Map<String, dynamic> json) {
     name = json['name'];
     group = json['group'];
+  }
+
+  bool get isUser => group & 1 != 0;
+  bool get isLeader => group & 2 != 0;
+  bool get isAdmin => group & 4 != 0;
+
+  set isLeader(bool flag) {
+    if (flag) {
+      group |= 2;
+    } else {
+      group &= -1 - 2;
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -475,20 +477,20 @@ class Client {
 }
 
 class VideoList {
-  String url;
-  String title;
-  String author;
-  double duration;
-  bool isTemp;
-  bool isIframe;
+  late String url;
+  late String title;
+  late String author;
+  late double duration;
+  late bool isTemp;
+  late bool isIframe;
 
   VideoList(
-      {this.url,
-      this.title,
-      this.author,
-      this.duration,
-      this.isTemp,
-      this.isIframe});
+      {required this.url,
+      required this.title,
+      required this.author,
+      required this.duration,
+      required this.isTemp,
+      required this.isIframe});
 
   VideoList.fromJson(Map<String, dynamic> json) {
     url = json['url'];
@@ -512,21 +514,26 @@ class VideoList {
 }
 
 class Login {
-  String clientName;
-  String passHash;
-  List<Client> clients;
-  bool isUnknownClient;
+  late String clientName;
+  late String? passHash;
+  late List<Client>? clients;
+  late bool? isUnknownClient;
 
-  Login({this.clientName, this.passHash, this.clients, this.isUnknownClient});
+  Login(
+      {required this.clientName,
+      required this.passHash,
+      required this.clients,
+      required this.isUnknownClient});
 
   Login.fromJson(Map<String, dynamic> json) {
     clientName = json['clientName'];
     passHash = json['passHash'];
     if (json['clients'] != null) {
-      clients = new List<Client>();
+      List<Client> clients = [];
       json['clients'].forEach((v) {
         clients.add(new Client.fromJson(v));
       });
+      this.clients = clients;
     }
     isUnknownClient = json['isUnknownClient'];
   }
@@ -535,26 +542,27 @@ class Login {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['clientName'] = this.clientName;
     data['passHash'] = this.passHash;
-    if (this.clients != null) {
-      data['clients'] = this.clients.map((v) => v.toJson()).toList();
-    }
+    data['clients'] = this.clients?.map((v) => v.toJson()).toList();
     data['isUnknownClient'] = this.isUnknownClient;
     return data;
   }
 }
 
 class Logout {
-  String oldClientName;
-  String clientName;
-  List<Client> clients;
+  late String oldClientName;
+  late String clientName;
+  late List<Client> clients;
 
-  Logout({this.oldClientName, this.clientName, this.clients});
+  Logout(
+      {required this.oldClientName,
+      required this.clientName,
+      required this.clients});
 
   Logout.fromJson(Map<String, dynamic> json) {
     oldClientName = json['oldClientName'];
     clientName = json['clientName'];
     if (json['clients'] != null) {
-      clients = new List<Client>();
+      clients = [];
       json['clients'].forEach((v) {
         clients.add(new Client.fromJson(v));
       });
@@ -565,18 +573,16 @@ class Logout {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['oldClientName'] = this.oldClientName;
     data['clientName'] = this.clientName;
-    if (this.clients != null) {
-      data['clients'] = this.clients.map((v) => v.toJson()).toList();
-    }
+    data['clients'] = this.clients.map((v) => v.toJson()).toList();
     return data;
   }
 }
 
 class Message {
-  String clientName;
-  String text;
+  late String clientName;
+  late String text;
 
-  Message({this.clientName, this.text});
+  Message({required this.clientName, required this.text});
 
   Message.fromJson(Map<String, dynamic> json) {
     clientName = json['clientName'];
@@ -592,9 +598,9 @@ class Message {
 }
 
 class ServerMessage {
-  String textId;
+  late String textId;
 
-  ServerMessage({this.textId});
+  ServerMessage({required this.textId});
 
   ServerMessage.fromJson(Map<String, dynamic> json) {
     textId = json['textId'];
@@ -608,13 +614,13 @@ class ServerMessage {
 }
 
 class UpdateClients {
-  List<Client> clients;
+  late List<Client> clients;
 
-  UpdateClients({this.clients});
+  UpdateClients({required this.clients});
 
   UpdateClients.fromJson(Map<String, dynamic> json) {
     if (json['clients'] != null) {
-      clients = new List<Client>();
+      clients = [];
       json['clients'].forEach((v) {
         clients.add(new Client.fromJson(v));
       });
@@ -623,38 +629,34 @@ class UpdateClients {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.clients != null) {
-      data['clients'] = this.clients.map((v) => v.toJson()).toList();
-    }
+    data['clients'] = this.clients.map((v) => v.toJson()).toList();
     return data;
   }
 }
 
 class AddVideo {
-  VideoList item;
-  bool atEnd;
+  late VideoList item;
+  late bool atEnd;
 
-  AddVideo({this.item, this.atEnd});
+  AddVideo({required this.item, required this.atEnd});
 
   AddVideo.fromJson(Map<String, dynamic> json) {
-    item = json['item'] != null ? new VideoList.fromJson(json['item']) : null;
+    item = new VideoList.fromJson(json['item']);
     atEnd = json['atEnd'];
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.item != null) {
-      data['item'] = this.item.toJson();
-    }
+    data['item'] = this.item.toJson();
     data['atEnd'] = this.atEnd;
     return data;
   }
 }
 
 class RemoveVideo {
-  String url;
+  late String url;
 
-  RemoveVideo({this.url});
+  RemoveVideo({required this.url});
 
   RemoveVideo.fromJson(Map<String, dynamic> json) {
     url = json['url'];
@@ -668,9 +670,9 @@ class RemoveVideo {
 }
 
 class Pause {
-  double time;
+  late double time;
 
-  Pause({this.time});
+  Pause({required this.time});
 
   Pause.fromJson(Map<String, dynamic> json) {
     time = json['time'].toDouble();
@@ -684,16 +686,16 @@ class Pause {
 }
 
 class GetTime {
-  double time;
-  bool paused;
-  int rate;
+  late double time;
+  late bool paused;
+  late int rate;
 
-  GetTime({this.time, this.paused, this.rate});
+  GetTime({required this.time, required this.paused, required this.rate});
 
   GetTime.fromJson(Map<String, dynamic> json) {
     time = json['time'].toDouble();
-    paused = json['paused'];
-    rate = json['rate'];
+    paused = json['paused'] ?? false;
+    rate = json['rate'] ?? 1;
   }
 
   Map<String, dynamic> toJson() {
@@ -706,9 +708,9 @@ class GetTime {
 }
 
 class SetRate {
-  int rate;
+  late int rate;
 
-  SetRate({this.rate});
+  SetRate({required this.rate});
 
   SetRate.fromJson(Map<String, dynamic> json) {
     rate = json['rate'];
@@ -722,9 +724,9 @@ class SetRate {
 }
 
 class SetLeader {
-  String clientName;
+  late String clientName;
 
-  SetLeader({this.clientName});
+  SetLeader({required this.clientName});
 
   SetLeader.fromJson(Map<String, dynamic> json) {
     clientName = json['clientName'];
@@ -738,9 +740,9 @@ class SetLeader {
 }
 
 class PlayItem {
-  int pos;
+  late int pos;
 
-  PlayItem({this.pos});
+  PlayItem({required this.pos});
 
   PlayItem.fromJson(Map<String, dynamic> json) {
     pos = json['pos'];
@@ -754,13 +756,13 @@ class PlayItem {
 }
 
 class UpdatePlaylist {
-  List<VideoList> videoList;
+  late List<VideoList> videoList;
 
-  UpdatePlaylist({this.videoList});
+  UpdatePlaylist({required this.videoList});
 
   UpdatePlaylist.fromJson(Map<String, dynamic> json) {
     if (json['videoList'] != null) {
-      videoList = new List<VideoList>();
+      videoList = [];
       json['videoList'].forEach((v) {
         videoList.add(new VideoList.fromJson(v));
       });
@@ -769,17 +771,15 @@ class UpdatePlaylist {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.videoList != null) {
-      data['videoList'] = this.videoList.map((v) => v.toJson()).toList();
-    }
+    data['videoList'] = this.videoList.map((v) => v.toJson()).toList();
     return data;
   }
 }
 
 class TogglePlaylistLock {
-  bool isOpen;
+  late bool isOpen;
 
-  TogglePlaylistLock({this.isOpen});
+  TogglePlaylistLock({required this.isOpen});
 
   TogglePlaylistLock.fromJson(Map<String, dynamic> json) {
     isOpen = json['isOpen'];

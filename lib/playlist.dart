@@ -7,20 +7,20 @@ import 'wsdata.dart';
 
 class Playlist extends StatelessWidget {
   const Playlist({
-    Key key,
+    Key? key,
   }) : super(key: key);
 
   Widget plailistItem(
     BuildContext context,
     PlaylistModel playlist, {
-    VideoList item,
-    int pos,
+    required VideoList item,
+    required int pos,
   }) {
     const containerPadding = EdgeInsets.all(5.0);
     const paddingNum = 5.0;
     const btnPadding = EdgeInsets.all(paddingNum);
     final isActive = pos == playlist.pos;
-    final time = item.isIframe ? "" : duration(item.duration);
+    final time = item.isIframe ? '' : duration(item.duration);
     return Container(
       decoration: BoxDecoration(
         color: isActive
@@ -110,7 +110,7 @@ class Playlist extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print("Rebuild playlist");
+    print('Rebuild playlist');
     final playlist = Provider.of<PlaylistModel>(context);
     List<Widget> items = [];
     for (var i = 0; i < playlist.length; i++) {

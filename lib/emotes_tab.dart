@@ -4,9 +4,9 @@ import 'wsdata.dart';
 
 class EmotesTab extends StatelessWidget {
   const EmotesTab({
-    Key key,
-    @required this.emotes,
-    @required this.input,
+    Key? key,
+    required this.emotes,
+    required this.input,
   }) : super(key: key);
 
   final List<Emotes> emotes;

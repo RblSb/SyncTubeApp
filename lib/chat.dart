@@ -7,7 +7,7 @@ import 'emotes_tab.dart';
 
 class Chat extends StatefulWidget {
   Chat({
-    Key key,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -30,7 +30,7 @@ class ChatItem {
     final List<InlineSpan> childs = [];
     const empty = '';
     text.splitMapJoin(
-      chat.emotesPattern,
+      chat.emotesPattern!,
       onMatch: (m) {
         final emote = chat.emotes.firstWhere(
           (element) => element.name == m.group(1),

@@ -58,7 +58,7 @@ jobs:
 
       - uses: subosito/flutter-action@v1
         with:
-          channel: 'stable'
+          channel: 'dev' # 'stable'
 
       - name: Create signing files
         working-directory: ${{github.workspace}}
@@ -73,7 +73,7 @@ jobs:
       - name: Build
         working-directory: ${{github.workspace}}
         run: |
-          flutter build apk --target-platform=android-arm
+          flutter build apk --target-platform=android-arm --enable-experiment=non-nullable --no-sound-null-safety
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2

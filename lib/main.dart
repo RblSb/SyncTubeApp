@@ -32,7 +32,7 @@ class Main extends StatelessWidget {
 class ServerListPage extends StatefulWidget {
   final String title;
 
-  ServerListPage({Key key, this.title}) : super(key: key);
+  ServerListPage({Key? key, required this.title}) : super(key: key);
 
   @override
   _ServerListPageState createState() => _ServerListPageState();
@@ -40,7 +40,7 @@ class ServerListPage extends StatefulWidget {
 
 class _ServerListPageState extends State<ServerListPage> {
   final List<ServerListItem> items = [];
-  Offset _tapPosition;
+  Offset? _tapPosition;
 
   @override
   void initState() {
@@ -50,10 +50,11 @@ class _ServerListPageState extends State<ServerListPage> {
 
   void readItems() async {
     final prefs = await SharedPreferences.getInstance();
-    var strings = prefs.getStringList('serverListItems');
+    var strings = prefs.getStringList('serverListItems') ?? [];
     print(strings);
-    if (strings == null || strings.length == 0)
+    if (strings.length == 0) {
       strings = ['Example', 'https://synctube-example.herokuapp.com'];
+    }
     setState(() {
       for (var i = 0; i < strings.length; i += 2) {
         items.add(ServerListItem(strings[i], strings[i + 1]));
@@ -71,7 +72,7 @@ class _ServerListPageState extends State<ServerListPage> {
     prefs.setStringList('serverListItems', strings);
   }
 
-  void addItem(ServerListItem item) {
+  void addItem(ServerListItem? item) {
     if (item == null) return;
     if (item.name.length == 0 || item.url.length == 0) return;
     setState(() => items.add(item));
@@ -90,11 +91,11 @@ class _ServerListPageState extends State<ServerListPage> {
   }
 
   void itemPopupMenu(ServerListItem item) async {
-    final RenderBox overlay = Overlay.of(context).context.findRenderObject();
-    final func = await showMenu(
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    void Function()? func = await showMenu(
       context: context,
       position: RelativeRect.fromRect(
-        _tapPosition & Size(40, 40),
+        (_tapPosition ?? Offset.zero) & Size(40, 40),
         Offset.zero & overlay.size,
       ),
       items: [
@@ -181,8 +182,8 @@ class ServerListItem {
   Widget buildSubtitle(BuildContext context) => Text(url);
 }
 
-Future<ServerListItem> _serverItemDialog(BuildContext context,
-    [ServerListItem item]) async {
+Future<ServerListItem?> _serverItemDialog(BuildContext context,
+    [ServerListItem? item]) async {
   if (item == null) item = ServerListItem('', '');
   return showDialog<ServerListItem>(
     context: context,
@@ -195,21 +196,21 @@ Future<ServerListItem> _serverItemDialog(BuildContext context,
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               TextFormField(
-                initialValue: item.name,
+                initialValue: item!.name,
                 autofocus: true,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Server Name',
                   hintText: 'My Cool Server',
                 ),
-                onChanged: (value) => item.name = value,
+                onChanged: (value) => item!.name = value,
               ),
               TextFormField(
                 initialValue: item.url,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Server URL',
                   hintText: 'my-synctube.com',
                 ),
-                onChanged: (value) => item.url = value,
+                onChanged: (value) => item!.url = value,
               ),
             ],
           ),
