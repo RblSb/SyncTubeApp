@@ -69,7 +69,7 @@ class PlayerModel extends ChangeNotifier {
     initPlayerFuture = null;
     final item = playlist.getItem(playlist.pos);
     var url = item.url;
-    if (url.contains('youtu')) url = await loadYoutubeVideo(url);
+    if (url.contains('youtu')) url = await getYoutubeVideoUrl(url);
     final prevController = controller;
     controller = VideoPlayerController.network(
       url,
@@ -82,20 +82,27 @@ class PlayerModel extends ChangeNotifier {
   }
 
   Future<double> getVideoDuration(String url) async {
-    if (url.contains('youtu')) url = await loadYoutubeVideo(url);
+    if (url.contains('youtu')) url = await getYoutubeVideoUrl(url);
     final controller = VideoPlayerController.network(url);
-    await controller.initialize();
-    Duration? duration = controller.value.duration;
-    controller.dispose();
+    Duration? duration;
+    try {
+      await controller.initialize();
+      duration = controller.value.duration;
+      controller.dispose();
+    } catch (e) {}
     if (duration == null) return 0;
     return duration.inMilliseconds / 1000;
   }
 
-  Future<String> loadYoutubeVideo(String url) async {
+  Future<String> getYoutubeVideoUrl(String url) async {
     final yt = youtube.YoutubeExplode();
-    final manifest = await yt.videos.streamsClient.getManifest(url);
-    final stream = manifest.muxed.withHighestBitrate();
-    return stream.url.toString();
+    try {
+      final manifest = await yt.videos.streamsClient.getManifest(url);
+      final stream = manifest.muxed.withHighestBitrate();
+      return stream.url.toString();
+    } catch (e) {
+      return '';
+    }
   }
 
   Future<String> getVideoTitle(String url) async {
@@ -112,8 +119,12 @@ class PlayerModel extends ChangeNotifier {
 
   Future<String> getYoutubeVideoTitle(String url) async {
     final yt = youtube.YoutubeExplode();
-    final manifest = await yt.videos.get(url);
-    return manifest.title;
+    try {
+      final manifest = await yt.videos.get(url);
+      return manifest.title;
+    } catch (e) {
+      return 'Youtube Video';
+    }
   }
 
   Future<ClosedCaptionFile?> _loadCaptions(String url) async {

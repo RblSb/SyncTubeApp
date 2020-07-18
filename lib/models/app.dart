@@ -297,6 +297,10 @@ class AppModel extends ChangeNotifier {
       player.getVideoTitle(url),
     ]);
     final duration = futures[0] as double;
+    if (duration == 0) {
+      chat.addItem(ChatItem('Failed to add video.', ''));
+      return;
+    }
     final title = futures[1] as String;
     data.item.duration = duration;
     data.item.title = title;
