@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'models/playlist.dart';
@@ -35,25 +36,39 @@ class Playlist extends StatelessWidget {
       padding: containerPadding,
       child: Wrap(
         children: <Widget>[
-          Row(
-            children: [
-              Padding(
-                padding: btnPadding,
-                child: Text(time),
-              ),
-              Expanded(
-                child: Container(
+          GestureDetector(
+            onLongPress: () {
+              Clipboard.setData(ClipboardData(text: item.url));
+              Scaffold.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Video URL is copied',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  backgroundColor: Colors.black45,
+                ),
+              );
+            },
+            child: Row(
+              children: [
+                Padding(
                   padding: btnPadding,
-                  child: Text(
-                    item.title,
-                    overflow: TextOverflow.fade,
-                    maxLines: 1,
-                    softWrap: false,
-                    style: TextStyle(fontSize: 18),
+                  child: Text(time),
+                ),
+                Expanded(
+                  child: Container(
+                    padding: btnPadding,
+                    child: Text(
+                      item.title,
+                      overflow: TextOverflow.fade,
+                      maxLines: 1,
+                      softWrap: false,
+                      style: TextStyle(fontSize: 18),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
