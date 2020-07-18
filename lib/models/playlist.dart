@@ -1,5 +1,5 @@
-import 'package:SyncTube/models/app.dart';
 import 'package:flutter/foundation.dart';
+import 'app.dart';
 import '../wsdata.dart';
 
 class PlaylistModel extends ChangeNotifier {
@@ -105,7 +105,7 @@ class PlaylistModel extends ChangeNotifier {
 
   void _safeInsert(int pos, VideoList item) {
     if (pos < _videoList.length) {
-      _videoList.insert(pos + 1, item);
+      _videoList.insert(pos, item);
     } else {
       _videoList.add(item);
     }
