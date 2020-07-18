@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'models/chat.dart';
@@ -75,6 +76,7 @@ class _ChatState extends State<Chat> {
     final chat = Provider.of<ChatModel>(context);
     scrollAfterFrame();
     final list = ListView.builder(
+      padding: EdgeInsets.zero,
       controller: chatScroll,
       scrollDirection: Axis.vertical,
       shrinkWrap: true,
@@ -82,6 +84,7 @@ class _ChatState extends State<Chat> {
       itemBuilder: (context, index) {
         final item = chat.items[index];
         return ListTile(
+          visualDensity: VisualDensity.compact,
           title: item.buildTitle(context),
           subtitle: item.buildSubtitle(context),
         );
@@ -103,30 +106,28 @@ class _ChatState extends State<Chat> {
                   contentPadding: const EdgeInsets.all(14),
                   hintText: 'Send a message...',
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(15),
+                    borderRadius: BorderRadius.circular(20),
                   ),
                 ),
                 onSubmitted: (String text) {
                   textController.clear();
                   chat.sendMessage(text);
+                  SystemChrome.restoreSystemUIOverlays();
                 },
               ),
             ),
-            Expanded(
-              flex: 4,
-              child: IconButton(
-                padding: EdgeInsets.zero,
-                onPressed: () {
-                  setState(() => showEmotesTab = !showEmotesTab);
-                },
-                tooltip: 'Show emotes',
-                icon: Icon(
-                  Icons.mood,
-                  size: 30,
-                  color: showEmotesTab
-                      ? Theme.of(context).buttonColor
-                      : Theme.of(context).iconColor,
-                ),
+            IconButton(
+              padding: EdgeInsets.only(left: 10, right: 20),
+              onPressed: () {
+                setState(() => showEmotesTab = !showEmotesTab);
+              },
+              tooltip: 'Show emotes',
+              icon: Icon(
+                Icons.mood,
+                size: 35,
+                color: showEmotesTab
+                    ? Theme.of(context).buttonColor
+                    : Theme.of(context).iconColor,
               ),
             ),
           ],

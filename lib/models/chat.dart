@@ -21,6 +21,7 @@ class ChatModel extends ChangeNotifier {
 
   void addItem(ChatItem item) {
     _items.add(item);
+    if (_items.length > 200) _items.removeAt(0);
     notifyListeners();
   }
 

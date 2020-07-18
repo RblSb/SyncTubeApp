@@ -33,63 +33,72 @@ class Playlist extends StatelessWidget {
         ),
       ),
       padding: containerPadding,
-      child: Row(
+      child: Wrap(
         children: <Widget>[
-          Padding(
-            padding: btnPadding,
-            child: Text(time),
-          ),
-          Expanded(
-            child: Container(
-              padding: btnPadding,
-              child: Text(
-                item.title,
-                overflow: TextOverflow.fade,
-                maxLines: 1,
-                softWrap: false,
-                style: TextStyle(fontSize: 18),
+          Row(
+            children: [
+              Padding(
+                padding: btnPadding,
+                child: Text(time),
               ),
-            ),
+              Expanded(
+                child: Container(
+                  padding: btnPadding,
+                  child: Text(
+                    item.title,
+                    overflow: TextOverflow.fade,
+                    maxLines: 1,
+                    softWrap: false,
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ),
+              ),
+            ],
           ),
-          IconButton(
-            padding: EdgeInsets.zero,
-            onPressed: () => playlist.sendPlayItem(pos),
-            tooltip: 'Play item',
-            icon: Icon(
-              Icons.play_arrow,
-              size: 30,
-              color: Theme.of(context).iconColor,
-            ),
-          ),
-          IconButton(
-            onPressed: () => playlist.sendSetNextItem(pos),
-            tooltip: 'Set item as next',
-            icon: Icon(
-              Icons.arrow_upward,
-              size: 30,
-              color: Theme.of(context).iconColor,
-            ),
-          ),
-          IconButton(
-            onPressed: () => playlist.sendToggleItemType(pos),
-            tooltip: 'Lock/unlock item',
-            icon: Icon(
-              item.isTemp ? Icons.lock_open : Icons.lock,
-              size: 30,
-              color: Theme.of(context).iconColor,
-            ),
-          ),
-          IconButton(
-            onPressed: () {
-              print(playlist.getItem(pos).url);
-              playlist.sendRemoveItem(playlist.getItem(pos).url);
-            },
-            tooltip: 'Remove item',
-            icon: Icon(
-              Icons.clear,
-              size: 30,
-              color: Theme.of(context).iconColor,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              IconButton(
+                padding: EdgeInsets.zero,
+                onPressed: () => playlist.sendPlayItem(pos),
+                tooltip: 'Play item',
+                icon: Icon(
+                  Icons.play_arrow,
+                  size: 30,
+                  color: Theme.of(context).iconColor,
+                ),
+              ),
+              IconButton(
+                onPressed: () => playlist.sendSetNextItem(pos),
+                tooltip: 'Set item as next',
+                icon: Icon(
+                  Icons.arrow_upward,
+                  size: 30,
+                  color: Theme.of(context).iconColor,
+                ),
+              ),
+              IconButton(
+                onPressed: () => playlist.sendToggleItemType(pos),
+                tooltip: 'Lock/unlock item',
+                icon: Icon(
+                  item.isTemp ? Icons.lock_open : Icons.lock,
+                  size: 30,
+                  color: Theme.of(context).iconColor,
+                ),
+              ),
+              IconButton(
+                onPressed: () {
+                  print(playlist.getItem(pos).url);
+                  playlist.sendRemoveItem(playlist.getItem(pos).url);
+                },
+                tooltip: 'Remove item',
+                icon: Icon(
+                  Icons.clear,
+                  size: 30,
+                  color: Theme.of(context).iconColor,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -112,23 +121,20 @@ class Playlist extends StatelessWidget {
   Widget build(BuildContext context) {
     print('Rebuild playlist');
     final playlist = Provider.of<PlaylistModel>(context);
-    List<Widget> items = [];
-    for (var i = 0; i < playlist.length; i++) {
-      final item = playlist.getItem(i);
-      items.add(
-        plailistItem(
+    return ListView.builder(
+      padding: const EdgeInsets.only(bottom: 90),
+      scrollDirection: Axis.vertical,
+      shrinkWrap: true,
+      itemCount: playlist.length,
+      itemBuilder: (context, index) {
+        final item = playlist.getItem(index);
+        return plailistItem(
           context,
           playlist,
           item: item,
-          pos: i,
-        ),
-      );
-    }
-    return SingleChildScrollView(
-      padding: const EdgeInsets.only(bottom: 90),
-      child: Column(
-        children: items,
-      ),
+          pos: index,
+        );
+      },
     );
   }
 }

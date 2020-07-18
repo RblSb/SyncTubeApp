@@ -17,7 +17,7 @@ class Main extends StatelessWidget {
         primaryColorDark: Colors.grey[900],
         accentColor: Colors.grey[300],
         cardColor: Color.fromARGB(255, 30, 30, 30),
-        backgroundColor: Color.fromARGB(255, 20, 20, 20),
+        backgroundColor: Color.fromARGB(255, 15, 15, 15),
         errorColor: Colors.red[900],
       ),
     );

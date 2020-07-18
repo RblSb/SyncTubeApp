@@ -1,11 +1,12 @@
 import 'dart:async';
-import 'package:SyncTube/playlist.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import 'chat_panel.dart';
+import 'models/player.dart';
 import 'models/app.dart';
+import 'playlist.dart';
+import 'chat_panel.dart';
 import 'settings.dart';
 import 'video_player.dart';
 import 'wsdata.dart';
@@ -31,17 +32,14 @@ class App extends StatefulWidget {
 class _AppState extends State<App> with WidgetsBindingObserver {
   @override
   void initState() {
+    super.initState();
     SystemChrome.setEnabledSystemUIOverlays([]);
     app = AppModel(widget.url);
-    super.initState();
   }
 
   late AppModel app;
 
-  @override
-  Widget build(BuildContext context) {
-    print('App rebuild');
-    final orientation = MediaQuery.of(context).orientation;
+  Widget providers({required Widget child}) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: app.playlist),
@@ -57,70 +55,107 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           onTap: () => removeFocus(context),
           child: WillPopScope(
             onWillPop: () => _onWillPop(context),
-            child: Scaffold(
-              body: Flex(
-                direction: orientation == Orientation.landscape
-                    ? Axis.horizontal
-                    : Axis.vertical,
-                children: <Widget>[
-                  Container(
-                    constraints: BoxConstraints(
-                      minWidth: orientation == Orientation.landscape
-                          ? MediaQuery.of(context).size.width / (16 / 9)
-                          : 0,
-                      minHeight: orientation == Orientation.landscape
-                          ? 0
-                          : MediaQuery.of(context).size.width / (16 / 9),
-                      maxWidth: orientation == Orientation.landscape
-                          ? MediaQuery.of(context).size.width / 1.75
-                          : double.infinity,
-                    ),
-                    child: VideoPlayerScreen(),
-                  ),
-                  Expanded(
-                    child: Column(
-                      children: <Widget>[
-                        Consumer<AppModel>(
-                          builder: (context, app, child) => ChatPanel(app: app),
-                        ),
-                        Selector<AppModel, int>(
-                          selector: (context, app) => app.mainTab.index,
-                          builder: (context, index, child) {
-                            return Expanded(
-                              child: IndexedStack(
-                                index: index,
-                                children: [
-                                  Chat(),
-                                  Playlist(),
-                                  Settings(),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              floatingActionButton: Selector<AppModel, bool>(
-                selector: (context, app) => app.mainTab == MainTab.playlist,
-                builder: (context, isVisible, child) {
-                  return Visibility(
-                    child: FloatingActionButton(
-                      tooltip: 'Add video URL',
-                      child: const Icon(Icons.add),
-                      onPressed: () => _addUrlDialog(context),
-                    ),
-                    visible: isVisible,
-                  );
-                },
-              ),
-            ),
+            child: child,
           ),
         ),
       ),
     );
+  }
+
+  double playerHeight(double ratio) {
+    final media = MediaQuery.of(context);
+    var height = double.infinity;
+    if (media.orientation == Orientation.portrait) {
+      height = media.size.width / ratio;
+      final max = (media.size.height - media.viewInsets.bottom) / 2;
+      if (height > max) height = max;
+    }
+    return height;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    print('App rebuild');
+    final orientation = MediaQuery.of(context).orientation;
+    return providers(
+      child: Scaffold(
+        body: Flex(
+          direction: orientation == Orientation.landscape
+              ? Axis.horizontal
+              : Axis.vertical,
+          children: <Widget>[
+            Selector<PlayerModel, double>(
+              selector: (context, player) =>
+                  player.controller?.value.aspectRatio ?? 16 / 9,
+              builder: (context, ratio, child) {
+                final media = MediaQuery.of(context);
+                return Container(
+                  color: Colors.black,
+                  padding: EdgeInsets.only(
+                    top: _isKeyboardVisible() ? media.padding.top : 0,
+                  ),
+                  width: orientation == Orientation.landscape
+                      ? media.size.width / 1.5
+                      : double.infinity,
+                  height: playerHeight(ratio),
+                  child: Column(
+                    children: [
+                      if (orientation == Orientation.landscape && !_isKeyboardVisible())
+                        Consumer<AppModel>(
+                          builder: (context, app, child) => ChatPanel(app: app),
+                        ),
+                      Expanded(child: VideoPlayerScreen()),
+                    ],
+                  ),
+                );
+              },
+            ),
+            Expanded(
+              child: Column(
+                children: <Widget>[
+                  if (orientation == Orientation.portrait && !_isKeyboardVisible())
+                    Consumer<AppModel>(
+                      builder: (context, app, child) => ChatPanel(app: app),
+                    ),
+                  Selector<AppModel, int>(
+                    selector: (context, app) => app.mainTab.index,
+                    builder: (context, index, child) {
+                      return Expanded(
+                        child: IndexedStack(
+                          index: index,
+                          children: [
+                            Chat(),
+                            Playlist(),
+                            Settings(),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        floatingActionButton: Selector<AppModel, bool>(
+          selector: (context, app) => app.mainTab == MainTab.playlist,
+          builder: (context, isVisible, child) {
+            return Visibility(
+              child: FloatingActionButton(
+                tooltip: 'Add video URL',
+                child: const Icon(Icons.add),
+                onPressed: () => _addUrlDialog(context),
+              ),
+              visible: isVisible,
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  bool _isKeyboardVisible() {
+    return MediaQuery.of(context).viewInsets.bottom != 0;
   }
 
   @override
@@ -135,7 +170,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
 
   void removeFocus(BuildContext context) {
     FocusScope.of(context).unfocus();
-    SystemChrome.setEnabledSystemUIOverlays([]);
+    SystemChrome.restoreSystemUIOverlays();
   }
 
   Future<bool> _onWillPop(BuildContext context) async {
@@ -160,6 +195,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         ],
       ),
     );
+    SystemChrome.restoreSystemUIOverlays();
     return dialog ?? false;
   }
 
@@ -183,13 +219,14 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       ),
       atEnd: true,
     );
-    return showDialog<AddVideo>(
+    final addVideo = await showDialog<AddVideo>(
       context: context,
       builder: (BuildContext context) {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text('Add Server'),
+              insetPadding: EdgeInsets.zero,
+              scrollable: true,
               content: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -236,6 +273,8 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         );
       },
     );
+    SystemChrome.restoreSystemUIOverlays();
+    return addVideo;
   }
 
   @override
