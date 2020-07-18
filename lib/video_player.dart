@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
 import 'models/player.dart';
+import 'settings.dart';
 
 class VideoPlayerScreen extends StatelessWidget {
   VideoPlayerScreen({Key? key}) : super(key: key);
@@ -26,7 +27,7 @@ class VideoPlayerScreen extends StatelessWidget {
               child: AspectRatio(
                 aspectRatio: player.controller?.value.aspectRatio ?? 16 / 9,
                 child: GestureDetector(
-                  onPanDown: (_) {
+                  onTap: () {
                     player.toggleControls(true);
                     player.controlsTimer?.cancel();
                     player.controlsTimer =
@@ -34,6 +35,9 @@ class VideoPlayerScreen extends StatelessWidget {
                       player.toggleControls(false);
                     });
                   },
+                  onDoubleTap: () => Settings.nextOrientationView(
+                    player.app,
+                  ),
                   child: Stack(
                     alignment: Alignment.bottomCenter,
                     children: <Widget>[
@@ -102,13 +106,15 @@ class _PlayPauseOverlay extends StatelessWidget {
                   ),
                 ),
         ),
-        GestureDetector(onTap: () {
-          if (!player.isPlaying()) {
-            // Timer(const Duration(milliseconds: 100), () {});
-            player.toggleControls(false);
-          }
-          player.userSetPlayerState(!player.isPlaying());
-        }),
+        GestureDetector(
+          onTap: () {
+            if (!player.isPlaying()) {
+              // Timer(const Duration(milliseconds: 100), () {});
+              player.toggleControls(false);
+            }
+            player.userSetPlayerState(!player.isPlaying());
+          },
+        ),
       ],
     );
   }

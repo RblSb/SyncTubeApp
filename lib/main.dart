@@ -95,16 +95,16 @@ class _ServerListPageState extends State<ServerListPage> {
     void Function()? func = await showMenu(
       context: context,
       position: RelativeRect.fromRect(
-        (_tapPosition ?? Offset.zero) & Size(40, 40),
+        (_tapPosition ?? Offset.zero) & const Size(40, 40),
         Offset.zero & overlay.size,
       ),
       items: [
         PopupMenuItem(
-          child: Text('Edit'),
+          child: const Text('Edit'),
           value: () => editItem(item),
         ),
         PopupMenuItem(
-          child: Text('Delete'),
+          child: const Text('Delete'),
           value: () => removeItem(item),
         ),
       ],
@@ -189,7 +189,9 @@ Future<ServerListItem?> _serverItemDialog(BuildContext context,
     context: context,
     builder: (BuildContext context) {
       return AlertDialog(
-        title: Text('Add Server'),
+        insetPadding: EdgeInsets.zero,
+        scrollable: true,
+        title: const Text('Add Server'),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -217,7 +219,7 @@ Future<ServerListItem?> _serverItemDialog(BuildContext context,
         ),
         actions: <Widget>[
           FlatButton(
-            child: Text('Ok'),
+            child: const Text('Ok'),
             onPressed: () => Navigator.of(context).pop(item),
           ),
         ],

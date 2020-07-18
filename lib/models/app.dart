@@ -35,6 +35,16 @@ class AppModel extends ChangeNotifier {
 
   int _prefferedOrientation = 0;
 
+  bool _isChatVisible = true;
+
+  bool get isChatVisible => _isChatVisible;
+
+  set isChatVisible(bool isChatVisible) {
+    if (_isChatVisible == isChatVisible) return;
+    _isChatVisible = isChatVisible;
+    notifyListeners();
+  }
+
   AppModel(String url) {
     print('AppModel created');
     _channel = IOWebSocketChannel.connect(url);
@@ -277,12 +287,8 @@ class AppModel extends ChangeNotifier {
     switch (_prefferedOrientation) {
       case 0:
         return 'Auto';
-      case 1:
-        return 'Landscape';
-      case 2:
-        return 'Portrait';
       default:
-        return 'Unknown';
+        return 'Landscape';
     }
   }
 

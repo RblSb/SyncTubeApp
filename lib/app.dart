@@ -35,6 +35,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     super.initState();
     SystemChrome.setEnabledSystemUIOverlays([]);
     app = AppModel(widget.url);
+    Settings.readPrefferedOrientation(app);
   }
 
   late AppModel app;
@@ -84,56 +85,69 @@ class _AppState extends State<App> with WidgetsBindingObserver {
               ? Axis.horizontal
               : Axis.vertical,
           children: <Widget>[
-            Selector<PlayerModel, double>(
-              selector: (context, player) =>
-                  player.controller?.value.aspectRatio ?? 16 / 9,
-              builder: (context, ratio, child) {
-                final media = MediaQuery.of(context);
-                return Container(
-                  color: Colors.black,
-                  padding: EdgeInsets.only(
-                    top: _isKeyboardVisible() ? media.padding.top : 0,
-                  ),
-                  width: orientation == Orientation.landscape
-                      ? media.size.width / 1.5
-                      : double.infinity,
-                  height: playerHeight(ratio),
-                  child: Column(
-                    children: [
-                      if (orientation == Orientation.landscape && !_isKeyboardVisible())
-                        Consumer<AppModel>(
-                          builder: (context, app, child) => ChatPanel(app: app),
+            Selector<AppModel, bool>(
+                selector: (context, app) => app.isChatVisible,
+                builder: (context, isChatVisible, child) {
+                  return Selector<PlayerModel, double>(
+                    selector: (context, player) =>
+                        player.controller?.value.aspectRatio ?? 16 / 9,
+                    builder: (context, ratio, child) {
+                      final media = MediaQuery.of(context);
+                      return Container(
+                        color: Colors.black,
+                        padding: EdgeInsets.only(
+                          top: _isKeyboardVisible() ? media.padding.top : 0,
                         ),
-                      Expanded(child: VideoPlayerScreen()),
-                    ],
-                  ),
-                );
-              },
-            ),
-            Expanded(
-              child: Column(
-                children: <Widget>[
-                  if (orientation == Orientation.portrait && !_isKeyboardVisible())
-                    Consumer<AppModel>(
-                      builder: (context, app, child) => ChatPanel(app: app),
-                    ),
-                  Selector<AppModel, int>(
-                    selector: (context, app) => app.mainTab.index,
-                    builder: (context, index, child) {
-                      return Expanded(
-                        child: IndexedStack(
-                          index: index,
+                        width: orientation == Orientation.landscape
+                            ? isChatVisible ? media.size.width / 1.5 : media.size.width
+                            : double.infinity,
+                        height: playerHeight(ratio),
+                        child: Column(
                           children: [
-                            Chat(),
-                            Playlist(),
-                            Settings(),
+                            if (orientation == Orientation.landscape &&
+                                !_isKeyboardVisible() && isChatVisible)
+                              Consumer<AppModel>(
+                                builder: (context, app, child) =>
+                                    ChatPanel(app: app),
+                              ),
+                            Expanded(child: VideoPlayerScreen()),
                           ],
                         ),
                       );
                     },
+                  );
+                }),
+            Selector<AppModel, bool>(
+              selector: (context, app) => app.isChatVisible,
+              builder: (context, isChatVisible, child) {
+                if (!isChatVisible) return const SizedBox.shrink();
+                return Expanded(
+                  child: Column(
+                    children: <Widget>[
+                      if (orientation == Orientation.portrait &&
+                          !_isKeyboardVisible())
+                        Consumer<AppModel>(
+                          builder: (context, app, child) => ChatPanel(app: app),
+                        ),
+                      Selector<AppModel, int>(
+                        selector: (context, app) => app.mainTab.index,
+                        builder: (context, index, child) {
+                          return Expanded(
+                            child: IndexedStack(
+                              index: index,
+                              children: [
+                                Chat(),
+                                Playlist(),
+                                Settings(),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                );
+              },
             ),
           ],
         ),
@@ -181,16 +195,16 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     bool? dialog = await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Are you sure?'),
-        content: Text('Do you want to exit channel?'),
+        title: const Text('Are you sure?'),
+        content: const Text('Do you want to exit channel?'),
         actions: <Widget>[
           FlatButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text('No'),
+            child: const Text('No'),
           ),
           FlatButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text('Yes'),
+            child: const Text('Yes'),
           ),
         ],
       ),
@@ -235,13 +249,13 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                     TextFormField(
                       initialValue: data.item.url,
                       autofocus: url == defaultUrl,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Video URL',
                       ),
                       onChanged: (value) => data.item.url = value,
                     ),
                     CheckboxListTile(
-                      title: Text('Add as temporary'),
+                      title: const Text('Add as temporary'),
                       value: data.item.isTemp,
                       onChanged: (flag) => setState(() {
                         data.item.isTemp = flag;
@@ -252,7 +266,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
               ),
               actions: <Widget>[
                 FlatButton(
-                  child: Text('Queue next'),
+                  child: const Text('Queue next'),
                   onPressed: () {
                     data.atEnd = false;
                     Navigator.of(context).pop(data);
@@ -260,7 +274,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                   },
                 ),
                 FlatButton(
-                  child: Text('Queue last'),
+                  child: const Text('Queue last'),
                   onPressed: () {
                     data.atEnd = true;
                     Navigator.of(context).pop(data);
