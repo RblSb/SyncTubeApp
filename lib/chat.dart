@@ -1,6 +1,8 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'models/chat.dart';
 import 'color_scheme.dart';
@@ -15,41 +17,109 @@ class Chat extends StatefulWidget {
   _ChatState createState() => _ChatState();
 }
 
+final _imgPattern =
+    RegExp(r"(https?:\/\/[^']*\.)(png|jpg|gif|jpeg|webp)([^' ,]*)");
+final _urlPattern = RegExp(r"(^|[^'])(https?:\/\/[^' \t]*)");
+final _textPattern = RegExp(r'[^\t]+');
+
 class ChatItem {
+  static const tabChar = '\t';
   final String name;
   final String text;
 
-  ChatItem(this.name, this.text);
+  const ChatItem(this.name, this.text);
 
   Widget buildTitle(BuildContext context) => Text(name);
 
   Widget buildSubtitle(BuildContext context) {
     final chat = Provider.of<ChatModel>(context, listen: false);
-    if (chat.emotesPattern == null) {
-      return Text(text);
-    }
-    final List<InlineSpan> childs = [];
-    const empty = '';
-    text.splitMapJoin(
-      chat.emotesPattern!,
-      onMatch: (m) {
-        final emote = chat.emotes.firstWhere(
-          (element) => element.name == m.group(1),
-        );
-        childs.add(WidgetSpan(
-          child: Image.network(emote.image),
+    final List<_OrderedSpan> childs = [];
+    var text = _parseEmotes(childs, chat, this.text);
+
+    text = text.splitMapJoin(
+      _imgPattern,
+      onMatch: (match) {
+        final link = match.group(1)! + match.group(2)! + match.group(3)!;
+        childs.add(_OrderedSpan(
+          match.start,
+          WidgetSpan(
+            child: InkWell(
+              child: Image.network(link),
+              onTap: () => launch(link),
+            ),
+          ),
         ));
-        return empty;
+        return tabChar * link.length;
       },
-      onNonMatch: (n) {
-        childs.add(TextSpan(text: n));
-        return empty;
-      },
+      onNonMatch: (text) => text,
     );
+
+    text = text.splitMapJoin(
+      _urlPattern,
+      onMatch: (match) {
+        var link = match.group(1)! + match.group(2)!;
+        link = link.trim();
+        childs.add(_OrderedSpan(
+          match.start,
+          TextSpan(
+              text: link,
+              style: TextStyle(color: Colors.blue),
+              recognizer: TapGestureRecognizer()
+                ..onTap = () async {
+                  if (await canLaunch(link)) launch(link);
+                }),
+        ));
+        return tabChar * link.length;
+      },
+      onNonMatch: (text) => text,
+    );
+
+    text.splitMapJoin(
+      _textPattern,
+      onMatch: (match) {
+        childs.add(_OrderedSpan(
+          match.start,
+          TextSpan(
+            text: match.group(0),
+          ),
+        ));
+        return tabChar;
+      },
+      onNonMatch: (text) => tabChar,
+    );
+
+    childs.sort((a, b) => a.pos - b.pos);
     return RichText(
-      text: TextSpan(children: childs),
+      text: TextSpan(children: childs.map((e) => e.obj).toList()),
     );
   }
+
+  String _parseEmotes(List<_OrderedSpan> childs, ChatModel chat, String text) {
+    if (chat.emotesPattern == null) return text;
+    return text.splitMapJoin(
+      chat.emotesPattern!,
+      onMatch: (match) {
+        final text = match.group(1)!;
+        final emote = chat.emotes.firstWhere(
+          (element) => element.name == text,
+        );
+        childs.add(_OrderedSpan(
+          match.start,
+          WidgetSpan(
+            child: Image.network(emote.image),
+          ),
+        ));
+        return tabChar * text.length;
+      },
+      onNonMatch: (text) => text,
+    );
+  }
+}
+
+class _OrderedSpan<T> {
+  final int pos;
+  final InlineSpan obj;
+  const _OrderedSpan(this.pos, this.obj);
 }
 
 class _ChatState extends State<Chat> {
@@ -135,6 +205,7 @@ class _ChatState extends State<Chat> {
                     reopenKeyboard = false;
                   }
                 });
+                SystemChrome.restoreSystemUIOverlays();
               },
               tooltip: 'Show emotes',
               icon: Icon(

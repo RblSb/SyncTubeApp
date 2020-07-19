@@ -304,7 +304,7 @@ class AppModel extends ChangeNotifier {
     ]);
     final duration = futures[0] as double;
     if (duration == 0) {
-      chat.addItem(ChatItem('Failed to add video.', ''));
+      chat.addItem(const ChatItem('Failed to add video.', ''));
       return;
     }
     final title = futures[1] as String;

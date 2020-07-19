@@ -2,9 +2,9 @@ import 'dart:convert';
 
 import 'package:video_player/video_player.dart';
 
-final RegExp _assTimeStamp = RegExp(r'\d+:\d\d:\d\d.\d\d');
-final RegExp _blockTags = RegExp(r'\{\\[^}]*\}');
-final RegExp _tags = RegExp(r'\\[^ ]+');
+final _assTimeStamp = RegExp(r'\d+:\d\d:\d\d.\d\d');
+final _blockTags = RegExp(r'\{\\[^}]*\}');
+final _tags = RegExp(r'\\[^ ]+');
 
 /// Represents a [ClosedCaptionFile], parsed from the ASS file format.
 class AssCaptionFile extends ClosedCaptionFile {
