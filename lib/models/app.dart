@@ -18,18 +18,21 @@ enum MainTab {
 }
 
 class AppModel extends ChangeNotifier {
+  String wsUrl;
   late IOWebSocketChannel _channel;
   late StreamSubscription<dynamic> _wsSubscription;
   late PlaylistModel playlist;
   late PlayerModel player;
   late ChatModel chat;
   MainTab mainTab = MainTab.chat;
+  bool isConnected = false;
 
   Client _personal = Client(name: 'Unknown', group: 0);
   List<Client> clients = [];
   bool isUnknownClient = true;
 
   Timer? _getTimeTimer;
+  Timer? _reconnectionTimer;
 
   int synchThreshold = 2;
 
@@ -45,13 +48,30 @@ class AppModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  AppModel(String url) {
+  AppModel(this.wsUrl) {
     print('AppModel created');
-    _channel = IOWebSocketChannel.connect(url);
-    _wsSubscription = _channel.stream.listen(onMessage);
+    connect();
     playlist = PlaylistModel(this);
     player = PlayerModel(this, playlist);
     chat = ChatModel(this);
+  }
+
+  void connect() {
+    _channel = IOWebSocketChannel.connect(wsUrl);
+    _wsSubscription = _channel.stream.listen(onMessage, onDone: () {
+      isConnected = false;
+      player.pause();
+      reconnect();
+    }, onError: (error) {});
+  }
+
+  void reconnect() {
+    if (isConnected) return;
+    _wsSubscription.cancel();
+    _reconnectionTimer = Timer(const Duration(seconds: 3), () {
+      print('Try to reconnect...');
+      connect();
+    });
   }
 
   void send(WsData data) {
@@ -66,6 +86,7 @@ class AppModel extends ChangeNotifier {
     final data = WsData.fromJson(jsonDecode(json));
     switch (data.type) {
       case 'Connected':
+        isConnected = true;
         final type = data.connected!;
         _getTimeTimer?.cancel();
         _getTimeTimer =
@@ -77,7 +98,8 @@ class AppModel extends ChangeNotifier {
         playlist.update(type.videoList);
         clients = type.clients;
         isUnknownClient = type.isUnknownClient;
-        _personal = type.clients.firstWhere((client) => client.name == type.clientName);
+        _personal =
+            type.clients.firstWhere((client) => client.name == type.clientName);
         chat.setItems(
             type.history.map((e) => ChatItem(e.name, e.text)).toList());
         playlist.setPlaylistLock(type.isPlaylistOpen);
@@ -322,6 +344,7 @@ class AppModel extends ChangeNotifier {
     player.dispose();
     playlist.dispose();
     _getTimeTimer?.cancel();
+    _reconnectionTimer?.cancel();
     _wsSubscription.cancel();
     _channel.sink.close(status.goingAway);
     super.dispose();
