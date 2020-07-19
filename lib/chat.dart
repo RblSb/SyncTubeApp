@@ -55,7 +55,9 @@ class ChatItem {
 class _ChatState extends State<Chat> {
   final ScrollController chatScroll = ScrollController();
   final textController = TextEditingController();
+  final inputFocus = new FocusNode();
   bool showEmotesTab = false;
+  bool reopenKeyboard = false;
 
   void scrollAfterFrame() {
     if (!chatScroll.hasClients) return;
@@ -99,9 +101,9 @@ class _ChatState extends State<Chat> {
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
             Expanded(
-              flex: 20,
               child: TextField(
                 controller: textController,
+                focusNode: inputFocus,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(14),
                   hintText: 'Send a message...',
@@ -109,6 +111,9 @@ class _ChatState extends State<Chat> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                 ),
+                onTap: () {
+                  setState(() => showEmotesTab = false);
+                },
                 onSubmitted: (String text) {
                   textController.clear();
                   chat.sendMessage(text);
@@ -117,9 +122,19 @@ class _ChatState extends State<Chat> {
               ),
             ),
             IconButton(
-              padding: EdgeInsets.only(left: 10, right: 20),
+              padding: const EdgeInsets.only(left: 10, right: 20),
               onPressed: () {
-                setState(() => showEmotesTab = !showEmotesTab);
+                setState(() {
+                  showEmotesTab = !showEmotesTab;
+                  if (showEmotesTab) {
+                    reopenKeyboard = inputFocus.hasFocus;
+                    inputFocus.unfocus();
+                  } else {
+                    if (reopenKeyboard && textController.text.isNotEmpty)
+                      inputFocus.requestFocus();
+                    reopenKeyboard = false;
+                  }
+                });
               },
               tooltip: 'Show emotes',
               icon: Icon(
@@ -132,7 +147,11 @@ class _ChatState extends State<Chat> {
             ),
           ],
         ),
-        if (showEmotesTab) EmotesTab(emotes: chat.emotes, input: textController)
+        if (showEmotesTab)
+          EmotesTab(
+            emotes: chat.emotes,
+            input: textController,
+          )
       ],
     );
   }
