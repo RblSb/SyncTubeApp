@@ -26,10 +26,36 @@ class ChatItem {
   static const tabChar = '\t';
   final String name;
   final String text;
+  late String date;
 
-  const ChatItem(this.name, this.text);
+  ChatItem(this.name, this.text, [String? date]) {
+    if (date != null) {
+      this.date = ' $date';
+      return;
+    }
+    final d = DateTime.now();
+    final h = d.hour.toString().padLeft(2, '0');
+    final m = d.minute.toString().padLeft(2, '0');
+    final s = d.second.toString().padLeft(2, '0');
+    this.date = ' $h:$m:$s';
+  }
 
-  Widget buildTitle(BuildContext context) => Text(name);
+  Widget buildTitle(BuildContext context) {
+    return RichText(
+      text: TextSpan(children: [
+        TextSpan(
+          text: name,
+          style: TextStyle(fontSize: 16),
+        ),
+        TextSpan(
+          text: date,
+          style: TextStyle(
+            color: Theme.of(context).timeStamp,
+          ),
+        ),
+      ]),
+    );
+  }
 
   Widget buildSubtitle(BuildContext context) {
     final chat = Provider.of<ChatModel>(context, listen: false);
@@ -44,7 +70,11 @@ class ChatItem {
           match.start,
           WidgetSpan(
             child: InkWell(
-              child: Image.network(link),
+              child: Image.network(
+                link,
+                fit: BoxFit.scaleDown,
+                height: MediaQuery.of(context).size.height / 4,
+              ),
               onTap: () => launch(link),
             ),
           ),
@@ -117,24 +147,28 @@ class ChatItem {
 }
 
 class _OrderedSpan<T> {
+  const _OrderedSpan(this.pos, this.obj);
   final int pos;
   final InlineSpan obj;
-  const _OrderedSpan(this.pos, this.obj);
 }
 
 class _ChatState extends State<Chat> {
   final ScrollController chatScroll = ScrollController();
   final textController = TextEditingController();
   final inputFocus = new FocusNode();
+  bool initialized = false;
   bool showEmotesTab = false;
   bool reopenKeyboard = false;
 
   void scrollAfterFrame() {
-    if (!chatScroll.hasClients) return;
-    final scrollAtEnd =
-        chatScroll.position.pixels >= chatScroll.position.maxScrollExtent - 10;
-    if (!scrollAtEnd) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!chatScroll.hasClients) return;
+      if (initialized) {
+        final scrollAtEnd = chatScroll.position.pixels >=
+            chatScroll.position.maxScrollExtent - 10;
+        if (!scrollAtEnd) return;
+      } else
+        initialized = true;
       chatScroll.animateTo(
         chatScroll.position.maxScrollExtent,
         duration: const Duration(milliseconds: 100),
@@ -213,7 +247,7 @@ class _ChatState extends State<Chat> {
                 size: 35,
                 color: showEmotesTab
                     ? Theme.of(context).buttonColor
-                    : Theme.of(context).iconColor,
+                    : Theme.of(context).icon,
               ),
             ),
           ],

@@ -35,9 +35,7 @@ class VideoPlayerScreen extends StatelessWidget {
                       player.toggleControls(false);
                     });
                   },
-                  onDoubleTap: () => Settings.nextOrientationView(
-                    player.app,
-                  ),
+                  onDoubleTap: () => Settings.nextOrientationView(player.app),
                   child: Stack(
                     alignment: Alignment.bottomCenter,
                     children: <Widget>[

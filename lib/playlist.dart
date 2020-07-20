@@ -29,7 +29,7 @@ class Playlist extends StatelessWidget {
             : Theme.of(context).canvasColor,
         border: Border(
           bottom: BorderSide(
-            color: Theme.of(context).itemBorderColor,
+            color: Theme.of(context).playlistItemBorder,
           ),
         ),
       ),
@@ -80,7 +80,7 @@ class Playlist extends StatelessWidget {
                 icon: Icon(
                   Icons.play_arrow,
                   size: 30,
-                  color: Theme.of(context).iconColor,
+                  color: Theme.of(context).icon,
                 ),
               ),
               IconButton(
@@ -89,7 +89,7 @@ class Playlist extends StatelessWidget {
                 icon: Icon(
                   Icons.arrow_upward,
                   size: 30,
-                  color: Theme.of(context).iconColor,
+                  color: Theme.of(context).icon,
                 ),
               ),
               IconButton(
@@ -98,7 +98,7 @@ class Playlist extends StatelessWidget {
                 icon: Icon(
                   item.isTemp ? Icons.lock_open : Icons.lock,
                   size: 30,
-                  color: Theme.of(context).iconColor,
+                  color: Theme.of(context).icon,
                 ),
               ),
               IconButton(
@@ -110,7 +110,7 @@ class Playlist extends StatelessWidget {
                 icon: Icon(
                   Icons.clear,
                   size: 30,
-                  color: Theme.of(context).iconColor,
+                  color: Theme.of(context).icon,
                 ),
               ),
             ],
@@ -134,7 +134,6 @@ class Playlist extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('Rebuild playlist');
     final playlist = Provider.of<PlaylistModel>(context);
     return ListView.builder(
       padding: const EdgeInsets.only(bottom: 90),

@@ -33,9 +33,8 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    SystemChrome.setEnabledSystemUIOverlays([]);
     app = AppModel(widget.url);
-    Settings.readPrefferedOrientation(app);
+    Settings.applySettings(app);
   }
 
   late AppModel app;
@@ -53,10 +52,14 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           statusBarColor: Colors.transparent,
         ),
         child: GestureDetector(
-          onTap: () => removeFocus(context),
+          onTap: () => removeFocus(),
           child: WillPopScope(
             onWillPop: () => _onWillPop(context),
-            child: child,
+            child: Selector<AppModel, bool>(
+              selector: (context, app) => app.hasSystemUi,
+              builder: (context, hasSystemUi, _) =>
+                  hasSystemUi ? SafeArea(child: child) : child,
+            ),
           ),
         ),
       ),
@@ -89,29 +92,39 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                 selector: (context, app) => app.isChatVisible,
                 builder: (context, isChatVisible, child) {
                   return Selector<PlayerModel, double>(
-                    selector: (context, player) =>
-                        player.controller?.value.aspectRatio ?? 16 / 9,
+                    selector: (context, player) {
+                      final isInit =
+                          player.controller?.value.initialized ?? false;
+                      if (!isInit) return 16 / 9;
+                      return player.controller?.value.aspectRatio ?? 16 / 9;
+                    },
                     builder: (context, ratio, child) {
                       final media = MediaQuery.of(context);
-                      return Container(
-                        color: Colors.black,
-                        padding: EdgeInsets.only(
-                          top: _isKeyboardVisible() ? media.padding.top : 0,
-                        ),
-                        width: orientation == Orientation.landscape
-                            ? isChatVisible ? media.size.width / 1.5 : media.size.width
-                            : double.infinity,
-                        height: playerHeight(ratio),
-                        child: Column(
-                          children: [
-                            if (orientation == Orientation.landscape &&
-                                !_isKeyboardVisible() && isChatVisible)
-                              Consumer<AppModel>(
-                                builder: (context, app, child) =>
-                                    ChatPanel(app: app),
-                              ),
-                            Expanded(child: VideoPlayerScreen()),
-                          ],
+                      return GestureDetector(
+                        onDoubleTap: () => Settings.nextOrientationView(app),
+                        child: Container(
+                          color: Colors.black,
+                          padding: EdgeInsets.only(
+                            top: _isKeyboardVisible() ? media.padding.top : 0,
+                          ),
+                          width: orientation == Orientation.landscape
+                              ? isChatVisible
+                                  ? media.size.width / 1.5
+                                  : media.size.width
+                              : double.infinity,
+                          height: playerHeight(ratio),
+                          child: Column(
+                            children: [
+                              if (orientation == Orientation.landscape &&
+                                  !_isKeyboardVisible() &&
+                                  isChatVisible)
+                                Consumer<AppModel>(
+                                  builder: (context, app, child) =>
+                                      ChatPanel(app: app),
+                                ),
+                              Expanded(child: VideoPlayerScreen()),
+                            ],
+                          ),
                         ),
                       );
                     },
@@ -120,31 +133,34 @@ class _AppState extends State<App> with WidgetsBindingObserver {
             Selector<AppModel, bool>(
               selector: (context, app) => app.isChatVisible,
               builder: (context, isChatVisible, child) {
-                if (!isChatVisible) return const SizedBox.shrink();
-                return Expanded(
-                  child: Column(
-                    children: <Widget>[
-                      if (orientation == Orientation.portrait &&
-                          !_isKeyboardVisible())
-                        Consumer<AppModel>(
-                          builder: (context, app, child) => ChatPanel(app: app),
+                return Visibility(
+                  visible: isChatVisible,
+                  child: Expanded(
+                    child: Column(
+                      children: <Widget>[
+                        if (orientation == Orientation.portrait &&
+                            !_isKeyboardVisible())
+                          Consumer<AppModel>(
+                            builder: (context, app, child) =>
+                                ChatPanel(app: app),
+                          ),
+                        Selector<AppModel, int>(
+                          selector: (context, app) => app.mainTab.index,
+                          builder: (context, index, child) {
+                            return Expanded(
+                              child: IndexedStack(
+                                index: index,
+                                children: [
+                                  Chat(),
+                                  Playlist(),
+                                  Settings(),
+                                ],
+                              ),
+                            );
+                          },
                         ),
-                      Selector<AppModel, int>(
-                        selector: (context, app) => app.mainTab.index,
-                        builder: (context, index, child) {
-                          return Expanded(
-                            child: IndexedStack(
-                              index: index,
-                              children: [
-                                Chat(),
-                                Playlist(),
-                                Settings(),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               },
@@ -182,14 +198,15 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     }
   }
 
-  void removeFocus(BuildContext context) {
+  void removeFocus() {
     FocusScope.of(context).unfocus();
     SystemChrome.restoreSystemUIOverlays();
   }
 
   Future<bool> _onWillPop(BuildContext context) async {
-    if (FocusScope.of(context).hasFocus) {
-      removeFocus(context);
+    final focus = FocusScope.of(context);
+    if (focus.hasFocus && focus.focusedChild != null) {
+      removeFocus();
       return false;
     }
     bool? dialog = await showDialog(

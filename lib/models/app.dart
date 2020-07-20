@@ -40,12 +40,22 @@ class AppModel extends ChangeNotifier {
 
   bool _isChatVisible = true;
 
+  bool _hasSystemUi = false;
+
+  bool get hasSystemUi => _hasSystemUi;
+
+  set hasSystemUi(bool hasSystemUi) {
+    _hasSystemUi = hasSystemUi;
+    notifyListeners();
+  }
+
   bool get isChatVisible => _isChatVisible;
 
   set isChatVisible(bool isChatVisible) {
     if (_isChatVisible == isChatVisible) return;
     _isChatVisible = isChatVisible;
     notifyListeners();
+    if (_isChatVisible) chat.notifyListeners();
   }
 
   AppModel(this.wsUrl) {
@@ -101,7 +111,8 @@ class AppModel extends ChangeNotifier {
         _personal =
             type.clients.firstWhere((client) => client.name == type.clientName);
         chat.setItems(
-            type.history.map((e) => ChatItem(e.name, e.text)).toList());
+          type.history.map((e) => ChatItem(e.name, e.text, e.time)).toList(),
+        );
         playlist.setPlaylistLock(type.isPlaylistOpen);
         player.loadVideo(playlist.pos);
         chat.setEmotes(type.config.emotes);
@@ -326,7 +337,7 @@ class AppModel extends ChangeNotifier {
     ]);
     final duration = futures[0] as double;
     if (duration == 0) {
-      chat.addItem(const ChatItem('Failed to add video.', ''));
+      chat.addItem(ChatItem('Failed to add video.', ''));
       return;
     }
     final title = futures[1] as String;

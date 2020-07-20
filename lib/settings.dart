@@ -11,23 +11,27 @@ class Settings extends StatelessWidget {
     final app = Provider.of<AppModel>(context);
     return Column(
       children: <Widget>[
-        FittedBox(
-          fit: BoxFit.fitWidth,
-          child: FlatButton(
-            onPressed: () async {
-              final prefs = await SharedPreferences.getInstance();
-              final key = 'prefferedOrientation';
-              var state = prefs.getInt(key) ?? 0;
-              state++;
-              if (state > 1) state = 0;
-              setPrefferedOrientation(app, state);
-              prefs.setInt(key, state);
-            },
-            child: Text(
-              'Orientation: ${app.prefferedOrientationType()}',
-              textScaleFactor: 2,
-            ),
-          ),
+        ListTile(
+          title: Text('Orientation'),
+          trailing: Text('${app.prefferedOrientationType()}'),
+          onTap: () async {
+            final prefs = await SharedPreferences.getInstance();
+            final key = 'prefferedOrientation';
+            var state = prefs.getInt(key) ?? 0;
+            state++;
+            if (state > 1) state = 0;
+            setPrefferedOrientation(app, state);
+            prefs.setInt(key, state);
+          },
+        ),
+        SwitchListTile(
+          title: Text('System UI'),
+          value: app.hasSystemUi,
+          onChanged: (state) async {
+            final prefs = await SharedPreferences.getInstance();
+            prefs.setBool('hasSystemUi', state);
+            setSystemUi(app, state);
+          },
         ),
       ],
     );
@@ -47,15 +51,6 @@ class Settings extends StatelessWidget {
         app.isChatVisible = !app.isChatVisible;
         break;
     }
-    print(state);
-    print(app.isChatVisible);
-  }
-
-  static readPrefferedOrientation(AppModel app) async {
-    final prefs = await SharedPreferences.getInstance();
-    final key = 'prefferedOrientation';
-    var state = prefs.getInt(key) ?? 0;
-    setPrefferedOrientation(app, state);
   }
 
   static setPrefferedOrientation(AppModel app, int state) {
@@ -71,5 +66,22 @@ class Settings extends StatelessWidget {
         break;
     }
     app.setPrefferedOrientation(state);
+  }
+
+  static setSystemUi(AppModel app, bool flag) {
+    app.hasSystemUi = flag;
+    if (flag) {
+      SystemChrome.setEnabledSystemUIOverlays(
+        [SystemUiOverlay.bottom, SystemUiOverlay.top],
+      );
+    } else {
+      SystemChrome.setEnabledSystemUIOverlays([]);
+    }
+  }
+
+  static applySettings(AppModel app) async {
+    final prefs = await SharedPreferences.getInstance();
+    setPrefferedOrientation(app, prefs.getInt('prefferedOrientation') ?? 0);
+    setSystemUi(app, prefs.getBool('hasSystemUi') ?? false);
   }
 }

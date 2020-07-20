@@ -29,12 +29,12 @@ class ChatPanel extends StatelessWidget {
                 Icons.list,
                 color: app.mainTab == MainTab.playlist
                     ? Theme.of(context).buttonColor
-                    : Theme.of(context).iconColor,
+                    : Theme.of(context).icon,
                 size: 30,
               ),
             ),
           ),
-          Text(app.clients.length == 0
+          Text(!app.isConnected
               ? 'Connection...'
               : '${app.clients.length} online'),
           const Spacer(),
@@ -55,7 +55,7 @@ class ChatPanel extends StatelessWidget {
                 Icons.settings,
                 color: app.mainTab == MainTab.settings
                     ? Theme.of(context).buttonColor
-                    : Theme.of(context).iconColor,
+                    : Theme.of(context).icon,
                 size: 30,
               ),
             ),
@@ -68,7 +68,9 @@ class ChatPanel extends StatelessWidget {
   Widget leaderButton(BuildContext context) {
     return OutlineButton(
       borderSide: BorderSide(
-        color: app.isLeader() ? Theme.of(context).leaderActiveBorder : Theme.of(context).cardColor,
+        color: app.isLeader()
+            ? Theme.of(context).leaderActiveBorder
+            : Theme.of(context).cardColor,
       ),
       shape: OutlineInputBorder(
         borderRadius: BorderRadius.circular(15),
