@@ -156,23 +156,22 @@ class _ChatState extends State<Chat> {
   final ScrollController chatScroll = ScrollController();
   final textController = TextEditingController();
   final inputFocus = new FocusNode();
-  bool initialized = false;
   bool showEmotesTab = false;
   bool reopenKeyboard = false;
 
   void scrollAfterFrame() {
+    // Doesn't works well
+    if (!chatScroll.hasClients) return;
+    final lastPos = chatScroll.position.pixels;
+    final scrollAtEnd = lastPos <= 20;
+    if (scrollAtEnd) return;
+    final lastMax = chatScroll.position.maxScrollExtent;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!chatScroll.hasClients) return;
-      if (initialized) {
-        final scrollAtEnd = chatScroll.position.pixels >=
-            chatScroll.position.maxScrollExtent - 10;
-        if (!scrollAtEnd) return;
-      } else
-        initialized = true;
-      chatScroll.animateTo(
-        chatScroll.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 100),
-        curve: Curves.easeOut,
+      final diff = chatScroll.position.maxScrollExtent - lastMax;
+      chatScroll.jumpTo(
+        lastPos + diff,
+        // duration: const Duration(milliseconds: 100),
+        // curve: Curves.easeOut,
       );
     });
   }
@@ -180,8 +179,9 @@ class _ChatState extends State<Chat> {
   @override
   Widget build(BuildContext context) {
     final chat = Provider.of<ChatModel>(context);
-    scrollAfterFrame();
+    // scrollAfterFrame();
     final list = ListView.builder(
+      reverse: true,
       padding: EdgeInsets.zero,
       controller: chatScroll,
       scrollDirection: Axis.vertical,

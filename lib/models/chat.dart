@@ -15,12 +15,12 @@ class ChatModel extends ChangeNotifier {
   UnmodifiableListView<Emotes> get emotes => UnmodifiableListView(_emotes);
 
   void setItems(List<ChatItem> items) {
-    _items = items;
+    _items = items.reversed.toList();
     notifyListeners();
   }
 
   void addItem(ChatItem item) {
-    _items.add(item);
+    _items.insert(0, item);
     if (_items.length > 200) _items.removeAt(0);
     notifyListeners();
   }
