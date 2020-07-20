@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'app.dart';
 
@@ -100,6 +101,10 @@ class _ServerListPageState extends State<ServerListPage> {
       ),
       items: [
         PopupMenuItem(
+          child: const Text('Copy Link'),
+          value: () => Clipboard.setData(ClipboardData(text: item.url)),
+        ),
+        PopupMenuItem(
           child: const Text('Edit'),
           value: () => editItem(item),
         ),
@@ -185,6 +190,10 @@ class ServerListItem {
 Future<ServerListItem?> _serverItemDialog(BuildContext context,
     [ServerListItem? item]) async {
   if (item == null) item = ServerListItem('', '');
+  if (item.url.isEmpty) {
+    final clipboard = await Clipboard.getData('text/plain');
+    if (clipboard.text.contains('http')) item.url = clipboard.text;
+  }
   return showDialog<ServerListItem>(
     context: context,
     builder: (BuildContext context) {
