@@ -179,7 +179,7 @@ class _ChatState extends State<Chat> {
   @override
   Widget build(BuildContext context) {
     final chat = Provider.of<ChatModel>(context);
-    // scrollAfterFrame();
+    scrollAfterFrame();
     final list = ListView.builder(
       reverse: true,
       padding: EdgeInsets.zero,

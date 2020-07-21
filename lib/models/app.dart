@@ -308,7 +308,7 @@ class AppModel extends ChangeNotifier {
   }
 
   void inBackground() {
-    if (player.isVideoLoaded()) player.play();
+    player.play();
   }
 
   void setPrefferedOrientation(int state) {
