@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
+import 'models/app.dart';
 import 'models/player.dart';
 import 'settings.dart';
 
@@ -40,6 +41,21 @@ class VideoPlayerScreen extends StatelessWidget {
                     alignment: Alignment.bottomCenter,
                     children: <Widget>[
                       VideoPlayer(player.controller),
+                      Selector<AppModel, bool>(
+                        selector: (context, app) {
+                          return app.hasNewMessages;
+                        },
+                        builder: (context, value, child) {
+                          return AnimatedOpacity(
+                            opacity: value ? 0.5 : 0,
+                            duration: const Duration(milliseconds: 500),
+                            child: const Align(
+                              alignment: Alignment.topRight,
+                              child: Icon(Icons.mail),
+                            ),
+                          );
+                        },
+                      ),
                       ClosedCaption(
                         text: player.controller?.value.caption.text,
                         textStyle: const TextStyle(fontSize: 16),

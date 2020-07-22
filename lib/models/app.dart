@@ -42,6 +42,15 @@ class AppModel extends ChangeNotifier {
 
   bool _hasSystemUi = false;
 
+  bool _hasNewMessages = false;
+
+  bool get hasNewMessages => _hasNewMessages;
+
+  set hasNewMessages(bool hasNewMessages) {
+    _hasNewMessages = hasNewMessages;
+    notifyListeners();
+  }
+
   bool get hasSystemUi => _hasSystemUi;
 
   set hasSystemUi(bool hasSystemUi) {
@@ -55,6 +64,10 @@ class AppModel extends ChangeNotifier {
     if (_isChatVisible == isChatVisible) return;
     _isChatVisible = isChatVisible;
     notifyListeners();
+    if (_hasNewMessages) {
+      _hasNewMessages = false;
+      player.notifyListeners();
+    }
     if (_isChatVisible) chat.notifyListeners();
   }
 
@@ -131,6 +144,7 @@ class AppModel extends ChangeNotifier {
       case 'Message':
         final type = data.message!;
         chat.addItem(ChatItem(type.clientName, type.text));
+        if (!isChatVisible) hasNewMessages = true;
         break;
       case 'ServerMessage':
         final type = data.serverMessage!;
