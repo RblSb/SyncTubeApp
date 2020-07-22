@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:wakelock/wakelock.dart';
 
 import 'models/player.dart';
 import 'models/app.dart';
@@ -35,6 +36,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     super.initState();
     app = AppModel(widget.url);
     Settings.applySettings(app);
+    Wakelock.enable();
   }
 
   late AppModel app;
@@ -318,6 +320,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       SystemUiOverlay.top,
       SystemUiOverlay.bottom,
     ]);
+    Wakelock.disable();
   }
 }
 
