@@ -119,7 +119,9 @@ class _ServerListPageState extends State<ServerListPage> {
   }
 
   void openServer(ServerListItem item) {
-    final uri = Uri.parse(item.url);
+    var link = item.url;
+    if (!link.contains('://')) link = 'http://$link';
+    final uri = Uri.parse(link);
     final protocol = uri.scheme == 'https' ? 'wss' : 'ws';
     final port = uri.port == 80 ? '' : ':${uri.port}';
     final url = '$protocol://${uri.host}$port${uri.path}';
