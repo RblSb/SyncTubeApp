@@ -102,31 +102,36 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                     },
                     builder: (context, ratio, child) {
                       final media = MediaQuery.of(context);
-                      return GestureDetector(
-                        onDoubleTap: () => Settings.nextOrientationView(app),
-                        child: Container(
-                          color: Colors.black,
-                          padding: EdgeInsets.only(
-                            top: _isKeyboardVisible() ? media.padding.top : 0,
-                          ),
-                          width: orientation == Orientation.landscape
-                              ? isChatVisible
-                                  ? media.size.width / 1.5
-                                  : media.size.width
-                              : double.infinity,
-                          height: playerHeight(ratio),
-                          child: Column(
-                            children: [
-                              if (orientation == Orientation.landscape &&
-                                  !_isKeyboardVisible() &&
-                                  isChatVisible)
-                                Consumer<AppModel>(
-                                  builder: (context, app, child) =>
-                                      ChatPanel(app: app),
-                                ),
-                              Expanded(child: VideoPlayerScreen()),
-                            ],
-                          ),
+                      return Container(
+                        color: Colors.black,
+                        padding: EdgeInsets.only(
+                          top: _isKeyboardVisible() ? media.padding.top : 0,
+                        ),
+                        width: orientation == Orientation.landscape
+                            ? isChatVisible
+                                ? media.size.width / 1.5
+                                : media.size.width
+                            : double.infinity,
+                        height: playerHeight(ratio),
+                        child: Column(
+                          children: [
+                            if (orientation == Orientation.landscape &&
+                                !_isKeyboardVisible() &&
+                                isChatVisible)
+                              Consumer<AppModel>(
+                                builder: (context, app, child) =>
+                                    ChatPanel(app: app),
+                              ),
+                            Expanded(
+                              child: GestureDetector(
+                                onDoubleTap: () =>
+                                    Settings.nextOrientationView(app),
+                                onLongPress: () =>
+                                    Settings.nextOrientationView(app),
+                                child: Container(child: VideoPlayerScreen()),
+                              ),
+                            ),
+                          ],
                         ),
                       );
                     },
