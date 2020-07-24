@@ -47,6 +47,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         ChangeNotifierProvider.value(value: app.playlist),
         ChangeNotifierProvider.value(value: app.player),
         ChangeNotifierProvider.value(value: app.chat),
+        ChangeNotifierProvider.value(value: app.chatPanel),
         ChangeNotifierProvider.value(value: app),
       ],
       child: AnnotatedRegion(
@@ -118,10 +119,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                             if (orientation == Orientation.landscape &&
                                 !_isKeyboardVisible() &&
                                 isChatVisible)
-                              Consumer<AppModel>(
-                                builder: (context, app, child) =>
-                                    ChatPanel(app: app),
-                              ),
+                              ChatPanel(),
                             Expanded(
                               child: GestureDetector(
                                 onDoubleTap: () =>
@@ -147,10 +145,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                       children: <Widget>[
                         if (orientation == Orientation.portrait &&
                             !_isKeyboardVisible())
-                          Consumer<AppModel>(
-                            builder: (context, app, child) =>
-                                ChatPanel(app: app),
-                          ),
+                          ChatPanel(),
                         Selector<AppModel, int>(
                           selector: (context, app) => app.mainTab.index,
                           builder: (context, index, child) {

@@ -138,7 +138,6 @@ class Playlist extends StatelessWidget {
     return ListView.builder(
       padding: const EdgeInsets.only(bottom: 90),
       scrollDirection: Axis.vertical,
-      shrinkWrap: true,
       itemCount: playlist.length,
       itemBuilder: (context, index) {
         final item = playlist.getItem(index);

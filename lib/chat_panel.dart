@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'models/app.dart';
+import 'models/chat_panel.dart';
 import 'color_scheme.dart';
 
 class ChatPanel extends StatelessWidget {
-  const ChatPanel({
-    Key? key,
-    required this.app,
-  }) : super(key: key);
-
-  final AppModel app;
+  const ChatPanel({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final ChatPanelModel panel = Provider.of<ChatPanelModel>(context);
     const paddingNum = 5.0;
     const btnPadding = EdgeInsets.all(paddingNum);
     return Container(
@@ -23,11 +21,11 @@ class ChatPanel extends StatelessWidget {
           Padding(
             padding: btnPadding,
             child: IconButton(
-              onPressed: () => app.togglePanel(MainTab.playlist),
+              onPressed: () => panel.togglePanel(MainTab.playlist),
               tooltip: 'Show playlist',
               icon: Icon(
                 Icons.list,
-                color: app.mainTab == MainTab.playlist
+                color: panel.mainTab == MainTab.playlist
                     ? Theme.of(context).buttonColor
                     : Theme.of(context).icon,
                 size: 30,
@@ -36,7 +34,7 @@ class ChatPanel extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              final text = app.clients.map((c) {
+              final text = panel.clients.map((c) {
                 if (c.isLeader) return '${c.name} (Leader)';
                 return c.name;
               }).join(', ');
@@ -50,12 +48,7 @@ class ChatPanel extends StatelessWidget {
                 ),
               );
             },
-            child: Text(
-              !app.isConnected
-                  ? 'Connection...'
-                  : '${app.clients.length} online',
-              style: TextStyle(color: Theme.of(context).icon),
-            ),
+            child: _onlineButton(panel, context),
           ),
           const Spacer(),
           Padding(
@@ -63,17 +56,17 @@ class ChatPanel extends StatelessWidget {
             child: ButtonTheme(
               minWidth: 60,
               height: 30,
-              child: leaderButton(context),
+              child: leaderButton(panel, context),
             ),
           ),
           Padding(
             padding: btnPadding,
             child: IconButton(
-              onPressed: () => app.togglePanel(MainTab.settings),
+              onPressed: () => panel.togglePanel(MainTab.settings),
               tooltip: 'Show settings',
               icon: Icon(
                 Icons.settings,
-                color: app.mainTab == MainTab.settings
+                color: panel.mainTab == MainTab.settings
                     ? Theme.of(context).buttonColor
                     : Theme.of(context).icon,
                 size: 30,
@@ -85,10 +78,10 @@ class ChatPanel extends StatelessWidget {
     );
   }
 
-  Widget leaderButton(BuildContext context) {
+  Widget leaderButton(ChatPanelModel panel, BuildContext context) {
     return OutlineButton(
       borderSide: BorderSide(
-        color: app.isLeader()
+        color: panel.isLeader()
             ? Theme.of(context).leaderActiveBorder
             : Theme.of(context).cardColor,
       ),
@@ -97,9 +90,25 @@ class ChatPanel extends StatelessWidget {
       ),
       child: Text(
         'Leader',
-        style: app.isLeader() ? null : TextStyle(color: Theme.of(context).icon),
+        style: panel.isLeader() ? null : TextStyle(color: Theme.of(context).icon),
       ),
-      onPressed: app.requestLeader,
+      onPressed: panel.requestLeader,
+    );
+  }
+
+  Widget _onlineButton(ChatPanelModel panel, BuildContext context) {
+    return Row(
+      children: [
+        Text(
+          !panel.isConnected ? 'Connection...' : '${panel.clients.length} online',
+          style: TextStyle(color: Theme.of(context).icon),
+        ),
+        if (panel.hasLeader())
+          Icon(
+            panel.serverPlay ? Icons.play_arrow : Icons.pause,
+            color: Theme.of(context).icon,
+          )
+      ],
     );
   }
 }

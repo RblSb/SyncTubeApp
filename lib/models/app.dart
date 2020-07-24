@@ -7,6 +7,7 @@ import 'package:web_socket_channel/status.dart' as status;
 import './chat.dart';
 import './player.dart';
 import './playlist.dart';
+import './chat_panel.dart';
 
 import '../chat.dart';
 import '../wsdata.dart';
@@ -24,8 +25,8 @@ class AppModel extends ChangeNotifier {
   late PlaylistModel playlist;
   late PlayerModel player;
   late ChatModel chat;
+  late ChatPanelModel chatPanel;
   MainTab mainTab = MainTab.chat;
-  bool isConnected = false;
 
   Client _personal = Client(name: 'Unknown', group: 0);
   List<Client> clients = [];
@@ -66,20 +67,21 @@ class AppModel extends ChangeNotifier {
     playlist = PlaylistModel(this);
     player = PlayerModel(this, playlist);
     chat = ChatModel(this);
+    chatPanel = ChatPanelModel(this);
     connect();
   }
 
   void connect() {
     _channel = IOWebSocketChannel.connect(wsUrl);
     _wsSubscription = _channel.stream.listen(onMessage, onDone: () {
-      isConnected = false;
+      chatPanel.isConnected = false;
       player.pause();
       reconnect();
     }, onError: (error) {});
   }
 
   void reconnect() {
-    if (isConnected) return;
+    if (chatPanel.isConnected) return;
     _wsSubscription.cancel();
     _reconnectionTimer = Timer(const Duration(seconds: 3), () {
       print('Try to reconnect...');
@@ -95,11 +97,18 @@ class AppModel extends ChangeNotifier {
 
   bool isLeader() => _personal.isLeader;
 
+  bool hasLeader() {
+    for (final client in clients) {
+      if (client.isLeader) return true;
+    }
+    return false;
+  }
+
   void onMessage(dynamic json) {
     final data = WsData.fromJson(jsonDecode(json));
     switch (data.type) {
       case 'Connected':
-        isConnected = true;
+        chatPanel.isConnected = true;
         final type = data.connected!;
         _getTimeTimer?.cancel();
         _getTimeTimer =
@@ -112,7 +121,7 @@ class AppModel extends ChangeNotifier {
         clients = type.clients;
         isUnknownClient = type.isUnknownClient;
         _personal =
-            type.clients.firstWhere((client) => client.name == type.clientName);
+            clients.firstWhere((client) => client.name == type.clientName);
         chat.setItems(
           type.history.map((e) => ChatItem(e.name, e.text, e.time)).toList(),
         );
@@ -120,6 +129,7 @@ class AppModel extends ChangeNotifier {
         player.loadVideo(playlist.pos);
         chat.setEmotes(type.config.emotes);
         notifyListeners();
+        chatPanel.notifyListeners();
         break;
       case 'Disconnected': // server-only
         break;
@@ -146,6 +156,7 @@ class AppModel extends ChangeNotifier {
         _personal =
             type.clients.firstWhere((client) => client.name == _personal.name);
         notifyListeners();
+        chatPanel.notifyListeners();
         break;
       case 'AddVideo':
         final type = data.addVideo!;
@@ -161,7 +172,10 @@ class AppModel extends ChangeNotifier {
         if (isCurrent && playlist.length > 0) player.loadVideo(playlist.pos);
 
         if (!player.isVideoLoaded()) return;
-        if (playlist.isEmpty()) player.pause();
+        if (playlist.isEmpty()) {
+          player.pause();
+          chatPanel.serverPlay = true;
+        }
         break;
       case 'SkipVideo':
         final type = data.skipVideo!;
@@ -182,6 +196,7 @@ class AppModel extends ChangeNotifier {
         player.play();
         break;
       case 'Pause':
+        chatPanel.serverPlay = false;
         if (!player.isVideoLoaded()) return;
         if (_personal.isLeader) return;
         final type = data.pause!;
@@ -192,6 +207,7 @@ class AppModel extends ChangeNotifier {
         );
         break;
       case 'Play':
+        chatPanel.serverPlay = true;
         if (!player.isVideoLoaded()) return;
         if (_personal.isLeader) return;
         final type = data.play!;
@@ -226,6 +242,7 @@ class AppModel extends ChangeNotifier {
           client.isLeader = client.name == type.clientName;
         }
         notifyListeners();
+        chatPanel.notifyListeners();
         break;
       case 'PlayItem':
         final type = data.playItem!;
@@ -280,6 +297,7 @@ class AppModel extends ChangeNotifier {
     if (duration <= time + synchThreshold) return;
     if (player.isPlaying() && type.paused) player.pause();
     if (!player.isPlaying() && !type.paused) player.play();
+    chatPanel.serverPlay = !type.paused;
     if ((time - newTime).abs() < synchThreshold) return;
     final ms = (newTime * 1000).round();
     player.seekTo(
@@ -304,15 +322,17 @@ class AppModel extends ChangeNotifier {
       type: 'SetLeader',
       setLeader: SetLeader(clientName: name),
     ));
+    chatPanel.notifyListeners();
   }
 
   void togglePanel(MainTab newTab) {
-    if (mainTab == MainTab.chat) {
-      mainTab = newTab;
-    } else {
+    if (mainTab == newTab) {
       mainTab = MainTab.chat;
+    } else {
+      mainTab = newTab;
     }
     notifyListeners();
+    chatPanel.notifyListeners();
   }
 
   void inBackground() {
