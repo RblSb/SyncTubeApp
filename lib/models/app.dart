@@ -42,15 +42,6 @@ class AppModel extends ChangeNotifier {
 
   bool _hasSystemUi = false;
 
-  bool _hasNewMessages = false;
-
-  bool get hasNewMessages => _hasNewMessages;
-
-  set hasNewMessages(bool hasNewMessages) {
-    _hasNewMessages = hasNewMessages;
-    notifyListeners();
-  }
-
   bool get hasSystemUi => _hasSystemUi;
 
   set hasSystemUi(bool hasSystemUi) {
@@ -63,20 +54,19 @@ class AppModel extends ChangeNotifier {
   set isChatVisible(bool isChatVisible) {
     if (_isChatVisible == isChatVisible) return;
     _isChatVisible = isChatVisible;
-    notifyListeners();
-    if (_hasNewMessages) {
-      _hasNewMessages = false;
-      player.notifyListeners();
+    if (player.showMessageIcon) {
+      player.showMessageIcon = false;
     }
-    if (_isChatVisible) chat.notifyListeners();
+    notifyListeners();
+    // if (_isChatVisible) chat.notifyListeners();
   }
 
   AppModel(this.wsUrl) {
     print('AppModel created');
-    connect();
     playlist = PlaylistModel(this);
     player = PlayerModel(this, playlist);
     chat = ChatModel(this);
+    connect();
   }
 
   void connect() {
@@ -144,7 +134,7 @@ class AppModel extends ChangeNotifier {
       case 'Message':
         final type = data.message!;
         chat.addItem(ChatItem(type.clientName, type.text));
-        if (!isChatVisible) hasNewMessages = true;
+        if (!isChatVisible) player.showMessageIcon = true;
         break;
       case 'ServerMessage':
         final type = data.serverMessage!;

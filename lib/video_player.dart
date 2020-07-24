@@ -30,18 +30,13 @@ class VideoPlayerScreen extends StatelessWidget {
                   alignment: Alignment.bottomCenter,
                   children: <Widget>[
                     VideoPlayer(player.controller),
-                    Selector<AppModel, bool>(
-                      selector: (context, app) => app.hasNewMessages,
-                      builder: (context, value, child) {
-                        return AnimatedOpacity(
-                          opacity: value ? 0.5 : 0,
-                          duration: const Duration(milliseconds: 500),
-                          child: const Align(
-                            alignment: Alignment.topRight,
-                            child: Icon(Icons.mail),
-                          ),
-                        );
-                      },
+                    AnimatedOpacity(
+                      opacity: player.showMessageIcon ? 0.5 : 0,
+                      duration: const Duration(milliseconds: 500),
+                      child: const Align(
+                        alignment: Alignment.topRight,
+                        child: Icon(Icons.mail),
+                      ),
                     ),
                     if (player.controller?.value.caption.text != null)
                       ClosedCaption(

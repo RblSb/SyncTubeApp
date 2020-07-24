@@ -155,13 +155,9 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                           selector: (context, app) => app.mainTab.index,
                           builder: (context, index, child) {
                             return Expanded(
-                              child: IndexedStack(
-                                index: index,
-                                children: [
-                                  Chat(),
-                                  Playlist(),
-                                  Settings(),
-                                ],
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 200),
+                                child: _panelWidget(index),
                               ),
                             );
                           },
@@ -177,18 +173,31 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         floatingActionButton: Selector<AppModel, bool>(
           selector: (context, app) => app.mainTab == MainTab.playlist,
           builder: (context, isVisible, child) {
-            return Visibility(
-              child: FloatingActionButton(
-                tooltip: 'Add video URL',
-                child: const Icon(Icons.add),
-                onPressed: () => _addUrlDialog(context),
-              ),
-              visible: isVisible,
+            return AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: isVisible
+                  ? FloatingActionButton(
+                      tooltip: 'Add video URL',
+                      child: const Icon(Icons.add),
+                      onPressed: () => _addUrlDialog(context),
+                    )
+                  : null,
             );
           },
         ),
       ),
     );
+  }
+
+  Widget _panelWidget(int index) {
+    switch (index) {
+      case 1:
+        return Playlist();
+      case 2:
+        return Settings();
+      default:
+        return Chat();
+    }
   }
 
   bool _isKeyboardVisible() {

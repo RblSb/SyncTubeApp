@@ -18,6 +18,16 @@ class PlayerModel extends ChangeNotifier {
   bool showControls = false;
   Timer? controlsTimer;
 
+  bool _showMessageIcon = false;
+
+  bool get showMessageIcon => _showMessageIcon;
+
+  set showMessageIcon(bool showMessageIcon) {
+    if (_showMessageIcon == showMessageIcon) return;
+    _showMessageIcon = showMessageIcon;
+    notifyListeners();
+  }
+
   PlayerModel(this.app, this.playlist);
 
   bool isVideoLoaded() {
