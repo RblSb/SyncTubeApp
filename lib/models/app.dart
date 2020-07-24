@@ -143,6 +143,8 @@ class AppModel extends ChangeNotifier {
       case 'UpdateClients':
         final type = data.updateClients!;
         clients = type.clients;
+        _personal =
+            type.clients.firstWhere((client) => client.name == _personal.name);
         notifyListeners();
         break;
       case 'AddVideo':
@@ -220,7 +222,9 @@ class AppModel extends ChangeNotifier {
         break;
       case 'SetLeader':
         final type = data.setLeader!;
-        _personal.isLeader = type.clientName == _personal.name;
+        for (final client in clients) {
+          client.isLeader = client.name == type.clientName;
+        }
         notifyListeners();
         break;
       case 'PlayItem':

@@ -34,9 +34,29 @@ class ChatPanel extends StatelessWidget {
               ),
             ),
           ),
-          Text(!app.isConnected
-              ? 'Connection...'
-              : '${app.clients.length} online'),
+          TextButton(
+            onPressed: () {
+              final text = app.clients.map((c) {
+                if (c.isLeader) return '${c.name} (Leader)';
+                return c.name;
+              }).join(', ');
+              Scaffold.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    text,
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  backgroundColor: Colors.black45,
+                ),
+              );
+            },
+            child: Text(
+              !app.isConnected
+                  ? 'Connection...'
+                  : '${app.clients.length} online',
+              style: TextStyle(color: Theme.of(context).icon),
+            ),
+          ),
           const Spacer(),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: paddingNum),
@@ -75,7 +95,10 @@ class ChatPanel extends StatelessWidget {
       shape: OutlineInputBorder(
         borderRadius: BorderRadius.circular(15),
       ),
-      child: const Text('Leader'),
+      child: Text(
+        'Leader',
+        style: app.isLeader() ? null : TextStyle(color: Theme.of(context).icon),
+      ),
       onPressed: app.requestLeader,
     );
   }
