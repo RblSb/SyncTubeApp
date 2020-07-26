@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
 import 'models/player.dart';
+import 'settings.dart';
 
 class VideoPlayerScreen extends StatelessWidget {
   VideoPlayerScreen({Key? key}) : super(key: key);
@@ -21,34 +22,47 @@ class VideoPlayerScreen extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
 
           case ConnectionState.done:
-            return Align(
-              alignment: Alignment.center,
-              child: AspectRatio(
-                aspectRatio: player.controller?.value.aspectRatio ?? 16 / 9,
-                child: Stack(
-                  alignment: Alignment.bottomCenter,
-                  children: <Widget>[
-                    VideoPlayer(player.controller),
-                    AnimatedOpacity(
-                      opacity: player.showMessageIcon ? 0.6 : 0,
-                      duration: const Duration(milliseconds: 300),
-                      child: const Align(
-                        alignment: Alignment.topRight,
-                        child: Icon(Icons.mail),
+            return GestureDetector(
+              onLongPressMoveUpdate: (details) =>
+                  player.hideControlsWithDelay(),
+              onDoubleTap: () => Settings.nextOrientationView(player.app),
+              onLongPress: () {
+                if (player.showControls) return;
+                Settings.nextOrientationView(player.app);
+              },
+              child: Align(
+                alignment: Alignment.center,
+                child: AspectRatio(
+                  aspectRatio: player.controller?.value.aspectRatio ?? 16 / 9,
+                  child: Stack(
+                    alignment: Alignment.bottomCenter,
+                    children: <Widget>[
+                      VideoPlayer(player.controller),
+                      AnimatedOpacity(
+                        opacity: player.showMessageIcon ? 0.6 : 0,
+                        duration: const Duration(milliseconds: 300),
+                        child: const Align(
+                          alignment: Alignment.topRight,
+                          child: Icon(Icons.mail),
+                        ),
                       ),
-                    ),
-                    if (player.controller?.value.caption.text != null)
-                      ClosedCaption(
-                        text: player.controller?.value.caption.text,
-                        textStyle: const TextStyle(fontSize: 16),
-                      ),
-                    _PlayPauseOverlay(player: player),
-                  ],
+                      if (player.controller?.value.caption.text != null)
+                        ClosedCaption(
+                          text: player.controller?.value.caption.text,
+                          textStyle: const TextStyle(fontSize: 16),
+                        ),
+                      _PlayPauseOverlay(player: player),
+                    ],
+                  ),
                 ),
               ),
             );
           default:
-            return const SizedBox.shrink();
+            return GestureDetector(
+              child: const SizedBox.expand(),
+              onDoubleTap: () => Settings.nextOrientationView(player.app),
+              onLongPress: () => Settings.nextOrientationView(player.app),
+            );
         }
       },
     );
@@ -66,15 +80,6 @@ class _PlayPauseOverlay extends StatelessWidget {
   void _onPlayButton() {
     if (!player.isPlaying()) player.toggleControls(false);
     player.userSetPlayerState(!player.isPlaying());
-  }
-
-  void _hideControlsWithDelay() {
-    if (!player.showControls) return;
-    player.controlsTimer?.cancel();
-    player.controlsTimer = Timer(
-      const Duration(seconds: 3),
-      () => player.toggleControls(false),
-    );
   }
 
   String _timeText(VideoPlayerValue? value) {
@@ -103,7 +108,7 @@ class _PlayPauseOverlay extends StatelessWidget {
           GestureDetector(
             onTap: () {
               player.toggleControls(!player.showControls);
-              _hideControlsWithDelay();
+              player.hideControlsWithDelay();
             },
             child: Container(
               color: Colors.black38,

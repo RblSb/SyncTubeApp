@@ -44,6 +44,15 @@ class PlayerModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void hideControlsWithDelay() {
+    if (!showControls) return;
+    controlsTimer?.cancel();
+    controlsTimer = Timer(
+      const Duration(milliseconds: 2500),
+      () => toggleControls(false),
+    );
+  }
+
   Future<Duration> getPosition() async {
     if (!isVideoLoaded()) return Duration();
     final posD = await controller?.position;

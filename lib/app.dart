@@ -120,15 +120,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                                 !_isKeyboardVisible() &&
                                 isChatVisible)
                               ChatPanel(),
-                            Expanded(
-                              child: GestureDetector(
-                                onDoubleTap: () =>
-                                    Settings.nextOrientationView(app),
-                                onLongPress: () =>
-                                    Settings.nextOrientationView(app),
-                                child: Container(child: VideoPlayerScreen()),
-                              ),
-                            ),
+                            Expanded(child: VideoPlayerScreen()),
                           ],
                         ),
                       );

@@ -38,6 +38,7 @@ class ChatPanel extends StatelessWidget {
                 if (c.isLeader) return '${c.name} (Leader)';
                 return c.name;
               }).join(', ');
+              Scaffold.of(context).hideCurrentSnackBar();
               Scaffold.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
