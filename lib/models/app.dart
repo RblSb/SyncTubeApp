@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/status.dart' as status;
 
+import '../settings.dart';
 import './chat.dart';
 import './player.dart';
 import './playlist.dart';
@@ -30,18 +31,15 @@ class AppModel extends ChangeNotifier {
 
   Client _personal = Client(name: 'Unknown', group: 0);
   List<Client> clients = [];
-  bool isUnknownClient = true;
 
   Timer? _getTimeTimer;
   Timer? _reconnectionTimer;
 
   int synchThreshold = 2;
-
   int _prefferedOrientation = 0;
-
   bool _isChatVisible = true;
-
   bool _hasSystemUi = false;
+  Config? config;
 
   bool get hasSystemUi => _hasSystemUi;
 
@@ -109,6 +107,7 @@ class AppModel extends ChangeNotifier {
       case 'Connected':
         chatPanel.isConnected = true;
         final type = data.connected!;
+        config = type.config;
         _getTimeTimer?.cancel();
         _getTimeTimer =
             Timer.periodic(Duration(seconds: synchThreshold), (Timer timer) {
@@ -118,7 +117,7 @@ class AppModel extends ChangeNotifier {
         playlist.setPos(type.itemPos);
         playlist.update(type.videoList);
         clients = type.clients;
-        isUnknownClient = type.isUnknownClient;
+        chat.isUnknownClient = type.isUnknownClient;
         _personal =
             clients.firstWhere((client) => client.name == type.clientName);
         chat.setItems(
@@ -128,16 +127,36 @@ class AppModel extends ChangeNotifier {
         player.loadVideo(playlist.pos);
         chat.setEmotes(type.config.emotes);
         chatPanel.notifyListeners();
+        if (chat.isUnknownClient) tryAutologin();
         break;
       case 'Disconnected': // server-only
         break;
       case 'Login':
+        final type = data.login!;
+        clients = type.clients!;
+        Client? newPersonal =
+            clients.firstWhere((client) => client.name == type.clientName);
+        if (newPersonal == null) return;
+        _personal = newPersonal;
+        chatPanel.notifyListeners();
+        chat.isUnknownClient = false;
+        chat.showPasswordField = false;
         break;
       case 'PasswordRequest':
+        chat.showPasswordField = true;
         break;
       case 'LoginError':
+        chat.isUnknownClient = true;
+        chat.showPasswordField = false;
+        Settings.resetNameAndHash();
         break;
       case 'Logout':
+        final type = data.logout!;
+        clients = type.clients;
+        _personal = Client(name: type.clientName, group: 0);
+        chat.isUnknownClient = true;
+        chat.showPasswordField = false;
+        Settings.resetNameAndHash();
         break;
       case 'Message':
         final type = data.message!;
@@ -272,6 +291,17 @@ class AppModel extends ChangeNotifier {
       default:
         print('Event ${data.type} not implemented');
     }
+  }
+
+  void tryAutologin() async {
+    final arr = await Settings.getSavedNameAndHash();
+    if (arr[0] == '') return;
+    chat.sendLogin(Login(
+      clientName: arr[0],
+      passHash: arr[1] == '' ? null : arr[1],
+      isUnknownClient: null,
+      clients: null,
+    ));
   }
 
   void onTimeGet(GetTime type) async {

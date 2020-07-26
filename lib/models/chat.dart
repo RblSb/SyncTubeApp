@@ -3,11 +3,33 @@ import 'dart:collection';
 import './app.dart';
 import '../chat.dart';
 import '../wsdata.dart';
+import 'package:crypto/crypto.dart';
+import 'dart:convert';
 
 class ChatModel extends ChangeNotifier {
   ChatModel(this._app);
 
   final AppModel _app;
+  var _isUnknownClient = true;
+
+  get isUnknownClient => _isUnknownClient;
+
+  set isUnknownClient(isUnknownClient) {
+    if (_isUnknownClient == isUnknownClient) return;
+    _isUnknownClient = isUnknownClient;
+    notifyListeners();
+  }
+
+  var _showPasswordField = false;
+
+  get showPasswordField => _showPasswordField;
+
+  set showPasswordField(showPasswordField) {
+    if (_showPasswordField == showPasswordField) return;
+    _showPasswordField = showPasswordField;
+    notifyListeners();
+  }
+
   List<ChatItem> _items = [];
   List<Emotes> _emotes = [];
   RegExp? emotesPattern;
@@ -41,6 +63,19 @@ class ChatModel extends ChangeNotifier {
     return regex.replaceAllMapped(matchRegExp, (match) {
       return '\\${match.group(1)}';
     });
+  }
+
+  void sendLogin(Login login) {
+    _app.send(WsData(
+      type: 'Login',
+      login: login,
+    ));
+  }
+
+  String passwordHash(String password) {
+    final salt = _app.config?.salt ?? '';
+    List<int> bytes = utf8.encode(password + salt);
+    return sha256.convert(bytes).toString();
   }
 
   void sendMessage(String text) {

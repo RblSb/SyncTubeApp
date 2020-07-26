@@ -24,6 +24,8 @@ dependencies:
   flutter:
     sdk: flutter
 
+  crypto: any
+
   provider: 4.3.1
 
   shared_preferences: 0.5.8

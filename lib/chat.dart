@@ -2,11 +2,14 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'models/chat.dart';
 import 'color_scheme.dart';
 import 'emotes_tab.dart';
+import 'settings.dart';
+import 'wsdata.dart';
 
 class Chat extends StatefulWidget {
   Chat({
@@ -29,7 +32,10 @@ class ChatItem {
   late String date;
 
   ChatItem(this.name, this.text, [String? date]) {
-    if (date != null) return;
+    if (date != null) {
+      this.date = date;
+      return;
+    }
     final d = DateTime.now();
     final h = d.hour.toString().padLeft(2, '0');
     final m = d.minute.toString().padLeft(2, '0');
@@ -178,6 +184,11 @@ class _ChatState extends State<Chat> {
     });
   }
 
+  String _hintText(ChatModel chat) {
+    if (chat.showPasswordField) return 'Enter Password...';
+    return chat.isUnknownClient ? 'Your Name' : 'Send a message...';
+  }
+
   @override
   Widget build(BuildContext context) {
     final chat = Provider.of<ChatModel>(context);
@@ -205,14 +216,14 @@ class _ChatState extends State<Chat> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisSize: MainAxisSize.max,
-          children: <Widget>[
+          children: [
             Expanded(
               child: TextField(
                 controller: textController,
                 focusNode: inputFocus,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(14),
-                  hintText: 'Send a message...',
+                  hintText: _hintText(chat),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),
@@ -220,38 +231,58 @@ class _ChatState extends State<Chat> {
                 onTap: () {
                   setState(() => showEmotesTab = false);
                 },
-                onSubmitted: (String text) {
+                onSubmitted: (String text) async {
                   textController.clear();
-                  chat.sendMessage(text);
+                  if (chat.showPasswordField) {
+                    chat.sendLogin(Login(
+                      clientName: await Settings.getSavedName(),
+                      passHash: chat.passwordHash(text),
+                      isUnknownClient: null,
+                      clients: null,
+                    ));
+                  } else if (chat.isUnknownClient) {
+                    // if (text.length == 0) return;
+                    chat.sendLogin(Login(
+                      clientName: text,
+                      passHash: null,
+                      isUnknownClient: null,
+                      clients: null,
+                    ));
+                    final prefs = await SharedPreferences.getInstance();
+                    prefs.setString('savedName', text);
+                  } else {
+                    chat.sendMessage(text);
+                  }
                   SystemChrome.restoreSystemUIOverlays();
                 },
               ),
             ),
-            IconButton(
-              padding: const EdgeInsets.only(left: 10, right: 20),
-              onPressed: () {
-                setState(() {
-                  showEmotesTab = !showEmotesTab;
-                  if (showEmotesTab) {
-                    reopenKeyboard = inputFocus.hasFocus;
-                    inputFocus.unfocus();
-                  } else {
-                    if (reopenKeyboard && textController.text.isNotEmpty)
-                      inputFocus.requestFocus();
-                    reopenKeyboard = false;
-                  }
-                });
-                SystemChrome.restoreSystemUIOverlays();
-              },
-              tooltip: 'Show emotes',
-              icon: Icon(
-                Icons.mood,
-                size: 35,
-                color: showEmotesTab
-                    ? Theme.of(context).buttonColor
-                    : Theme.of(context).icon,
+            if (!chat.isUnknownClient)
+              IconButton(
+                padding: const EdgeInsets.only(left: 10, right: 20),
+                onPressed: () {
+                  setState(() {
+                    showEmotesTab = !showEmotesTab;
+                    if (showEmotesTab) {
+                      reopenKeyboard = inputFocus.hasFocus;
+                      inputFocus.unfocus();
+                    } else {
+                      if (reopenKeyboard && textController.text.isNotEmpty)
+                        inputFocus.requestFocus();
+                      reopenKeyboard = false;
+                    }
+                  });
+                  SystemChrome.restoreSystemUIOverlays();
+                },
+                tooltip: 'Show emotes',
+                icon: Icon(
+                  Icons.mood,
+                  size: 35,
+                  color: showEmotesTab
+                      ? Theme.of(context).buttonColor
+                      : Theme.of(context).icon,
+                ),
               ),
-            ),
           ],
         ),
         if (showEmotesTab)
