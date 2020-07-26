@@ -30,8 +30,8 @@ class VideoPlayerScreen extends StatelessWidget {
                   children: <Widget>[
                     VideoPlayer(player.controller),
                     AnimatedOpacity(
-                      opacity: player.showMessageIcon ? 0.5 : 0,
-                      duration: const Duration(milliseconds: 500),
+                      opacity: player.showMessageIcon ? 0.6 : 0,
+                      duration: const Duration(milliseconds: 300),
                       child: const Align(
                         alignment: Alignment.topRight,
                         child: Icon(Icons.mail),

@@ -151,7 +151,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                           builder: (context, index, child) {
                             return Expanded(
                               child: AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 200),
+                                duration: const Duration(milliseconds: 100),
                                 child: _panelWidget(index),
                               ),
                             );
@@ -169,7 +169,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           selector: (context, app) => app.mainTab == MainTab.playlist,
           builder: (context, isVisible, child) {
             return AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
+              duration: const Duration(milliseconds: 100),
               child: isVisible
                   ? FloatingActionButton(
                       tooltip: 'Add video URL',

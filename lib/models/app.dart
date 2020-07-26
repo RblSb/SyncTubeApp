@@ -59,7 +59,6 @@ class AppModel extends ChangeNotifier {
       player.showMessageIcon = false;
     }
     notifyListeners();
-    // if (_isChatVisible) chat.notifyListeners();
   }
 
   AppModel(this.wsUrl) {
@@ -128,7 +127,6 @@ class AppModel extends ChangeNotifier {
         playlist.setPlaylistLock(type.isPlaylistOpen);
         player.loadVideo(playlist.pos);
         chat.setEmotes(type.config.emotes);
-        notifyListeners();
         chatPanel.notifyListeners();
         break;
       case 'Disconnected': // server-only
@@ -155,7 +153,6 @@ class AppModel extends ChangeNotifier {
         clients = type.clients;
         _personal =
             type.clients.firstWhere((client) => client.name == _personal.name);
-        notifyListeners();
         chatPanel.notifyListeners();
         break;
       case 'AddVideo':
@@ -241,7 +238,6 @@ class AppModel extends ChangeNotifier {
         for (final client in clients) {
           client.isLeader = client.name == type.clientName;
         }
-        notifyListeners();
         chatPanel.notifyListeners();
         break;
       case 'PlayItem':
