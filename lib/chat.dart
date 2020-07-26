@@ -29,31 +29,33 @@ class ChatItem {
   late String date;
 
   ChatItem(this.name, this.text, [String? date]) {
-    if (date != null) {
-      this.date = ' $date';
-      return;
-    }
+    if (date != null) return;
     final d = DateTime.now();
     final h = d.hour.toString().padLeft(2, '0');
     final m = d.minute.toString().padLeft(2, '0');
     final s = d.second.toString().padLeft(2, '0');
-    this.date = ' $h:$m:$s';
+    this.date = '$h:$m:$s';
   }
 
   Widget buildTitle(BuildContext context) {
-    return RichText(
-      text: TextSpan(children: [
-        TextSpan(
-          text: name,
-          style: TextStyle(fontSize: 16),
-        ),
-        TextSpan(
-          text: date,
-          style: TextStyle(
-            color: Theme.of(context).timeStamp,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Text(
+            name,
+            overflow: TextOverflow.fade,
+            softWrap: false,
           ),
         ),
-      ]),
+        Text(
+          date,
+          style: TextStyle(
+            color: Theme.of(context).timeStamp,
+            fontSize: 12,
+          ),
+        ),
+      ],
     );
   }
 
@@ -155,7 +157,7 @@ class _OrderedSpan<T> {
 class _ChatState extends State<Chat> {
   final ScrollController chatScroll = ScrollController();
   final textController = TextEditingController();
-  final inputFocus = new FocusNode();
+  final inputFocus = FocusNode();
   bool showEmotesTab = false;
   bool reopenKeyboard = false;
 

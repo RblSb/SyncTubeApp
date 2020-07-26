@@ -7,9 +7,7 @@ import 'color_scheme.dart';
 import 'wsdata.dart';
 
 class Playlist extends StatelessWidget {
-  const Playlist({
-    Key? key,
-  }) : super(key: key);
+  const Playlist({Key? key}) : super(key: key);
 
   Widget plailistItem(
     BuildContext context,
@@ -61,9 +59,8 @@ class Playlist extends StatelessWidget {
                     child: Text(
                       item.title,
                       overflow: TextOverflow.fade,
-                      maxLines: 1,
                       softWrap: false,
-                      style: TextStyle(fontSize: 18),
+                      style: const TextStyle(fontSize: 18),
                     ),
                   ),
                 ),

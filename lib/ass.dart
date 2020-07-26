@@ -12,11 +12,10 @@ class AssCaptionFile extends ClosedCaptionFile {
       : _captions = _parseCaptionsFromAssString(fileContents);
 
   final String fileContents;
+  final List<Caption> _captions;
 
   @override
   List<Caption> get captions => _captions;
-
-  final List<Caption> _captions;
 }
 
 List<Caption> _parseCaptionsFromAssString(String file) {
