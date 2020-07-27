@@ -82,11 +82,26 @@ class PlayerModel extends ChangeNotifier {
     return item.duration;
   }
 
+  bool isIframe() {
+    if (playlist.pos >= playlist.length) return false;
+    return playlist.getItem(playlist.pos).isIframe;
+  }
+
   void loadVideo(int pos) async {
     playlist.setPos(pos);
     if (playlist.pos >= playlist.length) return;
     initPlayerFuture = null;
     final item = playlist.getItem(playlist.pos);
+    if (item.isIframe) {
+      final old = controller;
+      controller = null;
+      initPlayerFuture = Future.microtask(() => null);
+      notifyListeners();
+      initPlayerFuture?.whenComplete(() {
+        Future.delayed(const Duration(seconds: 1), () => old?.dispose());
+      });
+      return;
+    }
     var url = item.url;
     if (url.contains('youtu')) url = await getYoutubeVideoUrl(url);
     final prevController = controller;
@@ -131,8 +146,10 @@ class PlayerModel extends ChangeNotifier {
     final decodedUrl = Uri.decodeFull(url);
     var title = decodedUrl.substring(decodedUrl.lastIndexOf('/') + 1);
     final isNameMatched = matchName.hasMatch(title);
-    if (isNameMatched) title = matchName.stringMatch(title)!;
-    else title = 'Raw Video';
+    if (isNameMatched)
+      title = matchName.stringMatch(title)!;
+    else
+      title = 'Raw Video';
     return Future.value(title);
   }
 

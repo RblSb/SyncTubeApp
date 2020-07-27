@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 import 'models/player.dart';
 import 'settings.dart';
@@ -20,6 +21,7 @@ class VideoPlayerScreen extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
 
           case ConnectionState.done:
+            if (player.isIframe()) return iframeWidget(player);
             return GestureDetector(
               onLongPressMoveUpdate: (details) =>
                   player.hideControlsWithDelay(),
@@ -63,6 +65,22 @@ class VideoPlayerScreen extends StatelessWidget {
             );
         }
       },
+    );
+  }
+
+  Widget iframeWidget(PlayerModel player) {
+    return GestureDetector(
+      onTap: () async {
+        final link = player.app.getChannelLink();
+        if (await canLaunch(link)) launch(link);
+      },
+      child: const Align(
+        alignment: Alignment.center,
+        child: Text(
+          'Iframes are not supported.\nClick here to open web client.',
+          textAlign: TextAlign.center,
+        ),
+      ),
     );
   }
 }

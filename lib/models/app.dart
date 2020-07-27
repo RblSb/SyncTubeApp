@@ -86,6 +86,12 @@ class AppModel extends ChangeNotifier {
     });
   }
 
+  String getChannelLink() {
+    final uri = Uri.parse(wsUrl);
+    final protocol = uri.scheme == 'wss' ? 'https' : 'http';
+    return '$protocol://${uri.host}';
+  }
+
   void send(WsData data) {
     _channel.sink.add(jsonEncode(data));
   }
@@ -157,6 +163,7 @@ class AppModel extends ChangeNotifier {
         chat.isUnknownClient = true;
         chat.showPasswordField = false;
         Settings.resetNameAndHash();
+        notifyListeners();
         break;
       case 'Message':
         final type = data.message!;
