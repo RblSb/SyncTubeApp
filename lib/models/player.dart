@@ -67,6 +67,9 @@ class PlayerModel extends ChangeNotifier {
 
   void play() async {
     if (!isVideoLoaded()) return;
+    if (app.isInBackground) {
+      if (!app.hasBackgroundAudio) return;
+    }
     await controller?.play();
   }
 
@@ -135,6 +138,7 @@ class PlayerModel extends ChangeNotifier {
       final stream = manifest.muxed.withHighestBitrate();
       return stream.url.toString();
     } catch (e) {
+      print('getYoutubeVideoUrl for url $url');
       return '';
     }
   }

@@ -37,6 +37,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     app = AppModel(widget.url);
     Settings.applySettings(app);
     Wakelock.enable();
+    WidgetsBinding.instance.addObserver(this);
   }
 
   late AppModel app;
@@ -197,6 +198,9 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       case AppLifecycleState.paused:
         app.inBackground();
         break;
+      case AppLifecycleState.resumed:
+        app.inForeground();
+        break;
       default:
     }
   }
@@ -326,6 +330,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       SystemUiOverlay.bottom,
     ]);
     Wakelock.disable();
+    WidgetsBinding.instance.removeObserver(this);
   }
 }
 

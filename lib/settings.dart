@@ -36,18 +36,20 @@ class Settings extends StatelessWidget {
         ),
         SwitchListTile(
           title: const Text('Background audio'),
-          value: true,
+          value: app.hasBackgroundAudio,
           onChanged: (state) async {
             final prefs = await SharedPreferences.getInstance();
             prefs.setBool('backgroundAudio', state);
+            app.hasBackgroundAudio = state;
           },
         ),
-        if (!app.chat.isUnknownClient) ListTile(
-          title: const Text('Logout'),
-          onTap: () {
-            app.send(WsData(type: 'Logout'));
-          },
-        ),
+        if (!app.chat.isUnknownClient)
+          ListTile(
+            title: const Text('Logout'),
+            onTap: () {
+              app.send(WsData(type: 'Logout'));
+            },
+          ),
       ],
     );
   }
@@ -117,5 +119,6 @@ class Settings extends StatelessWidget {
     final prefs = await SharedPreferences.getInstance();
     setPrefferedOrientation(app, prefs.getInt('prefferedOrientation') ?? 0);
     setSystemUi(app, prefs.getBool('hasSystemUi') ?? false);
+    app.hasBackgroundAudio = prefs.getBool('backgroundAudio') ?? true;
   }
 }

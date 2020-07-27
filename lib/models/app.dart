@@ -39,7 +39,17 @@ class AppModel extends ChangeNotifier {
   int _prefferedOrientation = 0;
   bool _isChatVisible = true;
   bool _hasSystemUi = false;
+  bool _hasBackgroundAudio = true;
+  bool isInBackground = false;
   Config? config;
+
+  bool get hasBackgroundAudio => _hasBackgroundAudio;
+
+  set hasBackgroundAudio(bool hasBackgroundAudio) {
+    if (_hasBackgroundAudio == hasBackgroundAudio) return;
+    _hasBackgroundAudio = hasBackgroundAudio;
+    notifyListeners();
+  }
 
   bool get hasSystemUi => _hasSystemUi;
 
@@ -369,7 +379,12 @@ class AppModel extends ChangeNotifier {
   }
 
   void inBackground() {
-    player.play();
+    isInBackground = true;
+    if (!player.isPlaying()) player.play();
+  }
+
+  void inForeground() {
+    isInBackground = false;
   }
 
   void setPrefferedOrientation(int state) {
