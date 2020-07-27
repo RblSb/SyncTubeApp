@@ -215,6 +215,7 @@ Future<ServerListItem?> _serverItemDialog(BuildContext context,
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               TextFormField(
+                textCapitalization: TextCapitalization.sentences,
                 initialValue: item!.name,
                 autofocus: true,
                 decoration: const InputDecoration(

@@ -219,6 +219,7 @@ class _ChatState extends State<Chat> {
           children: [
             Expanded(
               child: TextField(
+                textCapitalization: TextCapitalization.sentences,
                 controller: textController,
                 focusNode: inputFocus,
                 decoration: InputDecoration(
