@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/status.dart' as status;
+import 'package:youtube_explode_dart/youtube_explode_dart.dart' as youtube;
 
 import '../settings.dart';
 import './chat.dart';
@@ -406,7 +407,10 @@ class AppModel extends ChangeNotifier {
       data.item.url = 'http://${data.item.url}';
     }
     final url = data.item.url;
-    // final duration = await player.getVideoDuration(url);
+    if (url.contains('youtube.com/playlist')) {
+      sendYoutubePlaylist(data);
+      return;
+    }
     final futures = await Future.wait([
       player.getVideoDuration(url),
       player.getVideoTitle(url),
@@ -424,6 +428,31 @@ class AppModel extends ChangeNotifier {
       addVideo: data,
     ));
   }
+
+  void sendYoutubePlaylist(AddVideo data) async {
+    final yt = youtube.YoutubeExplode();
+    final playlist = await yt.playlists.getVideos(data.item.url).take(50).toList();
+    final items = data.atEnd ? playlist : sortItemsForQueueNext(playlist);
+    for (final video in items) {
+      data.item.duration = video.duration.inMilliseconds / 1000;
+      data.item.title = video.title;
+      data.item.url = video.url;
+      send(WsData(
+        type: 'AddVideo',
+        addVideo: data,
+      ));
+    }
+  }
+
+  List<T> sortItemsForQueueNext<T>(List<T> items) {
+		if (items.isEmpty) return items;
+		// except first item when list empty
+		T? first = null;
+		if (player.playlist.isEmpty()) first = items.removeAt(0);
+		items = items.reversed.toList();
+		if (first != null) items.insert(0, first);
+    return items;
+	}
 
   @override
   void dispose() {

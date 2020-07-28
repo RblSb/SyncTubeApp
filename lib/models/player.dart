@@ -131,10 +131,23 @@ class PlayerModel extends ChangeNotifier {
     return duration.inMilliseconds / 1000;
   }
 
+  String extractVideoId(String url) {
+    if (url.contains('youtu.be/')) {
+      return RegExp(r'youtu.be\/([A-z0-9_-]+)').firstMatch(url)!.group(1)!;
+    }
+    if (url.contains('youtube.com/embed/')) {
+      return RegExp(r'embed\/([A-z0-9_-]+)').firstMatch(url)!.group(1)!;
+    }
+    final r = RegExp(r'v=([A-z0-9_-]+)');
+    if (!r.hasMatch(url)) return '';
+    return r.firstMatch(url)!.group(1)!;
+  }
+
   Future<String> getYoutubeVideoUrl(String url) async {
     final yt = youtube.YoutubeExplode();
     try {
-      final manifest = await yt.videos.streamsClient.getManifest(url);
+      final id = extractVideoId(url);
+      final manifest = await yt.videos.streamsClient.getManifest(id);
       final stream = manifest.muxed.withHighestBitrate();
       return stream.url.toString();
     } catch (e) {
@@ -160,7 +173,8 @@ class PlayerModel extends ChangeNotifier {
   Future<String> getYoutubeVideoTitle(String url) async {
     final yt = youtube.YoutubeExplode();
     try {
-      final manifest = await yt.videos.get(url);
+      final id = extractVideoId(url);
+      final manifest = await yt.videos.get(id);
       return manifest.title;
     } catch (e) {
       return 'Youtube Video';
