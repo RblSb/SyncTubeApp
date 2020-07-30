@@ -2,12 +2,6 @@
 
 Mobile client for [SyncTube](https://github.com/RblSb/SyncTube).
 
-Not supported things for now:
-- Iframes
-- Youtube playlists
-- Login
-- Some buttons and settings
-
 ### Builds (Android)
 
 Open [workflow list](https://github.com/RblSb/SyncTubeApp/actions?query=is%3Asuccess), open first in list and download apk articaft.
