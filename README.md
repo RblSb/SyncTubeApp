@@ -2,6 +2,8 @@
 
 Mobile client for [SyncTube](https://github.com/RblSb/SyncTube).
 
+Screenshots: [portrait](https://i.imgur.com/ft5N5bb.png) / [landscape](https://i.imgur.com/Q0jz89w.png).
+
 ### Builds (Android)
 
 Open [workflow list](https://github.com/RblSb/SyncTubeApp/actions?query=is%3Asuccess), open first in list and download apk articaft.
