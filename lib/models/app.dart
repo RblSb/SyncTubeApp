@@ -183,7 +183,31 @@ class AppModel extends ChangeNotifier {
         break;
       case 'ServerMessage':
         final type = data.serverMessage!;
-        chat.addItem(ChatItem(type.textId, ''));
+        var text = type.textId;
+        switch (type.textId) {
+          case 'usernameError':
+            text = "Username length must be from 1 to ${config!.maxLoginLength} characters and don't repeat another's. Characters &^<>'\" are not allowed.";
+            break;
+          case 'passwordMatchError':
+            text = 'Wrong password.';
+            break;
+          case 'accessError':
+            text = 'Access Error.';
+            break;
+          case 'totalVideoLimitError':
+            text = 'Playlist video limit has been reached.';
+            break;
+          case 'userVideoLimitError':
+            text = 'Playlist video limit per user has been reached.';
+            break;
+          case 'videoAlreadyExistsError':
+            text = 'The video already exists in playlist.';
+            break;
+          case 'addVideoError':
+            text = 'Failed to add video.';
+            break;
+        }
+        chat.addItem(ChatItem('', text));
         break;
       case 'UpdateClients':
         final type = data.updateClients!;
