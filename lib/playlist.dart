@@ -100,7 +100,6 @@ class Playlist extends StatelessWidget {
               ),
               IconButton(
                 onPressed: () {
-                  print(playlist.getItem(pos).url);
                   playlist.sendRemoveItem(playlist.getItem(pos).url);
                 },
                 tooltip: 'Remove item',
