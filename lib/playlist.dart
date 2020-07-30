@@ -100,7 +100,9 @@ class Playlist extends StatelessWidget {
               ),
               IconButton(
                 onPressed: () {
-                  playlist.sendRemoveItem(playlist.getItem(pos).url);
+                  final item = playlist.getItem(pos);
+                  if (item == null) return;
+                  playlist.sendRemoveItem(item.url);
                 },
                 tooltip: 'Remove item',
                 icon: Icon(
@@ -136,7 +138,7 @@ class Playlist extends StatelessWidget {
       scrollDirection: Axis.vertical,
       itemCount: playlist.length,
       itemBuilder: (context, index) {
-        final item = playlist.getItem(index);
+        final item = playlist.getItem(index)!;
         return plailistItem(
           context,
           playlist,

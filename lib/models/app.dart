@@ -201,7 +201,7 @@ class AppModel extends ChangeNotifier {
         final type = data.removeVideo!;
         final index = playlist.indexWhere((item) => item.url == type.url);
         if (index == -1) return;
-        final isCurrent = playlist.getItem(playlist.pos).url == type.url;
+        final isCurrent = playlist.getItem(playlist.pos)!.url == type.url;
         playlist.removeItem(index);
         if (isCurrent && playlist.length > 0) player.loadVideo(playlist.pos);
 

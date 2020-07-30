@@ -79,22 +79,28 @@ class PlayerModel extends ChangeNotifier {
   }
 
   double getDuration() {
-    final itemPos = playlist.pos;
-    if (itemPos >= playlist.length) return 0;
-    final item = playlist.getItem(itemPos);
+    final item = playlist.getItem(playlist.pos);
+    if (item == null) return 0;
     return item.duration;
   }
 
   bool isIframe() {
-    if (playlist.pos >= playlist.length) return false;
-    return playlist.getItem(playlist.pos).isIframe;
+    final item = playlist.getItem(playlist.pos);
+    if (item == null) return false;
+    return item.isIframe;
+  }
+
+  String getCurrentItemTitle() {
+    final item = playlist.getItem(playlist.pos);
+    if (item == null) return '';
+    return item.title;
   }
 
   void loadVideo(int pos) async {
     playlist.setPos(pos);
-    if (playlist.pos >= playlist.length) return;
     initPlayerFuture = null;
     final item = playlist.getItem(playlist.pos);
+    if (item == null) return;
     if (item.isIframe) {
       final old = controller;
       controller = null;

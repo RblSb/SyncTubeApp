@@ -46,7 +46,8 @@ class PlaylistModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  VideoList getItem(int pos) {
+  VideoList? getItem(int pos) {
+    if (pos >= length) return null;
     return _videoList[pos];
   }
 

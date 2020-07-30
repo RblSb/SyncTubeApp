@@ -38,20 +38,20 @@ class VideoPlayerScreen extends StatelessWidget {
                     alignment: Alignment.bottomCenter,
                     children: <Widget>[
                       VideoPlayer(player.controller),
-                      AnimatedOpacity(
-                        opacity: player.showMessageIcon ? 0.6 : 0,
-                        duration: const Duration(milliseconds: 300),
-                        child: const Align(
-                          alignment: Alignment.topRight,
-                          child: Icon(Icons.mail),
-                        ),
-                      ),
                       if (player.controller?.value.caption.text != null)
                         ClosedCaption(
                           text: player.controller?.value.caption.text,
                           textStyle: const TextStyle(fontSize: 16),
                         ),
                       _PlayPauseOverlay(player: player),
+                      AnimatedOpacity(
+                        opacity: player.showMessageIcon ? 0.7 : 0,
+                        duration: const Duration(milliseconds: 200),
+                        child: const Align(
+                          alignment: Alignment.topRight,
+                          child: Icon(Icons.mail),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -60,8 +60,17 @@ class VideoPlayerScreen extends StatelessWidget {
           default:
             return GestureDetector(
               child: const SizedBox.expand(),
-              onDoubleTap: () => Settings.nextOrientationView(player.app),
-              onLongPress: () => Settings.nextOrientationView(player.app),
+              behavior: HitTestBehavior.translucent,
+              onDoubleTap: () {
+                if (player.app.prefferedOrientationType() == 'Landscape')
+                  return;
+                Settings.nextOrientationView(player.app);
+              },
+              onLongPress: () {
+                if (player.app.prefferedOrientationType() == 'Landscape')
+                  return;
+                Settings.nextOrientationView(player.app);
+              },
             );
         }
       },
@@ -163,6 +172,14 @@ class _PlayPauseOverlay extends StatelessWidget {
                   ),
                   allowScrubbing: true,
                 ),
+              ),
+            ),
+          if (player.showControls)
+            Align(
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Text(player.getCurrentItemTitle()),
               ),
             ),
         ],
