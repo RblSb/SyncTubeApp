@@ -163,7 +163,7 @@ class _ChatState extends State<Chat> {
   final ScrollController chatScroll = ScrollController();
   final textController = TextEditingController();
   final inputFocus = FocusNode();
-  final List<int> rewindOptions = [-90, -30, -10, 10, 30, 90];
+  final List<int> rewindOptions = [-80, -30, -10, 10, 30, 80];
   bool showEmotesTab = false;
   bool showRewindMenu = false;
   bool reopenKeyboard = false;
