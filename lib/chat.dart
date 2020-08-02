@@ -95,8 +95,7 @@ class ChatItem {
     text = text.splitMapJoin(
       _urlPattern,
       onMatch: (match) {
-        var link = match.group(1)! + match.group(2)!;
-        link = link.trim();
+        final link = match.group(2)!;
         childs.add(_OrderedSpan(
           match.start,
           TextSpan(
@@ -107,7 +106,7 @@ class ChatItem {
                   if (await canLaunch(link)) launch(link);
                 }),
         ));
-        return tabChar * link.length;
+        return match.group(1)! + tabChar * link.length;
       },
       onNonMatch: (text) => text,
     );
