@@ -208,6 +208,7 @@ class AppModel extends ChangeNotifier {
             break;
         }
         chat.addItem(ChatItem('', text));
+        if (!isChatVisible) player.showMessageIcon = true;
         break;
       case 'UpdateClients':
         final type = data.updateClients!;

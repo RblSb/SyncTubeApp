@@ -87,6 +87,7 @@ class Settings extends StatelessWidget {
         app.isChatVisible = !app.isChatVisible;
         break;
     }
+    SystemChrome.restoreSystemUIOverlays();
   }
 
   static void setPrefferedOrientation(AppModel app, int state) {

@@ -14,6 +14,10 @@ class ChatModel extends ChangeNotifier {
 
   get isUnknownClient => _isUnknownClient;
 
+  int get maxLoginLength => _app.config?.maxLoginLength ?? -1;
+
+  int get maxMessageLength => _app.config?.maxMessageLength ?? -1;
+
   set isUnknownClient(isUnknownClient) {
     if (_isUnknownClient == isUnknownClient) return;
     _isUnknownClient = isUnknownClient;

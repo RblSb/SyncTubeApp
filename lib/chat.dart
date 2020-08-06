@@ -250,6 +250,13 @@ class _ChatState extends State<Chat> {
           children: [
             Expanded(
               child: TextField(
+                inputFormatters: [
+                  if (chat.isUnknownClient)
+                    FilteringTextInputFormatter.deny(RegExp('[&^<>\'"]')),
+                  chat.isUnknownClient
+                      ? LengthLimitingTextInputFormatter(chat.maxLoginLength)
+                      : LengthLimitingTextInputFormatter(chat.maxMessageLength)
+                ],
                 textCapitalization: TextCapitalization.sentences,
                 controller: textController,
                 focusNode: inputFocus,

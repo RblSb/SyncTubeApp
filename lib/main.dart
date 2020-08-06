@@ -75,6 +75,8 @@ class _ServerListPageState extends State<ServerListPage> {
 
   void addItem(ServerListItem? item) {
     if (item == null) return;
+    item.name = item.name.trim();
+    item.url = item.url.trim();
     if (item.name.length == 0 || item.url.length == 0) return;
     setState(() => items.add(item));
     writeItems();
