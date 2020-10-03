@@ -245,10 +245,11 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     final clipboard = await Clipboard.getData('text/plain');
     final defaultUrl = 'http://';
     var url = defaultUrl;
-    if (clipboard.text.contains('mp4') ||
-        clipboard.text.contains('m3u8') ||
-        clipboard.text.contains('youtu')) {
-      url = clipboard.text;
+    final clipboardText = clipboard?.text ?? '';
+    if (clipboardText.contains('mp4') ||
+        clipboardText.contains('m3u8') ||
+        clipboardText.contains('youtu')) {
+      url = clipboardText;
     }
     final data = AddVideo(
       item: VideoList(

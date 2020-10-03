@@ -196,8 +196,9 @@ Future<ServerListItem?> _serverItemDialog(BuildContext context,
   if (item == null) item = ServerListItem('', '');
   if (item.url.isEmpty) {
     final clipboard = await Clipboard.getData('text/plain');
-    if (clipboard.text.contains('http')) {
-      item.url = clipboard.text;
+    final clipboardText = clipboard?.text ?? '';
+    if (clipboardText.contains('http')) {
+      item.url = clipboardText;
       try {
         final host = Uri.parse(item.url).host;
         item.name = host.split('.')[0];
