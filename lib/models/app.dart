@@ -186,7 +186,8 @@ class AppModel extends ChangeNotifier {
         var text = type.textId;
         switch (type.textId) {
           case 'usernameError':
-            text = "Username length must be from 1 to ${config!.maxLoginLength} characters and don't repeat another's. Characters &^<>'\" are not allowed.";
+            text =
+                "Username length must be from 1 to ${config!.maxLoginLength} characters and don't repeat another's. Characters &^<>'\" are not allowed.";
             break;
           case 'passwordMatchError':
             text = 'Wrong password.';
@@ -270,11 +271,7 @@ class AppModel extends ChangeNotifier {
         if (!player.isVideoLoaded()) return;
         if (_personal.isLeader) return;
         final type = data.play!;
-        final ms = (type.time * 1000).round();
-        player.seekTo(
-          Duration(milliseconds: ms),
-        );
-        player.play();
+        onPlay(type);
         break;
       case 'GetTime':
         final type = data.getTime!;
@@ -374,6 +371,19 @@ class AppModel extends ChangeNotifier {
     );
   }
 
+  void onPlay(Pause type) async {
+    final newTime = type.time;
+    final posD = await player.getPosition();
+    final time = posD.inMilliseconds / 1000;
+    if ((time - newTime).abs() >= synchThreshold) {
+      final ms = (newTime * 1000).round();
+      player.seekTo(
+        Duration(milliseconds: ms),
+      );
+    }
+    player.play();
+  }
+
   void onTimeSet(Pause type) async {
     final posD = await player.getPosition();
     final newTime = type.time;
@@ -456,7 +466,8 @@ class AppModel extends ChangeNotifier {
 
   void sendYoutubePlaylist(AddVideo data) async {
     final yt = youtube.YoutubeExplode();
-    final playlist = await yt.playlists.getVideos(data.item.url).take(50).toList();
+    final playlist =
+        await yt.playlists.getVideos(data.item.url).take(50).toList();
     final items = data.atEnd ? playlist : sortItemsForQueueNext(playlist);
     for (final video in items) {
       data.item.duration = video.duration.inMilliseconds / 1000;
@@ -470,14 +481,14 @@ class AppModel extends ChangeNotifier {
   }
 
   List<T> sortItemsForQueueNext<T>(List<T> items) {
-		if (items.isEmpty) return items;
-		// except first item when list empty
-		T? first = null;
-		if (player.playlist.isEmpty()) first = items.removeAt(0);
-		items = items.reversed.toList();
-		if (first != null) items.insert(0, first);
+    if (items.isEmpty) return items;
+    // except first item when list empty
+    T? first = null;
+    if (player.playlist.isEmpty()) first = items.removeAt(0);
+    items = items.reversed.toList();
+    if (first != null) items.insert(0, first);
     return items;
-	}
+  }
 
   @override
   void dispose() {
