@@ -688,7 +688,7 @@ class Pause {
 class GetTime {
   late double time;
   late bool paused;
-  late int rate;
+  late double rate;
 
   GetTime({required this.time, required this.paused, required this.rate});
 
@@ -708,7 +708,7 @@ class GetTime {
 }
 
 class SetRate {
-  late int rate;
+  late double rate;
 
   SetRate({required this.rate});
 

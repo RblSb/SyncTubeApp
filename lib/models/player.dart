@@ -78,6 +78,16 @@ class PlayerModel extends ChangeNotifier {
     await controller?.seekTo(duration);
   }
 
+  Future<double> getPlaybackSpeed() async {
+    if (!isVideoLoaded()) return 1.0;
+    return await controller?.value.playbackSpeed ?? 1.0;
+  }
+
+  void setPlaybackSpeed(double rate) async {
+    if (!isVideoLoaded()) return;
+    await controller?.setPlaybackSpeed(rate);
+  }
+
   double getDuration() {
     final item = playlist.getItem(playlist.pos);
     if (item == null) return 0;

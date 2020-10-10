@@ -282,7 +282,9 @@ class AppModel extends ChangeNotifier {
         final type = data.setTime!;
         onTimeSet(type);
         break;
-      case 'SetRate': // not yet available in library
+      case 'SetRate':
+        if (_personal.isLeader) return;
+        player.setPlaybackSpeed(data.setRate?.rate ?? 1);
         break;
       case 'Rewind':
         if (!player.isVideoLoaded()) return;
@@ -346,6 +348,14 @@ class AppModel extends ChangeNotifier {
 
   void onTimeGet(GetTime type) async {
     if (!player.isVideoLoaded()) return;
+
+    final rateFuture = player.getPlaybackSpeed();
+    rateFuture.then((rate) {
+      if (rate != type.rate) {
+        player.setPlaybackSpeed(type.rate);
+      }
+    });
+
     final posD = await player.getPosition();
     final newTime = type.time;
     final time = posD.inMilliseconds / 1000;
