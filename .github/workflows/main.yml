@@ -67,8 +67,9 @@ jobs:
           KEY_FILE: ${{secrets.KEY_FILE}}
           KEY_PROPS: ${{secrets.KEY_PROPS}}
         run: |
-          echo $KEY_FILE | base64 --decode > android/release.jks
-          echo $KEY_PROPS > android/key.properties
+          echo "$KEY_FILE" | base64 --decode > android/release.jks
+          echo "$KEY_PROPS" > android/key.properties
+          ls -ls android
 
       - name: Build
         working-directory: ${{github.workspace}}
