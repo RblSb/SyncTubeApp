@@ -1,5 +1,5 @@
 android/key.properties
-android/release.jks
+android/app/release.jks
 
 # Miscellaneous
 *.class
