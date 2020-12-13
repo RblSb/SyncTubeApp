@@ -159,7 +159,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           ],
         ),
         floatingActionButton: Selector<AppModel, bool>(
-          selector: (context, app) => app.mainTab == MainTab.playlist,
+          selector: (context, app) => app.mainTab == MainTab.playlist && app.isChatVisible,
           builder: (context, isVisible, child) {
             return AnimatedSwitcher(
               duration: const Duration(milliseconds: 100),

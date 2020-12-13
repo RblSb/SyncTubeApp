@@ -41,9 +41,13 @@ class ChatPanel extends StatelessWidget {
               Scaffold.of(context).hideCurrentSnackBar();
               Scaffold.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(
-                    text,
-                    style: TextStyle(color: Colors.white),
+                  duration: const Duration(seconds: 3),
+                  content: GestureDetector(
+                    onTap: () => Scaffold.of(context).hideCurrentSnackBar(),
+                    child: Text(
+                      text,
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                   backgroundColor: Colors.black45,
                 ),
@@ -91,7 +95,8 @@ class ChatPanel extends StatelessWidget {
       ),
       child: Text(
         'Leader',
-        style: panel.isLeader() ? null : TextStyle(color: Theme.of(context).icon),
+        style:
+            panel.isLeader() ? null : TextStyle(color: Theme.of(context).icon),
       ),
       onPressed: panel.requestLeader,
     );
@@ -101,7 +106,9 @@ class ChatPanel extends StatelessWidget {
     return Row(
       children: [
         Text(
-          !panel.isConnected ? 'Connection...' : '${panel.clients.length} online',
+          !panel.isConnected
+              ? 'Connection...'
+              : '${panel.clients.length} online',
           style: TextStyle(color: Theme.of(context).icon),
         ),
         if (panel.hasLeader())

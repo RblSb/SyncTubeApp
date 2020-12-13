@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 import 'models/player.dart';
 import 'settings.dart';
+import 'color_scheme.dart';
 
 class VideoPlayerScreen extends StatelessWidget {
   VideoPlayerScreen({Key? key}) : super(key: key);
@@ -153,7 +154,7 @@ class _PlayPauseOverlay extends StatelessWidget {
             Align(
               alignment: Alignment.bottomLeft,
               child: Padding(
-                padding: const EdgeInsets.only(bottom: 7, left: 7),
+                padding: const EdgeInsets.only(bottom: 9, left: 9),
                 child: Text(_timeText(player.controller?.value)),
               ),
             ),
@@ -161,7 +162,7 @@ class _PlayPauseOverlay extends StatelessWidget {
             Align(
               alignment: Alignment.bottomCenter,
               child: Padding(
-                padding: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.only(bottom: 13),
                 child: VideoProgressIndicator(
                   player.controller,
                   padding: const EdgeInsets.only(bottom: 20, top: 20),
@@ -181,6 +182,27 @@ class _PlayPauseOverlay extends StatelessWidget {
                 padding: const EdgeInsets.all(10),
                 child: Text(player.getCurrentItemTitle()),
               ),
+            ),
+          if (player.showControls)
+            Align(
+              alignment: Alignment.bottomRight,
+              child: Container(
+                  padding: const EdgeInsets.only(bottom: 0),
+                  width: 40.0,
+                  height: 40.0,
+                  child: IconButton(
+                    icon: Icon(
+                      player.app.isChatVisible
+                          ? Icons.fullscreen
+                          : Icons.fullscreen_exit,
+                      color: Theme.of(context).icon,
+                      size: 30,
+                    ),
+                    tooltip: 'Double-tap or long-tap for fullscreen',
+                    onPressed: () {
+                      Settings.nextOrientationView(player.app);
+                    },
+                  )),
             ),
         ],
       ),
