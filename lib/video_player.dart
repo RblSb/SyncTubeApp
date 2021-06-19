@@ -23,9 +23,9 @@ class VideoPlayerScreen extends StatelessWidget {
 
           case ConnectionState.done:
             if (player.isIframe()) return iframeWidget(player);
+            final captionText = player.controller?.value.caption.text;
             return GestureDetector(
-              onLongPressMoveUpdate: (details) =>
-                  player.hideControlsWithDelay(),
+              // onLongPressMoveUpdate: (details) => player.hideControlsWithDelay(),
               onDoubleTap: () => Settings.nextOrientationView(player.app),
               onLongPress: () {
                 if (player.showControls) return;
@@ -38,10 +38,10 @@ class VideoPlayerScreen extends StatelessWidget {
                   child: Stack(
                     alignment: Alignment.bottomCenter,
                     children: <Widget>[
-                      VideoPlayer(player.controller),
-                      if (player.controller?.value.caption.text != null)
+                      VideoPlayer(player.controller!),
+                      if (captionText != null && captionText != "")
                         ClosedCaption(
-                          text: player.controller?.value.caption.text,
+                          text: captionText,
                           textStyle: const TextStyle(fontSize: 16),
                         ),
                       _PlayPauseOverlay(player: player),
@@ -164,7 +164,7 @@ class _PlayPauseOverlay extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.only(bottom: 13),
                 child: VideoProgressIndicator(
-                  player.controller,
+                  player.controller!,
                   padding: const EdgeInsets.only(bottom: 20, top: 20),
                   colors: VideoProgressColors(
                     playedColor: const Color.fromRGBO(200, 0, 0, 0.75),

@@ -19,7 +19,8 @@ class AssCaptionFile extends ClosedCaptionFile {
 }
 
 List<Caption> _parseCaptionsFromAssString(String file) {
-  final List<Caption> captions = <Caption>[];
+  final List<Caption> captions = [];
+  if (file.isEmpty) return captions;
 
   final List<String> lines = LineSplitter.split(file).toList();
   bool eventStart = false;

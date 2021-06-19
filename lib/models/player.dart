@@ -31,7 +31,7 @@ class PlayerModel extends ChangeNotifier {
   PlayerModel(this.app, this.playlist);
 
   bool isVideoLoaded() {
-    return controller?.value.initialized ?? false;
+    return controller?.value.isInitialized ?? false;
   }
 
   bool isPlaying() {
@@ -197,15 +197,19 @@ class PlayerModel extends ChangeNotifier {
     }
   }
 
-  Future<ClosedCaptionFile?> _loadCaptions(String url) async {
+  Future<ClosedCaptionFile>? _loadCaptions(String url) {
     final i = url.lastIndexOf('.mp4');
     if (i == -1) return null;
     url = url.replaceFirst('.mp4', '.ass', i);
-    final response = await http.get(url);
+    return _loadCaptionsFuture(url);
+  }
+
+  Future<ClosedCaptionFile>? _loadCaptionsFuture(String url) async {
+    final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       return AssCaptionFile(response.body);
     } else {
-      return null;
+      return AssCaptionFile("");
     }
   }
 

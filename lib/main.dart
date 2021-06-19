@@ -94,7 +94,8 @@ class _ServerListPageState extends State<ServerListPage> {
   }
 
   void itemPopupMenu(ServerListItem item) async {
-    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final overlay =
+        Overlay.of(context)?.context.findRenderObject() as RenderBox;
     void Function()? func = await showMenu(
       context: context,
       position: RelativeRect.fromRect(
@@ -239,7 +240,7 @@ Future<ServerListItem?> _serverItemDialog(BuildContext context,
           ),
         ),
         actions: <Widget>[
-          FlatButton(
+          TextButton(
             child: const Text('Ok'),
             onPressed: () => Navigator.of(context).pop(item),
           ),

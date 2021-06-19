@@ -175,7 +175,7 @@ class _ChatState extends State<Chat> {
     final scrollAtEnd = lastPos <= 20;
     if (scrollAtEnd) return;
     final lastMax = chatScroll.position.maxScrollExtent;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance?.addPostFrameCallback((_) {
       final diff = chatScroll.position.maxScrollExtent - lastMax;
       chatScroll.jumpTo(
         lastPos + diff,
@@ -226,8 +226,12 @@ class _ChatState extends State<Chat> {
                     children: [
                       for (final time in rewindOptions)
                         Expanded(
-                          child: FlatButton(
-                            padding: EdgeInsets.zero,
+                          child: TextButton(
+                            style: TextButton.styleFrom(
+                              // primary: Theme.of(context).rewindButton,
+                              padding: EdgeInsets.zero,
+                            ),
+                            // padding: EdgeInsets.zero,
                             child: Align(
                               alignment: Alignment.center,
                               child: Text(time.toString(), maxLines: 1),

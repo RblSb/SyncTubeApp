@@ -37,7 +37,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     app = AppModel(widget.url);
     Settings.applySettings(app);
     Wakelock.enable();
-    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance?.addObserver(this);
   }
 
   late AppModel app;
@@ -98,7 +98,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                   return Selector<PlayerModel, double>(
                     selector: (context, player) {
                       final isInit =
-                          player.controller?.value.initialized ?? false;
+                          player.controller?.value.isInitialized ?? false;
                       if (!isInit) return 16 / 9;
                       return player.controller?.value.aspectRatio ?? 16 / 9;
                     },
@@ -226,11 +226,11 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         title: const Text('Are you sure?'),
         content: const Text('Do you want to exit channel?'),
         actions: <Widget>[
-          FlatButton(
+          TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             child: const Text('No'),
           ),
-          FlatButton(
+          TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             child: const Text('Yes'),
           ),
@@ -241,7 +241,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     return dialog ?? false;
   }
 
-  Future<AddVideo> _addUrlDialog(BuildContext context) async {
+  Future<AddVideo?> _addUrlDialog(BuildContext context) async {
     final clipboard = await Clipboard.getData('text/plain');
     final defaultUrl = 'http://';
     var url = defaultUrl;
@@ -287,14 +287,14 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                       title: const Text('Add as temporary'),
                       value: data.item.isTemp,
                       onChanged: (flag) => setState(() {
-                        data.item.isTemp = flag;
+                        data.item.isTemp = flag == true;
                       }),
                     ),
                   ],
                 ),
               ),
               actions: <Widget>[
-                FlatButton(
+                TextButton(
                   child: const Text('Queue next'),
                   onPressed: () {
                     data.atEnd = false;
@@ -302,7 +302,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                     app.sendVideoItem(data);
                   },
                 ),
-                FlatButton(
+                TextButton(
                   child: const Text('Queue last'),
                   onPressed: () {
                     data.atEnd = true;
@@ -331,15 +331,15 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       SystemUiOverlay.bottom,
     ]);
     Wakelock.disable();
-    WidgetsBinding.instance.removeObserver(this);
+    WidgetsBinding.instance?.removeObserver(this);
   }
 }
 
 class Printer extends StatelessWidget {
-  const Printer({Key? key, this.child}) : super(key: key);
-  final Widget? child;
+  const Printer({Key? key, required this.child}) : super(key: key);
+  final Widget child;
   @override
-  Widget? build(BuildContext context) {
+  Widget build(BuildContext context) {
     print('child rebuilded');
     return child;
   }

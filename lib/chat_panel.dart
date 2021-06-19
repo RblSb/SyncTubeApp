@@ -12,12 +12,13 @@ class ChatPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final ChatPanelModel panel = Provider.of<ChatPanelModel>(context);
     const paddingNum = 5.0;
-    const btnPadding = EdgeInsets.all(paddingNum);
+    const btnPadding = EdgeInsets.all(0);
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: paddingNum),
+      // padding: EdgeInsets.symmetric(horizontal: paddingNum),
       color: Theme.of(context).chatPanelBackground,
       child: Row(
         children: <Widget>[
+          const Spacer(flex: 2),
           Padding(
             padding: btnPadding,
             child: IconButton(
@@ -32,18 +33,20 @@ class ChatPanel extends StatelessWidget {
               ),
             ),
           ),
+          const Spacer(flex: 1),
           TextButton(
             onPressed: () {
               final text = panel.clients.map((c) {
                 if (c.isLeader) return '${c.name} (Leader)';
                 return c.name;
               }).join(', ');
-              Scaffold.of(context).hideCurrentSnackBar();
-              Scaffold.of(context).showSnackBar(
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   duration: const Duration(seconds: 3),
                   content: GestureDetector(
-                    onTap: () => Scaffold.of(context).hideCurrentSnackBar(),
+                    onTap: () =>
+                        ScaffoldMessenger.of(context).hideCurrentSnackBar(),
                     child: Text(
                       text,
                       style: TextStyle(color: Colors.white),
@@ -55,18 +58,16 @@ class ChatPanel extends StatelessWidget {
             },
             child: _onlineButton(panel, context),
           ),
-          const Spacer(),
+          const Spacer(flex: 100),
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: paddingNum),
-            child: ButtonTheme(
-              minWidth: 60,
-              height: 30,
-              child: leaderButton(panel, context),
-            ),
+            padding: EdgeInsets.symmetric(horizontal: 0.0),
+            child: leaderButton(panel, context),
           ),
+          const Spacer(flex: 1),
           Padding(
-            padding: btnPadding,
+            padding: EdgeInsets.all(paddingNum),
             child: IconButton(
+              padding: EdgeInsets.all(paddingNum),
               onPressed: () => panel.togglePanel(MainTab.settings),
               tooltip: 'Show settings',
               icon: Icon(
@@ -78,20 +79,26 @@ class ChatPanel extends StatelessWidget {
               ),
             ),
           ),
+          const Spacer(flex: 2),
         ],
       ),
     );
   }
 
   Widget leaderButton(ChatPanelModel panel, BuildContext context) {
-    return OutlineButton(
-      borderSide: BorderSide(
-        color: panel.isLeader()
-            ? Theme.of(context).leaderActiveBorder
-            : Theme.of(context).cardColor,
-      ),
-      shape: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
+    return OutlinedButton(
+      style: OutlinedButton.styleFrom(
+        primary: Colors.white,
+        minimumSize: Size(60, 34),
+        padding: EdgeInsets.symmetric(horizontal: 18),
+        side: BorderSide(
+          color: panel.isLeader()
+              ? Theme.of(context).leaderActiveBorder
+              : Theme.of(context).cardColor,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+        ),
       ),
       child: Text(
         'Leader',

@@ -153,6 +153,7 @@ class AppModel extends ChangeNotifier {
         clients = type.clients!;
         Client? newPersonal =
             clients.firstWhere((client) => client.name == type.clientName);
+        // ignore: unnecessary_null_comparison
         if (newPersonal == null) return;
         _personal = newPersonal;
         chatPanel.notifyListeners();
@@ -480,7 +481,8 @@ class AppModel extends ChangeNotifier {
         await yt.playlists.getVideos(data.item.url).take(50).toList();
     final items = data.atEnd ? playlist : sortItemsForQueueNext(playlist);
     for (final video in items) {
-      data.item.duration = video.duration.inMilliseconds / 1000;
+      if (video.duration == null) continue;
+      data.item.duration = video.duration!.inMilliseconds / 1000;
       data.item.title = video.title;
       data.item.url = video.url;
       send(WsData(
