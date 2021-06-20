@@ -30,6 +30,18 @@ class ChatPanelModel extends ChangeNotifier {
 
   void requestLeader() => _app.requestLeader();
 
+  void requestLeaderAndPause() async {
+    _app.requestLeader();
+    if (_app.isLeader()) return;
+    _app.player.pause();
+    final posD = await _app.player.getPosition();
+    final time = posD.inMilliseconds / 1000;
+    _app.send(WsData(
+      type: 'Pause',
+      pause: Pause(time: time),
+    ));
+  }
+
   togglePanel(MainTab newTab) => _app.togglePanel(newTab);
 
   set serverPlay(bool serverPlay) {
@@ -37,5 +49,4 @@ class ChatPanelModel extends ChangeNotifier {
     _serverPlay = serverPlay;
     notifyListeners();
   }
-
 }

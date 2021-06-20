@@ -231,7 +231,6 @@ class _ChatState extends State<Chat> {
                               // primary: Theme.of(context).rewindButton,
                               padding: EdgeInsets.zero,
                             ),
-                            // padding: EdgeInsets.zero,
                             child: Align(
                               alignment: Alignment.center,
                               child: Text(time.toString(), maxLines: 1),

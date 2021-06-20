@@ -11,29 +11,24 @@ class ChatPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ChatPanelModel panel = Provider.of<ChatPanelModel>(context);
-    const paddingNum = 5.0;
-    const btnPadding = EdgeInsets.all(0);
     return Container(
       // padding: EdgeInsets.symmetric(horizontal: paddingNum),
       color: Theme.of(context).chatPanelBackground,
       child: Row(
         children: <Widget>[
-          const Spacer(flex: 2),
-          Padding(
-            padding: btnPadding,
-            child: IconButton(
-              onPressed: () => panel.togglePanel(MainTab.playlist),
-              tooltip: 'Show playlist',
-              icon: Icon(
-                Icons.list,
-                color: panel.mainTab == MainTab.playlist
-                    ? Theme.of(context).buttonColor
-                    : Theme.of(context).icon,
-                size: 30,
-              ),
+          const Spacer(flex: 3),
+          IconButton(
+            onPressed: () => panel.togglePanel(MainTab.playlist),
+            tooltip: 'Show playlist',
+            icon: Icon(
+              Icons.list,
+              color: panel.mainTab == MainTab.playlist
+                  ? Theme.of(context).buttonColor
+                  : Theme.of(context).icon,
+              size: 30,
             ),
           ),
-          const Spacer(flex: 1),
+          const Spacer(flex: 2),
           TextButton(
             onPressed: () {
               final text = panel.clients.map((c) {
@@ -59,27 +54,20 @@ class ChatPanel extends StatelessWidget {
             child: _onlineButton(panel, context),
           ),
           const Spacer(flex: 100),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 0.0),
-            child: leaderButton(panel, context),
-          ),
-          const Spacer(flex: 1),
-          Padding(
-            padding: EdgeInsets.all(paddingNum),
-            child: IconButton(
-              padding: EdgeInsets.all(paddingNum),
-              onPressed: () => panel.togglePanel(MainTab.settings),
-              tooltip: 'Show settings',
-              icon: Icon(
-                Icons.settings,
-                color: panel.mainTab == MainTab.settings
-                    ? Theme.of(context).buttonColor
-                    : Theme.of(context).icon,
-                size: 30,
-              ),
+          leaderButton(panel, context),
+          const Spacer(flex: 5),
+          IconButton(
+            onPressed: () => panel.togglePanel(MainTab.settings),
+            tooltip: 'Show settings',
+            icon: Icon(
+              Icons.settings,
+              color: panel.mainTab == MainTab.settings
+                  ? Theme.of(context).buttonColor
+                  : Theme.of(context).icon,
+              size: 30,
             ),
           ),
-          const Spacer(flex: 2),
+          const Spacer(flex: 3),
         ],
       ),
     );
@@ -106,6 +94,7 @@ class ChatPanel extends StatelessWidget {
             panel.isLeader() ? null : TextStyle(color: Theme.of(context).icon),
       ),
       onPressed: panel.requestLeader,
+      onLongPress: panel.requestLeaderAndPause,
     );
   }
 
@@ -123,6 +112,8 @@ class ChatPanel extends StatelessWidget {
             panel.serverPlay ? Icons.play_arrow : Icons.pause,
             color: Theme.of(context).icon,
           )
+        else
+          const Text('     '),
       ],
     );
   }
