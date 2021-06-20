@@ -45,14 +45,12 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     orientationStream.listen((event) {
       switch (event) {
         case NativeDeviceOrientation.landscapeLeft:
-          if (!Settings.prefferedOrientations
-              .contains(DeviceOrientation.landscapeLeft)) return;
+          if (Settings.prefferedOrientations.isEmpty) return;
           SystemChrome.setPreferredOrientations(
               [DeviceOrientation.landscapeLeft]);
           break;
         case NativeDeviceOrientation.landscapeRight:
-          if (!Settings.prefferedOrientations
-              .contains(DeviceOrientation.landscapeRight)) return;
+          if (Settings.prefferedOrientations.isEmpty) return;
           SystemChrome.setPreferredOrientations(
               [DeviceOrientation.landscapeRight]);
           break;

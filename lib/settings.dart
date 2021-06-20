@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:native_device_orientation/native_device_orientation.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -92,16 +93,24 @@ class Settings extends StatelessWidget {
 
   static List<DeviceOrientation> prefferedOrientations = [];
 
-  static void setPrefferedOrientation(AppModel app, int state) {
+  static void setPrefferedOrientation(AppModel app, int state) async {
     switch (state) {
       case 0:
         prefferedOrientations = [];
         break;
       case 1:
         prefferedOrientations = [
+          DeviceOrientation.landscapeRight,
           DeviceOrientation.landscapeLeft,
-          DeviceOrientation.landscapeRight
         ];
+        final orientation = await NativeDeviceOrientationCommunicator()
+            .orientation(useSensor: true)
+            .timeout(
+              Duration(milliseconds: 100),
+              onTimeout: () => NativeDeviceOrientation.landscapeLeft,
+            );
+        if (orientation == NativeDeviceOrientation.landscapeRight)
+          prefferedOrientations = [DeviceOrientation.landscapeRight];
         break;
     }
     SystemChrome.setPreferredOrientations(prefferedOrientations);
