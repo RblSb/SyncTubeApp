@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -159,19 +160,32 @@ class _PlayPauseOverlay extends StatelessWidget {
               ),
             ),
           if (player.showControls)
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 13),
-                child: VideoProgressIndicator(
-                  player.controller!,
-                  padding: const EdgeInsets.only(bottom: 20, top: 20),
-                  colors: VideoProgressColors(
-                    playedColor: const Color.fromRGBO(200, 0, 0, 0.75),
-                    bufferedColor: const Color.fromRGBO(200, 200, 200, 0.5),
-                    backgroundColor: const Color.fromRGBO(200, 200, 200, 0.2),
+            RawGestureDetector(
+              gestures: {
+                AllowMultipleGestureRecognizer:
+                    GestureRecognizerFactoryWithHandlers<
+                        AllowMultipleGestureRecognizer>(
+                  () => AllowMultipleGestureRecognizer(),
+                  (AllowMultipleGestureRecognizer instance) {
+                    instance.onTapDown =
+                        (details) => player.cancelControlsHide();
+                  },
+                )
+              },
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 13),
+                  child: VideoProgressIndicator(
+                    player.controller!,
+                    padding: const EdgeInsets.only(bottom: 20, top: 20),
+                    colors: VideoProgressColors(
+                      playedColor: const Color.fromRGBO(200, 0, 0, 0.75),
+                      bufferedColor: const Color.fromRGBO(200, 200, 200, 0.5),
+                      backgroundColor: const Color.fromRGBO(200, 200, 200, 0.2),
+                    ),
+                    allowScrubbing: true,
                   ),
-                  allowScrubbing: true,
                 ),
               ),
             ),
@@ -207,5 +221,12 @@ class _PlayPauseOverlay extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class AllowMultipleGestureRecognizer extends TapGestureRecognizer {
+  @override
+  void rejectGesture(int pointer) {
+    acceptGesture(pointer);
   }
 }

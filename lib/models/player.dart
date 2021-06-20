@@ -53,6 +53,11 @@ class PlayerModel extends ChangeNotifier {
     );
   }
 
+  void cancelControlsHide() {
+    if (!showControls) return;
+    controlsTimer?.cancel();
+  }
+
   Future<Duration> getPosition() async {
     if (!isVideoLoaded()) return Duration();
     final posD = await controller?.position;
@@ -126,7 +131,7 @@ class PlayerModel extends ChangeNotifier {
     final prevController = controller;
     controller = VideoPlayerController.network(
       url,
-      closedCaptionFile: _loadCaptions(url),
+      closedCaptionFile: _loadCaptions(item),
     );
     controller?.addListener(notifyListeners);
     initPlayerFuture = controller?.initialize();
@@ -197,11 +202,15 @@ class PlayerModel extends ChangeNotifier {
     }
   }
 
-  Future<ClosedCaptionFile>? _loadCaptions(String url) {
-    final i = url.lastIndexOf('.mp4');
-    if (i == -1) return null;
-    url = url.replaceFirst('.mp4', '.ass', i);
-    return _loadCaptionsFuture(url);
+  Future<ClosedCaptionFile>? _loadCaptions(VideoList item) {
+    var subsUrl = item.subs ?? '';
+    if (subsUrl == '') {
+      if (item.duration < 60 * 5) return null;
+      final i = item.url.lastIndexOf('.mp4');
+      if (i == -1) return null;
+      subsUrl = item.url.replaceFirst('.mp4', '.ass', i);
+    }
+    return _loadCaptionsFuture(subsUrl);
   }
 
   Future<ClosedCaptionFile>? _loadCaptionsFuture(String url) async {

@@ -12,6 +12,7 @@ import 'settings.dart';
 import 'video_player.dart';
 import 'wsdata.dart';
 import 'chat.dart';
+import 'package:native_device_orientation/native_device_orientation.dart';
 // import 'color_scheme.dart';
 
 typedef WsDataFunc = void Function(WsData data);
@@ -38,6 +39,26 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     Settings.applySettings(app);
     Wakelock.enable();
     WidgetsBinding.instance?.addObserver(this);
+    final nativeOrientation = NativeDeviceOrientationCommunicator();
+    final orientationStream =
+        nativeOrientation.onOrientationChanged(useSensor: true);
+    orientationStream.listen((event) {
+      switch (event) {
+        case NativeDeviceOrientation.landscapeLeft:
+          if (!Settings.prefferedOrientations
+              .contains(DeviceOrientation.landscapeLeft)) return;
+          SystemChrome.setPreferredOrientations(
+              [DeviceOrientation.landscapeLeft]);
+          break;
+        case NativeDeviceOrientation.landscapeRight:
+          if (!Settings.prefferedOrientations
+              .contains(DeviceOrientation.landscapeRight)) return;
+          SystemChrome.setPreferredOrientations(
+              [DeviceOrientation.landscapeRight]);
+          break;
+        default:
+      }
+    });
   }
 
   late AppModel app;
@@ -159,7 +180,8 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           ],
         ),
         floatingActionButton: Selector<AppModel, bool>(
-          selector: (context, app) => app.mainTab == MainTab.playlist && app.isChatVisible,
+          selector: (context, app) =>
+              app.mainTab == MainTab.playlist && app.isChatVisible,
           builder: (context, isVisible, child) {
             return AnimatedSwitcher(
               duration: const Duration(milliseconds: 100),

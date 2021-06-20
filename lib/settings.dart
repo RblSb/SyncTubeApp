@@ -90,18 +90,21 @@ class Settings extends StatelessWidget {
     SystemChrome.restoreSystemUIOverlays();
   }
 
+  static List<DeviceOrientation> prefferedOrientations = [];
+
   static void setPrefferedOrientation(AppModel app, int state) {
     switch (state) {
       case 0:
-        SystemChrome.setPreferredOrientations([]);
+        prefferedOrientations = [];
         break;
       case 1:
-        SystemChrome.setPreferredOrientations([
+        prefferedOrientations = [
           DeviceOrientation.landscapeLeft,
           DeviceOrientation.landscapeRight
-        ]);
+        ];
         break;
     }
+    SystemChrome.setPreferredOrientations(prefferedOrientations);
     app.setPrefferedOrientation(state);
   }
 

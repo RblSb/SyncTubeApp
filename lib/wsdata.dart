@@ -481,6 +481,7 @@ class VideoList {
   late String title;
   late String author;
   late double duration;
+  late String? subs;
   late bool isTemp;
   late bool isIframe;
 
@@ -489,6 +490,7 @@ class VideoList {
       required this.title,
       required this.author,
       required this.duration,
+      this.subs,
       required this.isTemp,
       required this.isIframe});
 
@@ -497,6 +499,7 @@ class VideoList {
     title = json['title'];
     author = json['author'];
     duration = json['duration'].toDouble();
+    subs = json['subs'];
     isTemp = json['isTemp'];
     isIframe = json['isIframe'];
   }

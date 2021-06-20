@@ -73,7 +73,7 @@ jobs:
       - name: Build
         working-directory: ${{github.workspace}}
         run: |
-          flutter build apk --target-platform=android-arm --enable-experiment=non-nullable --no-sound-null-safety
+          flutter build apk --target-platform=android-arm
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2
