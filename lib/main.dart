@@ -168,7 +168,9 @@ class _ServerListPageState extends State<ServerListPage> {
         title: Text(widget.title),
       ),
       body: Column(
-        children: <Widget>[listView],
+        children: [
+          Expanded(child: listView),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
@@ -217,7 +219,7 @@ Future<ServerListItem?> _serverItemDialog(BuildContext context,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
+            children: [
               TextFormField(
                 textCapitalization: TextCapitalization.sentences,
                 initialValue: item!.name,
@@ -239,7 +241,7 @@ Future<ServerListItem?> _serverItemDialog(BuildContext context,
             ],
           ),
         ),
-        actions: <Widget>[
+        actions: [
           TextButton(
             child: const Text('Ok'),
             onPressed: () => Navigator.of(context).pop(item),
