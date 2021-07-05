@@ -216,7 +216,11 @@ class PlayerModel extends ChangeNotifier {
   Future<ClosedCaptionFile>? _loadCaptionsFuture(String url) async {
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
-      return AssCaptionFile(response.body);
+      if (url.endsWith(".srt")) {
+        return SubRipCaptionFile(response.body);
+      } else {
+        return AssCaptionFile(response.body);
+      }
     } else {
       return AssCaptionFile("");
     }
