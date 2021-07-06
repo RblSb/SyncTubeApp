@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:video_player/video_player.dart';
@@ -6,7 +7,8 @@ import 'package:http/http.dart' as http;
 import 'package:youtube_explode_dart/youtube_explode_dart.dart' as youtube;
 import './app.dart';
 import './playlist.dart';
-import '../ass.dart';
+import '../subs/ass.dart';
+import '../subs/web_vtt.dart';
 import '../wsdata.dart';
 
 class PlayerModel extends ChangeNotifier {
@@ -204,26 +206,36 @@ class PlayerModel extends ChangeNotifier {
 
   Future<ClosedCaptionFile>? _loadCaptions(VideoList item) {
     var subsUrl = item.subs ?? '';
-    if (subsUrl == '') {
-      if (item.duration < 60 * 5) return null;
-      final i = item.url.lastIndexOf('.mp4');
-      if (i == -1) return null;
-      subsUrl = item.url.replaceFirst('.mp4', '.ass', i);
-    }
+    if (subsUrl.isEmpty) return null;
+    // if (subsUrl == '') {
+    //   if (item.duration < 60 * 5) return null;
+    //   final i = item.url.lastIndexOf('.mp4');
+    //   if (i == -1) return null;
+    //   subsUrl = item.url.replaceFirst('.mp4', '.ass', i);
+    // }
     return _loadCaptionsFuture(subsUrl);
   }
 
   Future<ClosedCaptionFile>? _loadCaptionsFuture(String url) async {
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
-      if (url.endsWith(".srt")) {
-        return SubRipCaptionFile(response.body);
+      final data = utf8.decode(response.bodyBytes);
+      if (url.endsWith('.srt')) {
+        return SubRipCaptionFile(data);
+      } else if (url.endsWith('.vtt')) {
+        return WebVttCaptionFile(data);
       } else {
-        return AssCaptionFile(response.body);
+        return AssCaptionFile(data);
       }
     } else {
-      return AssCaptionFile("");
+      return AssCaptionFile('');
     }
+  }
+
+  bool hasCaptions() {
+    final item = playlist.getItem(playlist.pos);
+    final subs = item?.subs;
+    return subs != null && subs.isNotEmpty;
   }
 
   void userSetPlayerState(bool state) {

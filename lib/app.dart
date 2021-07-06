@@ -274,6 +274,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     final data = AddVideo(
       item: VideoList(
         url: url,
+        subs: '',
         title: 'Raw Video',
         author: '',
         duration: 0.0,
@@ -302,6 +303,12 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                         labelText: 'Video URL',
                       ),
                       onChanged: (value) => data.item.url = value,
+                    ),
+                    TextFormField(
+                      decoration: const InputDecoration(
+                        labelText: 'Subtitles URL',
+                      ),
+                      onChanged: (value) => data.item.subs = value,
                     ),
                     CheckboxListTile(
                       title: const Text('Add as temporary'),

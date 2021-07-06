@@ -510,6 +510,7 @@ class VideoList {
     data['title'] = this.title;
     data['author'] = this.author;
     data['duration'] = this.duration;
+    data['subs'] = this.subs;
     data['isTemp'] = this.isTemp;
     data['isIframe'] = this.isIframe;
     return data;

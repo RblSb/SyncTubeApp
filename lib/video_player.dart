@@ -40,7 +40,9 @@ class VideoPlayerScreen extends StatelessWidget {
                     alignment: Alignment.bottomCenter,
                     children: <Widget>[
                       VideoPlayer(player.controller!),
-                      if (captionText != null && captionText != "")
+                      if (player.app.showSubtitles &&
+                          captionText != null &&
+                          captionText.isNotEmpty)
                         ClosedCaption(
                           text: captionText,
                           textStyle: const TextStyle(fontSize: 16),
@@ -144,7 +146,7 @@ class _PlayPauseOverlay extends StatelessWidget {
                   onTap: player.showControls ? _onPlayButton : null,
                   child: Icon(
                     player.isPlaying() ? Icons.pause : Icons.play_arrow,
-                    color: Colors.white60,
+                    color: Colors.white70,
                     size: 100,
                   ),
                 ),
@@ -200,23 +202,47 @@ class _PlayPauseOverlay extends StatelessWidget {
           if (player.showControls)
             Align(
               alignment: Alignment.bottomRight,
-              child: Container(
-                  padding: const EdgeInsets.only(bottom: 0),
-                  width: 40.0,
-                  height: 40.0,
-                  child: IconButton(
-                    icon: Icon(
-                      player.app.isChatVisible
-                          ? Icons.fullscreen
-                          : Icons.fullscreen_exit,
-                      color: Theme.of(context).icon,
-                      size: 30,
-                    ),
-                    tooltip: 'Double-tap or long-tap for fullscreen',
-                    onPressed: () {
-                      Settings.nextOrientationView(player.app);
-                    },
-                  )),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (player.hasCaptions())
+                    Container(
+                        padding: const EdgeInsets.only(bottom: 0),
+                        width: 40.0,
+                        height: 40.0,
+                        child: IconButton(
+                          icon: Icon(
+                            player.app.showSubtitles
+                                ? Icons.subtitles
+                                : Icons.subtitles_off,
+                            color: Theme.of(context).playerIcon,
+                            size: 30,
+                          ),
+                          tooltip: 'Double-tap or long-tap for fullscreen',
+                          onPressed: () {
+                            player.app.showSubtitles =
+                                !player.app.showSubtitles;
+                          },
+                        )),
+                  Container(
+                      padding: const EdgeInsets.only(bottom: 0),
+                      width: 40.0,
+                      height: 40.0,
+                      child: IconButton(
+                        icon: Icon(
+                          player.app.isChatVisible
+                              ? Icons.fullscreen
+                              : Icons.fullscreen_exit,
+                          color: Theme.of(context).playerIcon,
+                          size: 30,
+                        ),
+                        tooltip: 'Double-tap or long-tap for fullscreen',
+                        onPressed: () {
+                          Settings.nextOrientationView(player.app);
+                        },
+                      )),
+                ],
+              ),
             ),
         ],
       ),

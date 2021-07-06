@@ -39,6 +39,7 @@ class AppModel extends ChangeNotifier {
   int synchThreshold = 2;
   int _prefferedOrientation = 0;
   bool _isChatVisible = true;
+  bool _showSubtitles = true;
   bool _hasSystemUi = false;
   bool _hasBackgroundAudio = true;
   bool isInBackground = false;
@@ -67,6 +68,14 @@ class AppModel extends ChangeNotifier {
     if (player.showMessageIcon) {
       player.showMessageIcon = false;
     }
+    notifyListeners();
+  }
+
+  bool get showSubtitles => _showSubtitles;
+
+  set showSubtitles(bool showSubtitles) {
+    if (_showSubtitles == showSubtitles) return;
+    _showSubtitles = showSubtitles;
     notifyListeners();
   }
 
