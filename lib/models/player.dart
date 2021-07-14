@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart';
 import 'package:video_player/video_player.dart';
 import 'package:http/http.dart' as http;
 import 'package:youtube_explode_dart/youtube_explode_dart.dart' as youtube;
@@ -134,6 +135,7 @@ class PlayerModel extends ChangeNotifier {
     controller = VideoPlayerController.network(
       url,
       closedCaptionFile: _loadCaptions(item),
+      videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
     );
     controller?.addListener(notifyListeners);
     initPlayerFuture = controller?.initialize();
@@ -217,7 +219,13 @@ class PlayerModel extends ChangeNotifier {
   }
 
   Future<ClosedCaptionFile>? _loadCaptionsFuture(String url) async {
-    final response = await http.get(Uri.parse(url));
+    Response response;
+    try {
+      response = await http.get(Uri.parse(url));
+    } catch (_) {
+      print('Subtitles loading error ($url)');
+      return AssCaptionFile('');
+    }
     if (response.statusCode == 200) {
       final data = utf8.decode(response.bodyBytes);
       if (url.endsWith('.srt')) {

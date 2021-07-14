@@ -30,15 +30,15 @@ dependencies:
 
   shared_preferences: ^2.0.6
 
-  video_player: ^2.1.6
+  video_player: ^2.1.10
 
   web_socket_channel: ^2.1.0
 
   http: ^0.13.3
 
-  youtube_explode_dart: ^1.9.5
+  youtube_explode_dart: ^1.9.9
 
-  url_launcher: ^6.0.6
+  url_launcher: ^6.0.9
 
   wakelock: ^0.5.2
 

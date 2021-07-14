@@ -76,7 +76,7 @@ class AppModel extends ChangeNotifier {
   set showSubtitles(bool showSubtitles) {
     if (_showSubtitles == showSubtitles) return;
     _showSubtitles = showSubtitles;
-    notifyListeners();
+    player.notifyListeners();
   }
 
   AppModel(this.wsUrl) {

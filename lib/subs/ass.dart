@@ -4,7 +4,10 @@ import 'package:video_player/video_player.dart';
 
 final _assTimeStamp = RegExp(r'\d+:\d\d:\d\d.\d\d');
 final _blockTags = RegExp(r'\{\\[^}]*\}');
-final _tags = RegExp(r'\\[^ ]+');
+final _spaceTags = RegExp(r'\\(n|h)');
+final _newLineTag = RegExp(r'\\N');
+final _manyNewLineTags = RegExp(r'\\N(\\N)+');
+final _drawingMode = RegExp(r'\\p[124]');
 
 /// Represents a [ClosedCaptionFile], parsed from the ASS file format.
 class AssCaptionFile extends ClosedCaptionFile {
@@ -49,8 +52,11 @@ List<Caption> _parseCaptionsFromAssString(String file) {
     }
     list = list.map((e) => e.trim()).toList();
     var text = list[ids['Text']!];
+    if (_drawingMode.hasMatch(text)) text = '';
     text = text.replaceAll(_blockTags, '');
-    text = text.replaceAll(_tags, '');
+    text = text.replaceAll(_spaceTags, ' ');
+    text = text.replaceAll(_manyNewLineTags, '\\N');
+    text = text.replaceAll(_newLineTag, '\n');
     final caption = Caption(
       number: captionNumber,
       start: _parseAssTimestamp(list[ids['Start']!]),
@@ -73,7 +79,7 @@ Duration _parseAssTimestamp(String timestampString) {
   final int hours = int.parse(hoursMinutesSeconds[0]);
   final int minutes = int.parse(hoursMinutesSeconds[1]);
   final int seconds = int.parse(hoursMinutesSeconds[2]);
-  final int milliseconds = int.parse(commaSections[1]);
+  final int milliseconds = int.parse(commaSections[1]) * 10;
 
   return Duration(
     hours: hours,

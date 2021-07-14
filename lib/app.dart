@@ -42,7 +42,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     final nativeOrientation = NativeDeviceOrientationCommunicator();
     final orientationStream =
         nativeOrientation.onOrientationChanged(useSensor: true);
-    orientationStream.listen((event) {
+    orientationListener = orientationStream.listen((event) {
       switch (event) {
         case NativeDeviceOrientation.landscapeLeft:
           if (Settings.prefferedOrientations.isEmpty) return;
@@ -60,6 +60,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   }
 
   late AppModel app;
+  late StreamSubscription<NativeDeviceOrientation>? orientationListener;
 
   Widget providers({required Widget child}) {
     return MultiProvider(
@@ -352,6 +353,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     print('app disposed');
     super.dispose();
     app.dispose();
+    orientationListener?.cancel();
     SystemChrome.setPreferredOrientations([]);
     SystemChrome.setEnabledSystemUIOverlays([
       SystemUiOverlay.top,
