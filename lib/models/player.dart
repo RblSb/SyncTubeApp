@@ -131,6 +131,7 @@ class PlayerModel extends ChangeNotifier {
     }
     var url = item.url;
     if (url.contains('youtu')) url = await getYoutubeVideoUrl(url);
+    pause();
     final prevController = controller;
     controller = VideoPlayerController.network(
       url,
@@ -140,6 +141,11 @@ class PlayerModel extends ChangeNotifier {
     controller?.addListener(notifyListeners);
     initPlayerFuture = controller?.initialize();
     initPlayerFuture?.whenComplete(() => prevController?.dispose());
+    initPlayerFuture?.whenComplete(() {
+      app.send(WsData(
+        type: 'VideoLoaded',
+      ));
+    });
     notifyListeners();
   }
 
@@ -221,7 +227,7 @@ class PlayerModel extends ChangeNotifier {
   Future<ClosedCaptionFile>? _loadCaptionsFuture(String url) async {
     Response response;
     try {
-      response = await http.get(Uri.parse(url));
+      response = await http.get(Uri.parse(url)).timeout(Duration(seconds: 5));
     } catch (_) {
       print('Subtitles loading error ($url)');
       return AssCaptionFile('');
