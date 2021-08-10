@@ -456,15 +456,16 @@ class Client {
     group = json['group'];
   }
 
-  bool get isUser => group & 1 != 0;
-  bool get isLeader => group & 2 != 0;
-  bool get isAdmin => group & 4 != 0;
+  bool get isBanned => group & 1 != 0;
+  bool get isUser => group & 2 != 0;
+  bool get isLeader => group & 4 != 0;
+  bool get isAdmin => group & 8 != 0;
 
   set isLeader(bool flag) {
     if (flag) {
-      group |= 2;
+      group |= 4;
     } else {
-      group &= -1 - 2;
+      group &= -1 - 4;
     }
   }
 
