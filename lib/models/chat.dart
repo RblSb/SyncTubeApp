@@ -84,7 +84,7 @@ class ChatModel extends ChangeNotifier {
 
   void sendMessage(String text) {
     if (text.startsWith('/')) {
-      handleCommands(text.substring(1));
+      if (handleCommands(text.substring(1))) return;
     }
     _app.send(WsData(
       type: 'Message',
@@ -92,21 +92,91 @@ class ChatModel extends ChangeNotifier {
     ));
   }
 
-  final RegExp matchNumbers = RegExp(r'^-?[0-9]+$');
-
-  void handleCommands(String text) {
-    switch (text) {
+  bool handleCommands(String command) {
+    final args = command.trim().split(' ');
+    command = args.removeAt(0);
+    switch (command) {
+      case 'ban':
+        final name = elementAt(args, 0) ?? '';
+        final time = parseSimpleDate(elementAt(args, 1));
+        if (time <= 0) return true;
+        _app.send(WsData(
+          type: 'BanClient',
+          banClient: BanClient(
+            name: name,
+            time: time,
+          ),
+        ));
+        return true;
+      case 'unban':
+      case 'removeBan':
+        final name = elementAt(args, 0) ?? '';
+        final time = parseSimpleDate(elementAt(args, 1));
+        _app.send(WsData(
+          type: 'BanClient',
+          banClient: BanClient(
+            name: name,
+            time: time,
+          ),
+        ));
+        return true;
       case 'clear':
-        if (_app.isAdmin()) _app.send(WsData(type: 'ClearChat'));
-        break;
+        if (_app.isAdmin())
+          _app.send(WsData(type: 'ClearChat'));
+        else
+          clearChat();
+        return true;
       default:
     }
-    if (matchNumbers.hasMatch(text)) {
+    if (matchSimpleDate.hasMatch(command)) {
       _app.send(WsData(
         type: 'Rewind',
-        rewind: Pause(time: int.parse(text).toDouble()),
+        rewind: Pause(time: parseSimpleDate(command).toDouble()),
       ));
     }
+    return false;
+  }
+
+  T? elementAt<T>(List<T> arr, int pos) {
+    if (pos < arr.length) return arr[pos];
+    return null;
+  }
+
+  final matchSimpleDate =
+      RegExp(r'^-?([0-9]+d)?([0-9]+h)?([0-9]+m)?([0-9]+s?)?$');
+
+  int parseSimpleDate(String? text) {
+    if (text == null) return 0;
+    if (!matchSimpleDate.hasMatch(text)) return 0;
+    List<String> matches = [];
+    final match = matchSimpleDate.firstMatch(text);
+    final length = match!.groupCount + 1;
+    for (var i = 1; i < length; i++) {
+      final group = match.group(i);
+      if (group == null) continue;
+      matches.add(group);
+    }
+    var seconds = 0;
+    for (final block in matches) {
+      seconds += _parseSimpleDateBlock(block);
+    }
+    if (text.startsWith('-')) seconds = -seconds;
+    return seconds;
+  }
+
+  int _parseSimpleDateBlock(String block) {
+    if (block.endsWith('s'))
+      return _time(block);
+    else if (block.endsWith('m'))
+      return _time(block) * 60;
+    else if (block.endsWith('h'))
+      return _time(block) * 60 * 60;
+    else if (block.endsWith('d')) return _time(block) * 60 * 60 * 24;
+    return int.parse(block);
+  }
+
+  int _time(String block) {
+    return int.parse(block.substring(0, block.length - 1));
   }
 
   void clearChat() {

@@ -8,6 +8,7 @@ class WsData {
   Message? message;
   ServerMessage? serverMessage;
   UpdateClients? updateClients;
+  BanClient? banClient;
   AddVideo? addVideo;
   RemoveVideo? removeVideo;
   RemoveVideo? skipVideo;
@@ -32,6 +33,7 @@ class WsData {
       this.message,
       this.serverMessage,
       this.updateClients,
+      this.banClient,
       this.addVideo,
       this.removeVideo,
       this.skipVideo,
@@ -75,6 +77,9 @@ class WsData {
         : null;
     pause = json['pause'] != null ? new Pause.fromJson(json['pause']) : null;
     play = json['play'] != null ? new Pause.fromJson(json['play']) : null;
+    banClient = json['banClient'] != null
+        ? new BanClient.fromJson(json['banClient'])
+        : null;
     getTime =
         json['getTime'] != null ? new GetTime.fromJson(json['getTime']) : null;
     setTime =
@@ -137,6 +142,9 @@ class WsData {
     }
     if (this.play != null) {
       data['play'] = this.play?.toJson();
+    }
+    if (this.banClient != null) {
+      data['banClient'] = this.banClient?.toJson();
     }
     if (this.getTime != null) {
       data['getTime'] = this.getTime?.toJson();
@@ -330,12 +338,14 @@ class Permissions {
   late List<String> user;
   late List<String> leader;
   late List<String> admin;
+  late List<String> banned;
 
   Permissions({
     required this.guest,
     required this.user,
     required this.leader,
     required this.admin,
+    required this.banned,
   });
 
   Permissions.fromJson(Map<String, dynamic> json) {
@@ -363,6 +373,12 @@ class Permissions {
         admin.add(v);
       });
     }
+    if (json['banned'] != null) {
+      banned = [];
+      json['banned'].forEach((v) {
+        banned.add(v);
+      });
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -371,6 +387,7 @@ class Permissions {
     data['user'] = this.user;
     data['leader'] = this.leader;
     data['admin'] = this.admin;
+    data['banned'] = this.banned;
     return data;
   }
 }
@@ -549,6 +566,25 @@ class Login {
     data['passHash'] = this.passHash;
     data['clients'] = this.clients?.map((v) => v.toJson()).toList();
     data['isUnknownClient'] = this.isUnknownClient;
+    return data;
+  }
+}
+
+class BanClient {
+  late String name;
+  late int time;
+
+  BanClient({required this.name, required this.time});
+
+  BanClient.fromJson(Map<String, dynamic> json) {
+    name = json['name'];
+    time = json['time'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['name'] = this.name;
+    data['time'] = this.time;
     return data;
   }
 }
