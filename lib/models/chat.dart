@@ -126,6 +126,10 @@ class ChatModel extends ChangeNotifier {
         else
           clearChat();
         return true;
+      case 'fb':
+      case 'flashback':
+        _app.send(WsData(type: 'Flashback'));
+        return false;
       default:
     }
     if (matchSimpleDate.hasMatch(command)) {
