@@ -1,4 +1,5 @@
 // https://github.com/RblSb/SyncTube/blob/master/src/Types.hx
+// https://autocode.icu/jsontodart
 
 class WsData {
   late String type;
@@ -9,6 +10,7 @@ class WsData {
   ServerMessage? serverMessage;
   UpdateClients? updateClients;
   BanClient? banClient;
+  KickClient? kickClient;
   AddVideo? addVideo;
   RemoveVideo? removeVideo;
   RemoveVideo? skipVideo;
@@ -34,6 +36,7 @@ class WsData {
       this.serverMessage,
       this.updateClients,
       this.banClient,
+      this.kickClient,
       this.addVideo,
       this.removeVideo,
       this.skipVideo,
@@ -79,6 +82,9 @@ class WsData {
     play = json['play'] != null ? new Pause.fromJson(json['play']) : null;
     banClient = json['banClient'] != null
         ? new BanClient.fromJson(json['banClient'])
+        : null;
+    kickClient = json['kickClient'] != null
+        ? new KickClient.fromJson(json['kickClient'])
         : null;
     getTime =
         json['getTime'] != null ? new GetTime.fromJson(json['getTime']) : null;
@@ -145,6 +151,9 @@ class WsData {
     }
     if (this.banClient != null) {
       data['banClient'] = this.banClient?.toJson();
+    }
+    if (this.kickClient != null) {
+      data['kickClient'] = this.kickClient?.toJson();
     }
     if (this.getTime != null) {
       data['getTime'] = this.getTime?.toJson();
@@ -585,6 +594,22 @@ class BanClient {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['name'] = this.name;
     data['time'] = this.time;
+    return data;
+  }
+}
+
+class KickClient {
+  late String name;
+
+  KickClient({required this.name});
+
+  KickClient.fromJson(Map<String, dynamic> json) {
+    name = json['name'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['name'] = this.name;
     return data;
   }
 }

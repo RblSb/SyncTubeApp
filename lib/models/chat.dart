@@ -97,6 +97,7 @@ class ChatModel extends ChangeNotifier {
     command = args.removeAt(0);
     switch (command) {
       case 'ban':
+        mergeRedundantArgs(args, 0, 2);
         final name = elementAt(args, 0) ?? '';
         final time = parseSimpleDate(elementAt(args, 1));
         if (time <= 0) return true;
@@ -110,13 +111,23 @@ class ChatModel extends ChangeNotifier {
         return true;
       case 'unban':
       case 'removeBan':
+        mergeRedundantArgs(args, 0, 1);
         final name = elementAt(args, 0) ?? '';
-        final time = parseSimpleDate(elementAt(args, 1));
         _app.send(WsData(
           type: 'BanClient',
           banClient: BanClient(
             name: name,
-            time: time,
+            time: 0,
+          ),
+        ));
+        return true;
+      case 'kick':
+        mergeRedundantArgs(args, 0, 1);
+        final name = elementAt(args, 0) ?? '';
+        _app.send(WsData(
+          type: 'KickClient',
+          kickClient: KickClient(
+            name: name,
           ),
         ));
         return true;
@@ -181,6 +192,13 @@ class ChatModel extends ChangeNotifier {
 
   int _time(String block) {
     return int.parse(block.substring(0, block.length - 1));
+  }
+
+  void mergeRedundantArgs(List<String> args, int pos, int newLength) {
+    final count = args.length - (newLength - 1);
+    if (count < 2) return;
+    args.insert(pos, args.sublist(pos, pos + count).join(" "));
+    args.removeRange(pos + 1, pos + count + 1);
   }
 
   void clearChat() {

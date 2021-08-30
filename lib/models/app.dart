@@ -299,7 +299,7 @@ class AppModel extends ChangeNotifier {
       case 'Rewind':
         if (!player.isVideoLoaded()) return;
         final type = data.rewind!;
-        final ms = (type.time * 1000).round();
+        final ms = (type.time * 1000 + 500).round();
         player.seekTo(
           Duration(milliseconds: ms),
         );
@@ -385,7 +385,8 @@ class AppModel extends ChangeNotifier {
     if (!player.isPlaying() && !type.paused) player.play();
     chatPanel.serverPlay = !type.paused;
     if ((time - newTime).abs() < synchThreshold) return;
-    final ms = (newTime * 1000).round();
+    var ms = (newTime * 1000).round();
+    if (!type.paused) ms += 500;
     player.seekTo(
       Duration(milliseconds: ms),
     );
@@ -436,6 +437,7 @@ class AppModel extends ChangeNotifier {
 
   void inBackground() {
     isInBackground = true;
+    if (playlist.isEmpty()) return;
     if (!player.isPlaying()) player.play();
   }
 
