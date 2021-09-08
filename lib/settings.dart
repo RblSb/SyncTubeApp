@@ -120,11 +120,12 @@ class Settings extends StatelessWidget {
   static void setSystemUi(AppModel app, bool flag) {
     app.hasSystemUi = flag;
     if (flag) {
-      SystemChrome.setEnabledSystemUIOverlays(
-        [SystemUiOverlay.bottom, SystemUiOverlay.top],
-      );
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: [
+        SystemUiOverlay.bottom,
+        SystemUiOverlay.top,
+      ]);
     } else {
-      SystemChrome.setEnabledSystemUIOverlays([]);
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: []);
     }
   }
 

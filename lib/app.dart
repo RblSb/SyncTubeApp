@@ -355,7 +355,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     app.dispose();
     orientationListener?.cancel();
     SystemChrome.setPreferredOrientations([]);
-    SystemChrome.setEnabledSystemUIOverlays([
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: [
       SystemUiOverlay.top,
       SystemUiOverlay.bottom,
     ]);

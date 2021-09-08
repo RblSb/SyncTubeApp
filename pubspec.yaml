@@ -26,17 +26,17 @@ dependencies:
 
   crypto: any
 
-  provider: ^5.0.0
+  provider: ^6.0.0
 
   shared_preferences: ^2.0.6
 
-  video_player: ^2.1.12
+  video_player: ^2.1.15
 
   web_socket_channel: ^2.1.0
 
   http: ^0.13.3
 
-  youtube_explode_dart: ^1.9.9
+  youtube_explode_dart: ^1.10.6
 
   url_launcher: ^6.0.9
 
