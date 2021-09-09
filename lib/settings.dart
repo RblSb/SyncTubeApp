@@ -11,7 +11,7 @@ class Settings extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final app = Provider.of<AppModel>(context);
-    return Column(
+    return ListView(
       children: <Widget>[
         ListTile(
           title: const Text('Orientation'),

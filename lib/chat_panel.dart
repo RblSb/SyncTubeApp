@@ -23,7 +23,7 @@ class ChatPanel extends StatelessWidget {
             icon: Icon(
               Icons.list,
               color: panel.mainTab == MainTab.playlist
-                  ? Theme.of(context).buttonColor
+                  ? Theme.of(context).colorScheme.primary
                   : Theme.of(context).icon,
               size: 30,
             ),
@@ -62,7 +62,7 @@ class ChatPanel extends StatelessWidget {
             icon: Icon(
               Icons.settings,
               color: panel.mainTab == MainTab.settings
-                  ? Theme.of(context).buttonColor
+                  ? Theme.of(context).colorScheme.primary
                   : Theme.of(context).icon,
               size: 30,
             ),

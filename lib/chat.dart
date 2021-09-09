@@ -332,7 +332,7 @@ class _ChatState extends State<Chat> {
                     showRewindMenu ? Icons.close : Icons.mood,
                     size: 35,
                     color: showEmotesTab
-                        ? Theme.of(context).buttonColor
+                        ? Theme.of(context).colorScheme.primary
                         : Theme.of(context).icon,
                   ),
                 ),

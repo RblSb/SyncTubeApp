@@ -146,6 +146,7 @@ class PlayerModel extends ChangeNotifier {
         type: 'VideoLoaded',
       ));
     });
+    // app.chat.addItem(ChatItem("", "VideoLoaded"))
     notifyListeners();
   }
 
@@ -179,10 +180,26 @@ class PlayerModel extends ChangeNotifier {
     try {
       final id = extractVideoId(url);
       final manifest = await yt.videos.streamsClient.getManifest(id);
-      final stream = manifest.muxed.withHighestBitrate();
-      return stream.url.toString();
+      yt.close();
+      // final stream = manifest.muxed.withHighestBitrate();
+      final qualities = manifest.muxed.getAllVideoQualities().toList();
+      final values = youtube.VideoQuality.values;
+      qualities.sort((a, b) {
+        return values.indexOf(a).compareTo(values.indexOf(b));
+      });
+      while (values.indexOf(qualities.last) >
+          values.indexOf(youtube.VideoQuality.high1080)) {
+        qualities.removeLast();
+      }
+      // print(qualities);
+      final stream = manifest.muxed.firstWhere((element) {
+        return element.videoQuality == qualities.last;
+      });
+      final streamUrl = stream.url.toString();
+      return streamUrl;
     } catch (e) {
       print('getYoutubeVideoUrl for url $url');
+      yt.close();
       return '';
     }
   }
