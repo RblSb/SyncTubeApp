@@ -9,7 +9,6 @@ import 'package:youtube_explode_dart/youtube_explode_dart.dart' as youtube;
 import './app.dart';
 import './playlist.dart';
 import '../subs/ass.dart';
-import '../subs/web_vtt.dart';
 import '../wsdata.dart';
 
 class PlayerModel extends ChangeNotifier {
@@ -254,7 +253,7 @@ class PlayerModel extends ChangeNotifier {
       if (url.endsWith('.srt')) {
         return SubRipCaptionFile(data);
       } else if (url.endsWith('.vtt')) {
-        return WebVttCaptionFile(data);
+        return WebVTTCaptionFile(data);
       } else {
         return AssCaptionFile(data);
       }

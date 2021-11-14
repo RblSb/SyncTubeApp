@@ -147,7 +147,7 @@ class _PlayPauseOverlay extends StatelessWidget {
                   child: Icon(
                     player.isPlaying() ? Icons.pause : Icons.play_arrow,
                     color: Colors.white70,
-                    size: 100,
+                    size: MediaQuery.of(context).size.shortestSide / 4,
                   ),
                 ),
               ),
@@ -157,37 +157,27 @@ class _PlayPauseOverlay extends StatelessWidget {
             Align(
               alignment: Alignment.bottomLeft,
               child: Padding(
-                padding: const EdgeInsets.only(bottom: 9, left: 9),
+                padding: const EdgeInsets.only(bottom: 32, left: 15),
                 child: Text(_timeText(player.controller?.value)),
               ),
             ),
           if (player.showControls)
-            RawGestureDetector(
-              gestures: {
-                AllowMultipleGestureRecognizer:
-                    GestureRecognizerFactoryWithHandlers<
-                        AllowMultipleGestureRecognizer>(
-                  () => AllowMultipleGestureRecognizer(),
-                  (AllowMultipleGestureRecognizer instance) {
-                    instance.onTapDown =
-                        (details) => player.cancelControlsHide();
-                  },
-                )
+            GestureDetector(
+              onHorizontalDragDown: (details) {
+                player.cancelControlsHide();
               },
               child: Align(
                 alignment: Alignment.bottomCenter,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 13),
-                  child: VideoProgressIndicator(
-                    player.controller!,
-                    padding: const EdgeInsets.only(bottom: 20, top: 20),
-                    colors: VideoProgressColors(
-                      playedColor: const Color.fromRGBO(200, 0, 0, 0.75),
-                      bufferedColor: const Color.fromRGBO(200, 200, 200, 0.5),
-                      backgroundColor: const Color.fromRGBO(200, 200, 200, 0.2),
-                    ),
-                    allowScrubbing: true,
+                child: VideoProgressIndicator(
+                  player.controller!,
+                  padding: const EdgeInsets.only(
+                      bottom: 15, top: 5, left: 15, right: 15),
+                  colors: VideoProgressColors(
+                    playedColor: const Color.fromRGBO(200, 0, 0, 0.75),
+                    bufferedColor: const Color.fromRGBO(200, 200, 200, 0.5),
+                    backgroundColor: const Color.fromRGBO(200, 200, 200, 0.2),
                   ),
+                  allowScrubbing: true,
                 ),
               ),
             ),
@@ -202,46 +192,40 @@ class _PlayPauseOverlay extends StatelessWidget {
           if (player.showControls)
             Align(
               alignment: Alignment.bottomRight,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (player.hasCaptions())
-                    Container(
-                        padding: const EdgeInsets.only(bottom: 0),
-                        width: 40.0,
-                        height: 40.0,
-                        child: IconButton(
-                          icon: Icon(
-                            player.app.showSubtitles
-                                ? Icons.subtitles
-                                : Icons.subtitles_off,
-                            color: Theme.of(context).playerIcon,
-                            size: 30,
-                          ),
-                          tooltip: 'Double-tap or long-tap for fullscreen',
-                          onPressed: () {
-                            player.app.showSubtitles =
-                                !player.app.showSubtitles;
-                          },
-                        )),
-                  Container(
-                      padding: const EdgeInsets.only(bottom: 0),
-                      width: 40.0,
-                      height: 40.0,
-                      child: IconButton(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 20),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (player.hasCaptions())
+                      IconButton(
                         icon: Icon(
-                          player.app.isChatVisible
-                              ? Icons.fullscreen
-                              : Icons.fullscreen_exit,
+                          player.app.showSubtitles
+                              ? Icons.subtitles
+                              : Icons.subtitles_off,
                           color: Theme.of(context).playerIcon,
                           size: 30,
                         ),
                         tooltip: 'Double-tap or long-tap for fullscreen',
                         onPressed: () {
-                          Settings.nextOrientationView(player.app);
+                          player.app.showSubtitles = !player.app.showSubtitles;
                         },
-                      )),
-                ],
+                      ),
+                    IconButton(
+                      icon: Icon(
+                        player.app.isChatVisible
+                            ? Icons.fullscreen
+                            : Icons.fullscreen_exit,
+                        color: Theme.of(context).playerIcon,
+                        size: 30,
+                      ),
+                      tooltip: 'Double-tap or long-tap for fullscreen',
+                      onPressed: () {
+                        Settings.nextOrientationView(player.app);
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
         ],
