@@ -113,6 +113,7 @@ class AppModel extends ChangeNotifier {
   }
 
   void send(WsData data) {
+    if (!chatPanel.isConnected) return;
     _channel.sink.add(jsonEncode(data));
   }
 

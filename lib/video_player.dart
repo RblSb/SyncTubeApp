@@ -26,39 +26,48 @@ class VideoPlayerScreen extends StatelessWidget {
             if (player.isIframe()) return iframeWidget(player);
             final captionText = player.controller?.value.caption.text;
             return GestureDetector(
-              // onLongPressMoveUpdate: (details) => player.hideControlsWithDelay(),
               onDoubleTap: () => Settings.nextOrientationView(player.app),
               onLongPress: () {
                 if (player.showControls) return;
                 Settings.nextOrientationView(player.app);
               },
-              child: Align(
-                alignment: Alignment.center,
-                child: AspectRatio(
-                  aspectRatio: player.controller?.value.aspectRatio ?? 16 / 9,
-                  child: Stack(
-                    alignment: Alignment.bottomCenter,
-                    children: <Widget>[
-                      VideoPlayer(player.controller!),
-                      if (player.app.showSubtitles &&
-                          captionText != null &&
-                          captionText.isNotEmpty)
-                        ClosedCaption(
-                          text: captionText,
-                          textStyle: const TextStyle(fontSize: 16),
-                        ),
-                      _PlayPauseOverlay(player: player),
-                      AnimatedOpacity(
-                        opacity: player.showMessageIcon ? 0.7 : 0,
-                        duration: const Duration(milliseconds: 200),
-                        child: const Align(
-                          alignment: Alignment.topRight,
-                          child: Icon(Icons.mail),
+              child: Stack(
+                children: [
+                  Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      FittedBox(
+                        fit: player.isFitWidth
+                            ? BoxFit.fitWidth
+                            : BoxFit.contain,
+                        child: SizedBox(
+                          width: player.controller?.value.aspectRatio ?? 16 / 9,
+                          height: 1,
+                          child: VideoPlayer(player.controller!),
                         ),
                       ),
                     ],
                   ),
-                ),
+                  if (player.app.showSubtitles &&
+                      captionText != null &&
+                      captionText.isNotEmpty)
+                    ClosedCaption(
+                      text: captionText,
+                      textStyle: const TextStyle(fontSize: 16),
+                    ),
+                  _PlayPauseOverlay(player: player),
+                  AnimatedOpacity(
+                    opacity: player.showMessageIcon ? 0.7 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: const Align(
+                      alignment: Alignment.topRight,
+                      child: Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: Icon(Icons.mail),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             );
           default:
@@ -197,6 +206,18 @@ class _PlayPauseOverlay extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    IconButton(
+                      icon: Icon(
+                        player.isFitWidth
+                            ? Icons.fit_screen
+                            : Icons.fit_screen_outlined,
+                        color: Theme.of(context).playerIcon,
+                        size: 30,
+                      ),
+                      onPressed: () {
+                        player.isFitWidth = !player.isFitWidth;
+                      },
+                    ),
                     if (player.hasCaptions())
                       IconButton(
                         icon: Icon(
@@ -206,7 +227,6 @@ class _PlayPauseOverlay extends StatelessWidget {
                           color: Theme.of(context).playerIcon,
                           size: 30,
                         ),
-                        tooltip: 'Double-tap or long-tap for fullscreen',
                         onPressed: () {
                           player.app.showSubtitles = !player.app.showSubtitles;
                         },

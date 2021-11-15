@@ -21,12 +21,20 @@ class PlayerModel extends ChangeNotifier {
   Timer? controlsTimer;
 
   bool _showMessageIcon = false;
-
   bool get showMessageIcon => _showMessageIcon;
 
   set showMessageIcon(bool showMessageIcon) {
     if (_showMessageIcon == showMessageIcon) return;
     _showMessageIcon = showMessageIcon;
+    notifyListeners();
+  }
+
+  bool _isFitWidth = false;
+  bool get isFitWidth => _isFitWidth;
+
+  set isFitWidth(bool isFitWidth) {
+    if (_isFitWidth == isFitWidth) return;
+    _isFitWidth = isFitWidth;
     notifyListeners();
   }
 
@@ -146,6 +154,7 @@ class PlayerModel extends ChangeNotifier {
       ));
     });
     // app.chat.addItem(ChatItem("", "VideoLoaded"))
+    _isFitWidth = false;
     notifyListeners();
   }
 

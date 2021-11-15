@@ -7,6 +7,7 @@ Screenshots: [portrait](https://i.imgur.com/ft5N5bb.png) / [landscape](https://i
 ### Builds (Android)
 
 Open [workflow list](https://github.com/RblSb/SyncTubeApp/actions?query=is%3Asuccess), open first in list and download apk articaft.
+Or try to download from [this link](https://nightly.link/RblSb/SyncTubeApp/workflows/main/master/app-release.apk.zip).
 
 ### Development
 
