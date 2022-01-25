@@ -26,25 +26,21 @@ dependencies:
 
   crypto: any
 
-  provider: ^6.0.1
+  provider: ^6.0.2
 
-  shared_preferences: ^2.0.11
+  shared_preferences: ^2.0.12
 
-  video_player: ^2.2.7
+  video_player: ^2.2.15
 
   web_socket_channel: ^2.1.0
 
   http: ^0.13.4
 
-  # youtube_explode_dart: ^1.10.8
-  youtube_explode_dart:
-    git:
-      url: https://github.com/Hexer10/youtube_explode_dart
-      ref: a51e38dcf8299f11271511922dc90ac48e7f5a47
+  youtube_explode_dart: ^1.10.9+1
 
-  url_launcher: ^6.0.17
+  url_launcher: ^6.0.18
 
-  wakelock: ^0.5.6
+  wakelock: ^0.6.1
 
   native_device_orientation: ^1.0.0
 
