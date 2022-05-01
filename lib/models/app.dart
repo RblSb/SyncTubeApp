@@ -439,7 +439,7 @@ class AppModel extends ChangeNotifier {
   void inBackground() {
     isInBackground = true;
     if (playlist.isEmpty()) return;
-    if (!player.isPlaying()) player.play();
+    if (!hasBackgroundAudio) player.pause();
   }
 
   void inForeground() {

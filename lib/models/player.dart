@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:SyncTube/subs/raw.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart';
 import 'package:video_player/video_player.dart';
@@ -142,9 +143,13 @@ class PlayerModel extends ChangeNotifier {
     final prevController = controller;
     controller = VideoPlayerController.network(
       url,
-      closedCaptionFile: _loadCaptions(item),
-      videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+      // closedCaptionFile: _loadCaptions(item),
+      videoPlayerOptions: VideoPlayerOptions(
+        mixWithOthers: true,
+        allowBackgroundPlayback: true,
+      ),
     );
+    controller?.setClosedCaptionFile(_loadCaptions(item));
     controller?.addListener(notifyListeners);
     initPlayerFuture = controller?.initialize();
     initPlayerFuture?.whenComplete(() => prevController?.dispose());
@@ -234,6 +239,28 @@ class PlayerModel extends ChangeNotifier {
       return manifest.title;
     } catch (e) {
       return 'Youtube Video';
+    }
+  }
+
+  Future<ClosedCaptionFile> getYoutubeSubtitles(String url) async {
+    // TODO check later
+    final yt = youtube.YoutubeExplode();
+    try {
+      final id = extractVideoId(url);
+      final manifest = await yt.videos.closedCaptions.getManifest(id);
+      final en = manifest.getByLanguage("en");
+      final info = en.first;
+      final track = await yt.videos.closedCaptions.get(info);
+      final items = track.captions.asMap().entries.map((element) {
+        final i = element.key;
+        final e = element.value;
+        return Caption(
+            number: i, start: e.offset, end: e.duration, text: e.text);
+      }).toList();
+      print(items);
+      return RawCaptionFile(items);
+    } catch (e) {
+      return RawCaptionFile([]);
     }
   }
 
