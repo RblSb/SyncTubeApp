@@ -38,7 +38,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     app = AppModel(widget.url);
     Settings.applySettings(app);
     Wakelock.enable();
-    WidgetsBinding.instance?.addObserver(this);
+    WidgetsBinding.instance.addObserver(this);
     final nativeOrientation = NativeDeviceOrientationCommunicator();
     final orientationStream =
         nativeOrientation.onOrientationChanged(useSensor: true);
@@ -360,7 +360,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       SystemUiOverlay.bottom,
     ]);
     Wakelock.disable();
-    WidgetsBinding.instance?.removeObserver(this);
+    WidgetsBinding.instance.removeObserver(this);
   }
 }
 

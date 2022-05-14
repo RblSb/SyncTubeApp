@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 import 'models/chat.dart';
 import 'color_scheme.dart';
@@ -83,7 +83,7 @@ class ChatItem {
                 fit: BoxFit.scaleDown,
                 height: MediaQuery.of(context).size.height / 4,
               ),
-              onTap: () => launch(link),
+              onTap: () => launchUrlString(link),
             ),
           ),
         ));
@@ -103,7 +103,7 @@ class ChatItem {
               style: TextStyle(color: Colors.blue),
               recognizer: TapGestureRecognizer()
                 ..onTap = () async {
-                  if (await canLaunch(link)) launch(link);
+                  if (await canLaunchUrlString(link)) launchUrlString(link);
                 }),
         ));
         return match.group(1)! + tabChar * link.length;
@@ -175,7 +175,7 @@ class _ChatState extends State<Chat> {
     final scrollAtEnd = lastPos <= 20;
     if (scrollAtEnd) return;
     final lastMax = chatScroll.position.maxScrollExtent;
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       final diff = chatScroll.position.maxScrollExtent - lastMax;
       chatScroll.jumpTo(
         lastPos + diff,
@@ -236,7 +236,7 @@ class _ChatState extends State<Chat> {
                               child: Text(time.toString(), maxLines: 1),
                             ),
                             onPressed: () {
-                              chat.sendMessage('/${time}');
+                              chat.sendMessage('/$time');
                               setState(() => showRewindMenu = false);
                             },
                           ),

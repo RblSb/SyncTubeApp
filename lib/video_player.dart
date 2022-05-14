@@ -1,7 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 import 'package:video_player/video_player.dart';
 import 'models/player.dart';
 import 'settings.dart';
@@ -94,7 +94,7 @@ class VideoPlayerScreen extends StatelessWidget {
     return GestureDetector(
       onTap: () async {
         final link = player.app.getChannelLink();
-        if (await canLaunch(link)) launch(link);
+        if (await canLaunchUrlString(link)) launchUrlString(link);
       },
       child: const Align(
         alignment: Alignment.center,

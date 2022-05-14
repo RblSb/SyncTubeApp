@@ -491,6 +491,7 @@ class AppModel extends ChangeNotifier {
     final yt = youtube.YoutubeExplode();
     final playlist =
         await yt.playlists.getVideos(data.item.url).take(50).toList();
+    yt.close();
     final items = data.atEnd ? playlist : sortItemsForQueueNext(playlist);
     for (final video in items) {
       if (video.duration == null) continue;
@@ -507,7 +508,7 @@ class AppModel extends ChangeNotifier {
   List<T> sortItemsForQueueNext<T>(List<T> items) {
     if (items.isEmpty) return items;
     // except first item when list empty
-    T? first = null;
+    T? first;
     if (player.playlist.isEmpty()) first = items.removeAt(0);
     items = items.reversed.toList();
     if (first != null) items.insert(0, first);
