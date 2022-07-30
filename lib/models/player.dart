@@ -309,15 +309,16 @@ class PlayerModel extends ChangeNotifier {
         yt.close();
         return RawCaptionFile([]);
       }
-      final items = track.captions.asMap().entries.map((element) {
-        final i = element.key;
-        final e = element.value;
-        return Caption(
+      var i = 0;
+      final items = track.captions.map((e) {
+        final caption = Caption(
           number: i,
           start: e.offset,
           end: e.offset + e.duration,
           text: e.text,
         );
+        i++;
+        return caption;
       }).toList();
       yt.close();
       return RawCaptionFile(items);
