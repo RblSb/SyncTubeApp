@@ -94,7 +94,8 @@ class VideoPlayerScreen extends StatelessWidget {
     return GestureDetector(
       onTap: () async {
         final link = player.app.getChannelLink();
-        if (await canLaunchUrlString(link)) launchUrlString(link);
+        if (await canLaunchUrlString(link))
+          launchUrlString(link, mode: LaunchMode.externalApplication);
       },
       child: const Align(
         alignment: Alignment.center,

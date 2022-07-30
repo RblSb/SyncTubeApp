@@ -83,7 +83,8 @@ class ChatItem {
                 fit: BoxFit.scaleDown,
                 height: MediaQuery.of(context).size.height / 4,
               ),
-              onTap: () => launchUrlString(link),
+              onTap: () =>
+                  launchUrlString(link, mode: LaunchMode.externalApplication),
             ),
           ),
         ));
@@ -103,7 +104,8 @@ class ChatItem {
               style: TextStyle(color: Colors.blue),
               recognizer: TapGestureRecognizer()
                 ..onTap = () async {
-                  if (await canLaunchUrlString(link)) launchUrlString(link);
+                  if (await canLaunchUrlString(link))
+                    launchUrlString(link, mode: LaunchMode.externalApplication);
                 }),
         ));
         return match.group(1)! + tabChar * link.length;
