@@ -76,7 +76,7 @@ class ChatPanel extends StatelessWidget {
   Widget leaderButton(ChatPanelModel panel, BuildContext context) {
     return OutlinedButton(
       style: OutlinedButton.styleFrom(
-        primary: Colors.white,
+        foregroundColor: Colors.white,
         minimumSize: Size(60, 34),
         padding: EdgeInsets.symmetric(horizontal: 18),
         side: BorderSide(
