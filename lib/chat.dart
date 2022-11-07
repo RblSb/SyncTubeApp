@@ -33,7 +33,8 @@ class ChatItem {
 
   ChatItem(this.name, this.text, [String? date]) {
     if (date != null) {
-      this.date = date;
+      final time = date.split(" ");
+      this.date = time.length > 1 ? time[1] : date;
       return;
     }
     final d = DateTime.now();

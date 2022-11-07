@@ -26,7 +26,7 @@ dependencies:
 
   crypto: any
 
-  provider: ^6.0.3
+  provider: ^6.0.4
 
   shared_preferences: ^2.0.15
 
@@ -36,7 +36,7 @@ dependencies:
 
   http: ^0.13.5
 
-  youtube_explode_dart: ^1.12.1
+  youtube_explode_dart: ^1.12.2
 
   url_launcher: ^6.1.6
 
