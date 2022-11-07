@@ -33,15 +33,26 @@ class ChatItem {
 
   ChatItem(this.name, this.text, [String? date]) {
     if (date != null) {
+      date = getLocalDateFromUtc(date);
       final time = date.split(" ");
       this.date = time.length > 1 ? time[1] : date;
       return;
     }
-    final d = DateTime.now();
-    final h = d.hour.toString().padLeft(2, '0');
-    final m = d.minute.toString().padLeft(2, '0');
-    final s = d.second.toString().padLeft(2, '0');
-    this.date = '$h:$m:$s';
+    this.date = dateToTimestamp(DateTime.now());
+  }
+
+  String getLocalDateFromUtc(String utcDate) {
+    if (!utcDate.contains(' ')) utcDate = '1970-01-01 $utcDate';
+    final date = DateTime.parse(utcDate);
+    final offset = DateTime.now().timeZoneOffset;
+    return dateToTimestamp(date.add(offset));
+  }
+
+  String dateToTimestamp(DateTime date) {
+    final h = date.hour.toString().padLeft(2, '0');
+    final m = date.minute.toString().padLeft(2, '0');
+    final s = date.second.toString().padLeft(2, '0');
+    return '$h:$m:$s';
   }
 
   Widget buildTitle(BuildContext context) {
