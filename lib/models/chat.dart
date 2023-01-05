@@ -1,10 +1,12 @@
 import 'package:flutter/foundation.dart';
+import 'package:synctube/models/player.dart';
 import 'dart:collection';
 import './app.dart';
 import '../chat.dart';
 import '../wsdata.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class ChatModel extends ChangeNotifier {
   ChatModel(this._app);
@@ -141,6 +143,9 @@ class ChatModel extends ChangeNotifier {
       case 'flashback':
         _app.send(WsData(type: 'Flashback'));
         return false;
+      case 'ad':
+        skipYoutubeAd();
+        return false;
       default:
     }
     if (matchSimpleDate.hasMatch(command)) {
@@ -150,6 +155,40 @@ class ChatModel extends ChangeNotifier {
       ));
     }
     return false;
+  }
+
+  void skipYoutubeAd() {
+    final item = _app.playlist.getItem(_app.playlist.pos);
+    if (item == null) return;
+    final id = PlayerModel.extractVideoId(item.url);
+    if (id.isEmpty) return;
+    final url = 'https://sponsor.ajay.app/api/skipSegments?videoID=$id';
+    final response = http.get(Uri.parse(url)).timeout(Duration(seconds: 5));
+    response.then((res) async {
+      if (res.statusCode != 200) return;
+      try {
+        final data = utf8.decode(res.bodyBytes);
+        final List<dynamic> json = jsonDecode(data);
+        final List<Map<String, dynamic>> list = json.map((e) {
+          final Map<String, dynamic> item = e;
+          return item;
+        }).toList();
+        for (final block in list) {
+          final double start = block["segment"][0];
+          final double end = block["segment"][1];
+          final pos = await _app.player.getPosition();
+          final time = pos.inMilliseconds / 1000;
+          if (time > start - 1 && time < end) {
+            _app.send(WsData(
+              type: 'Rewind',
+              rewind: Pause(time: end - time - 1),
+            ));
+          }
+        }
+      } catch (err) {
+        print(err);
+      }
+    });
   }
 
   T? elementAt<T>(List<T> arr, int pos) {
