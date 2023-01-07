@@ -1,3 +1,4 @@
+import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -53,13 +54,41 @@ class _ServerListPageState extends State<ServerListPage> {
     var strings = prefs.getStringList('serverListItems') ?? [];
     print(strings);
     if (strings.length == 0) {
-      strings = ['Example', 'https://synctube-example.herokuapp.com'];
+      strings = ['Example', 'https://synctube.onrender.com/'];
     }
     setState(() {
       for (var i = 0; i < strings.length; i += 2) {
         items.add(ServerListItem(strings[i], strings[i + 1]));
       }
     });
+
+    final _appLinks = AppLinks();
+    _appLinks.allUriLinkStream.listen((uri) {
+      deepLinkListener(uri);
+    });
+  }
+
+  void deepLinkListener(Uri uri) {
+    print(uri.toString());
+    // parse `synctube://http//server.com`
+    final protocols = ['https', 'http', 'wss', 'ws', 'synctube'];
+    if (protocols.contains(uri.host)) {
+      final link = uri
+          .toString()
+          .replaceFirst('${uri.host}//', '')
+          .replaceFirst('synctube://', '${uri.host}://');
+      final name = genServerNameFromLink(link);
+      final item = ServerListItem(name, link);
+      addItem(item);
+      openServer(item);
+    } else {
+      // parse `synctube://server.com`
+      final link = uri.toString().replaceFirst('synctube://', '');
+      final name = genServerNameFromLink(link);
+      final item = ServerListItem(name, link);
+      addItem(item);
+      openServer(item);
+    }
   }
 
   void writeItems() async {
@@ -77,6 +106,9 @@ class _ServerListPageState extends State<ServerListPage> {
     item.name = item.name.trim();
     item.url = item.url.trim();
     if (item.name.length == 0 || item.url.length == 0) return;
+    for (final el in items) {
+      if (el.name == item.name && el.url == item.url) return;
+    }
     setState(() => items.add(item));
     writeItems();
   }
@@ -121,12 +153,18 @@ class _ServerListPageState extends State<ServerListPage> {
   }
 
   void openServer(ServerListItem item) {
+    // move opened server to top
+    // setState(() {
+    //   items.remove(item);
+    //   items.insert(0, item);
+    // });
     var link = item.url;
     if (!link.contains('://')) link = 'http://$link';
     final uri = Uri.parse(link);
     final protocol = uri.scheme == 'https' ? 'wss' : 'ws';
     final port = uri.port == 80 ? '' : ':${uri.port}';
     final url = '$protocol://${uri.host}$port${uri.path}';
+    Navigator.of(context).popUntil((route) => route.isFirst);
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -193,6 +231,13 @@ class ServerListItem {
   Widget buildSubtitle(BuildContext context) => Text(url);
 }
 
+String genServerNameFromLink(String link) {
+  final host = Uri.parse(link).host;
+  var name = host.split('.')[0];
+  if (name.length < 4) name = host;
+  return name;
+}
+
 Future<ServerListItem?> _serverItemDialog(BuildContext context,
     [ServerListItem? item]) async {
   if (item == null) item = ServerListItem('', '');
@@ -202,8 +247,7 @@ Future<ServerListItem?> _serverItemDialog(BuildContext context,
     if (clipboardText.contains('http')) {
       item.url = clipboardText;
       try {
-        final host = Uri.parse(item.url).host;
-        item.name = host.split('.')[0];
+        item.name = genServerNameFromLink(item.url);
       } catch (e) {}
     }
   }

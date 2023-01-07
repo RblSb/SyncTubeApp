@@ -18,7 +18,7 @@ import 'package:native_device_orientation/native_device_orientation.dart';
 typedef WsDataFunc = void Function(WsData data);
 
 class App extends StatefulWidget {
-  App({
+  const App({
     Key? key,
     required this.name,
     required this.url,
