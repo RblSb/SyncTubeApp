@@ -10,7 +10,7 @@ import 'wsdata.dart';
 class Settings extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final app = Provider.of<AppModel>(context);
+    final app = context.watch<AppModel>();
     return ListView(
       children: <Widget>[
         ListTile(
@@ -90,6 +90,8 @@ class Settings extends StatelessWidget {
     }
     SystemChrome.restoreSystemUIOverlays();
   }
+
+  static bool isTV = false;
 
   static List<DeviceOrientation> prefferedOrientations = [];
 

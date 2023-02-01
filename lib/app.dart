@@ -232,14 +232,16 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   }
 
   Future<bool> _onWillPop(BuildContext context) async {
-    if (!app.isChatVisible) {
-      app.isChatVisible = true;
-      return false;
-    }
-    final focus = FocusScope.of(context);
-    if (focus.hasFocus && focus.focusedChild != null) {
-      removeFocus();
-      return false;
+    if (!Settings.isTV) {
+      if (!app.isChatVisible) {
+        app.isChatVisible = true;
+        return false;
+      }
+      final focus = FocusScope.of(context);
+      if (focus.hasFocus && focus.focusedChild != null) {
+        removeFocus();
+        return false;
+      }
     }
     bool? dialog = await showDialog(
       context: context,

@@ -1,8 +1,12 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:perfect_volume_control/perfect_volume_control.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:video_player/video_player.dart';
+import 'chat_panel.dart';
+import 'models/chat_panel.dart';
 import 'models/player.dart';
 import 'settings.dart';
 import 'color_scheme.dart';
@@ -13,7 +17,7 @@ class VideoPlayerScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // print('player rebuild');
-    final player = Provider.of<PlayerModel>(context);
+    final player = context.watch<PlayerModel>();
     return FutureBuilder(
       future: player.initPlayerFuture,
       builder: (context, snapshot) {
@@ -23,56 +27,17 @@ class VideoPlayerScreen extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
 
           case ConnectionState.done:
-            if (player.isIframe()) return iframeWidget(player);
-            final captionText = player.controller?.value.caption.text;
-            return GestureDetector(
-              onDoubleTap: () => Settings.nextOrientationView(player.app),
-              onLongPress: () {
-                if (player.showControls) return;
-                Settings.nextOrientationView(player.app);
-              },
-              child: Stack(
-                children: [
-                  Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      FittedBox(
-                        fit: player.isFitWidth
-                            ? BoxFit.fitWidth
-                            : BoxFit.contain,
-                        child: SizedBox(
-                          width: player.controller?.value.aspectRatio ?? 16 / 9,
-                          height: 1,
-                          child: VideoPlayer(player.controller!),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (player.app.showSubtitles &&
-                      captionText != null &&
-                      captionText.isNotEmpty)
-                    ClosedCaption(
-                      text: captionText,
-                      textStyle: const TextStyle(fontSize: 16),
-                    ),
-                  _PlayPauseOverlay(player: player),
-                  AnimatedOpacity(
-                    opacity: player.showMessageIcon ? 0.7 : 0,
-                    duration: const Duration(milliseconds: 200),
-                    child: const Align(
-                      alignment: Alignment.topRight,
-                      child: Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: Icon(Icons.mail),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
+            if (Settings.isTV) {
+              return TvControls(
+                child: buildPlayer(player),
+              );
+            }
+            return buildPlayer(player);
           default:
             return GestureDetector(
-              child: const SizedBox.expand(),
+              child: Settings.isTV
+                  ? tvEmptyPlayerWidget(context)
+                  : const SizedBox.expand(),
               behavior: HitTestBehavior.translucent,
               onDoubleTap: () {
                 if (player.app.prefferedOrientationType() == 'Landscape')
@@ -90,6 +55,54 @@ class VideoPlayerScreen extends StatelessWidget {
     );
   }
 
+  Widget buildPlayer(PlayerModel player) {
+    if (player.isIframe()) return iframeWidget(player);
+    final captionText = player.controller?.value.caption.text;
+    return GestureDetector(
+      onDoubleTap: () => Settings.nextOrientationView(player.app),
+      onLongPress: () {
+        if (player.showControls) return;
+        Settings.nextOrientationView(player.app);
+      },
+      child: Stack(
+        children: [
+          Stack(
+            fit: StackFit.expand,
+            children: [
+              FittedBox(
+                fit: player.isFitWidth ? BoxFit.fitWidth : BoxFit.contain,
+                child: SizedBox(
+                  width: player.controller?.value.aspectRatio ?? 16 / 9,
+                  height: 1,
+                  child: VideoPlayer(player.controller!),
+                ),
+              ),
+            ],
+          ),
+          if (player.app.showSubtitles &&
+              captionText != null &&
+              captionText.isNotEmpty)
+            ClosedCaption(
+              text: captionText,
+              textStyle: const TextStyle(fontSize: 16),
+            ),
+          _PlayPauseOverlay(player: player),
+          AnimatedOpacity(
+            opacity: player.showMessageIcon ? 0.7 : 0,
+            duration: const Duration(milliseconds: 200),
+            child: const Align(
+              alignment: Alignment.topRight,
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Icon(Icons.mail),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget iframeWidget(PlayerModel player) {
     return GestureDetector(
       onTap: () async {
@@ -101,6 +114,21 @@ class VideoPlayerScreen extends StatelessWidget {
         alignment: Alignment.center,
         child: Text(
           'Iframes are not supported.\nClick here to open web client.',
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+
+  Widget tvEmptyPlayerWidget(BuildContext context) {
+    final panel = context.watch<ChatPanelModel>();
+    return GestureDetector(
+      child: Align(
+        alignment: Alignment.center,
+        child: Text(
+          !panel.isConnected
+              ? 'Connection...'
+              : 'Playlist is empty. Waiting for videos... (${panel.clients.length} online)',
           textAlign: TextAlign.center,
         ),
       ),
@@ -259,5 +287,53 @@ class AllowMultipleGestureRecognizer extends TapGestureRecognizer {
   @override
   void rejectGesture(int pointer) {
     acceptGesture(pointer);
+  }
+}
+
+class TvControls extends StatelessWidget {
+  TvControls({
+    Key? key,
+    required this.child,
+  }) : super(key: key);
+
+  final Widget child;
+  static final focusNode = FocusNode();
+
+  @override
+  Widget build(BuildContext context) {
+    return FocusScope(
+      child: RawKeyboardListener(
+        focusNode: focusNode,
+        autofocus: true,
+        onKey: (value) {
+          if (!focusNode.hasFocus) return;
+          if (value.isKeyPressed(LogicalKeyboardKey.arrowUp)) {
+            ChatPanel.showUsersSnackBar(context);
+          }
+          if (value.isKeyPressed(LogicalKeyboardKey.select)) {
+            final player = context.read<PlayerModel>();
+            player.toggleControls(!player.showControls);
+            player.hideControlsWithDelay();
+          }
+          if (value.isKeyPressed(LogicalKeyboardKey.arrowLeft)) {
+            () async {
+              final volume = await PerfectVolumeControl.getVolume();
+              var newVolume = volume - 0.1;
+              if (newVolume < 0) newVolume = 0;
+              PerfectVolumeControl.setVolume(newVolume);
+            }();
+          }
+          if (value.isKeyPressed(LogicalKeyboardKey.arrowRight)) {
+            () async {
+              final volume = await PerfectVolumeControl.getVolume();
+              var newVolume = volume + 0.1;
+              if (newVolume > 1) newVolume = 1;
+              PerfectVolumeControl.setVolume(newVolume);
+            }();
+          }
+        },
+        child: child,
+      ),
+    );
   }
 }

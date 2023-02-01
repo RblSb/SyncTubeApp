@@ -86,6 +86,7 @@ class AppModel extends ChangeNotifier {
     chat = ChatModel(this);
     chatPanel = ChatPanelModel(this);
     connect();
+    if (Settings.isTV) isChatVisible = false;
   }
 
   void connect() {
@@ -190,7 +191,7 @@ class AppModel extends ChangeNotifier {
       case 'Message':
         final type = data.message!;
         chat.addItem(ChatItem(type.clientName, type.text));
-        if (!isChatVisible) player.showMessageIcon = true;
+        if (!isChatVisible && !Settings.isTV) player.showMessageIcon = true;
         break;
       case 'ServerMessage':
         final type = data.serverMessage!;
@@ -220,7 +221,7 @@ class AppModel extends ChangeNotifier {
             break;
         }
         chat.addItem(ChatItem('', text));
-        if (!isChatVisible) player.showMessageIcon = true;
+        if (!isChatVisible && !Settings.isTV) player.showMessageIcon = true;
         break;
       case 'UpdateClients':
         final type = data.updateClients!;

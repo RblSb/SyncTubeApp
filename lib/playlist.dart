@@ -132,7 +132,7 @@ class Playlist extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final playlist = Provider.of<PlaylistModel>(context);
+    final playlist = context.watch<PlaylistModel>();
     return ListView.builder(
       padding: const EdgeInsets.only(bottom: 90),
       scrollDirection: Axis.vertical,

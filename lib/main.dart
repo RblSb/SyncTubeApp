@@ -1,7 +1,9 @@
 import 'package:app_links/app_links.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:synctube/settings.dart';
 import 'app.dart';
 
 void main() {
@@ -22,10 +24,15 @@ class Main extends StatelessWidget {
         errorColor: Colors.red[900],
       ),
     );
-    return MaterialApp(
-      title: 'SyncTube',
-      theme: theme,
-      home: ServerListPage(title: 'Latest Servers'),
+    return Shortcuts(
+      shortcuts: {
+        LogicalKeySet(LogicalKeyboardKey.select): const ActivateIntent(),
+      },
+      child: MaterialApp(
+        title: 'SyncTube',
+        theme: theme,
+        home: ServerListPage(title: 'Latest Servers'),
+      ),
     );
   }
 }
@@ -46,10 +53,12 @@ class _ServerListPageState extends State<ServerListPage> {
   @override
   void initState() {
     super.initState();
-    readItems();
+    init();
   }
 
-  void readItems() async {
+  void init() async {
+    Settings.isTV = await _checkTvMode();
+
     final prefs = await SharedPreferences.getInstance();
     var strings = prefs.getStringList('serverListItems') ?? [];
     print(strings);
@@ -66,6 +75,13 @@ class _ServerListPageState extends State<ServerListPage> {
     _appLinks.allUriLinkStream.listen((uri) {
       deepLinkListener(uri);
     });
+  }
+
+  Future<bool> _checkTvMode() async {
+    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+    return androidInfo.systemFeatures.contains('android.software.leanback') ||
+        androidInfo.systemFeatures.contains('android.hardware.type.television');
   }
 
   void deepLinkListener(Uri uri) {
@@ -125,8 +141,7 @@ class _ServerListPageState extends State<ServerListPage> {
   }
 
   void itemPopupMenu(ServerListItem item) async {
-    final overlay =
-        Overlay.of(context)?.context.findRenderObject() as RenderBox;
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
     void Function()? func = await showMenu(
       context: context,
       position: RelativeRect.fromRect(
@@ -267,6 +282,7 @@ Future<ServerListItem?> _serverItemDialog(BuildContext context,
                 textCapitalization: TextCapitalization.sentences,
                 initialValue: item!.name,
                 autofocus: true,
+                textInputAction: TextInputAction.next,
                 decoration: const InputDecoration(
                   labelText: 'Server Name',
                   hintText: 'My Cool Server',
@@ -275,6 +291,7 @@ Future<ServerListItem?> _serverItemDialog(BuildContext context,
               ),
               TextFormField(
                 initialValue: item.url,
+                textInputAction: TextInputAction.next,
                 decoration: const InputDecoration(
                   labelText: 'Server URL',
                   hintText: 'my-synctube.com',

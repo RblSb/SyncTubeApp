@@ -78,7 +78,7 @@ class ChatItem {
   }
 
   Widget buildSubtitle(BuildContext context) {
-    final chat = Provider.of<ChatModel>(context, listen: false);
+    final chat = context.read<ChatModel>();
     final List<_OrderedSpan> childs = [];
     var text = _parseEmotes(childs, chat, this.text);
 
@@ -206,7 +206,7 @@ class _ChatState extends State<Chat> {
 
   @override
   Widget build(BuildContext context) {
-    final chat = Provider.of<ChatModel>(context);
+    final chat = context.watch<ChatModel>();
     scrollAfterFrame();
     final list = ListView.builder(
       reverse: true,

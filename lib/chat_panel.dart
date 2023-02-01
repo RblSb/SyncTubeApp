@@ -10,7 +10,7 @@ class ChatPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ChatPanelModel panel = Provider.of<ChatPanelModel>(context);
+    final panel = context.watch<ChatPanelModel>();
     return Container(
       // padding: EdgeInsets.symmetric(horizontal: paddingNum),
       color: Theme.of(context).chatPanelBackground,
@@ -30,27 +30,7 @@ class ChatPanel extends StatelessWidget {
           ),
           const Spacer(flex: 2),
           TextButton(
-            onPressed: () {
-              final text = panel.clients.map((c) {
-                if (c.isLeader) return '${c.name} (Leader)';
-                return c.name;
-              }).join(', ');
-              ScaffoldMessenger.of(context).hideCurrentSnackBar();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  duration: const Duration(seconds: 3),
-                  content: GestureDetector(
-                    onTap: () =>
-                        ScaffoldMessenger.of(context).hideCurrentSnackBar(),
-                    child: Text(
-                      text,
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                  backgroundColor: Colors.black45,
-                ),
-              );
-            },
+            onPressed: () => showUsersSnackBar(context),
             child: _onlineButton(panel, context),
           ),
           const Spacer(flex: 100),
@@ -69,6 +49,28 @@ class ChatPanel extends StatelessWidget {
           ),
           const Spacer(flex: 3),
         ],
+      ),
+    );
+  }
+
+  static void showUsersSnackBar(BuildContext context) {
+    final panel = context.read<ChatPanelModel>();
+    final text = panel.clients.map((c) {
+      if (c.isLeader) return '${c.name} (Leader)';
+      return c.name;
+    }).join(', ');
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 3),
+        content: GestureDetector(
+          onTap: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+          child: Text(
+            text,
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+        backgroundColor: Colors.black45,
       ),
     );
   }
