@@ -6,6 +6,8 @@ import 'package:http/http.dart';
 import 'package:video_player/video_player.dart';
 import 'package:http/http.dart' as http;
 import 'package:youtube_explode_dart/youtube_explode_dart.dart' as youtube;
+import 'package:youtube_explode_dart/youtube_explode_dart.dart';
+import '../chat.dart';
 import './app.dart';
 import './playlist.dart';
 import '../subs/ass.dart';
@@ -173,7 +175,9 @@ class PlayerModel extends ChangeNotifier {
       await controller.initialize();
       duration = controller.value.duration;
       controller.dispose();
-    } catch (e) {}
+    } catch (e) {
+      print(e.toString());
+    }
     if (duration == null) return 0;
     return duration.inMilliseconds / 1000;
   }
@@ -194,7 +198,14 @@ class PlayerModel extends ChangeNotifier {
     final yt = youtube.YoutubeExplode();
     try {
       final id = extractVideoId(url);
-      final manifest = await yt.videos.streamsClient.getManifest(id);
+      StreamManifest manifest;
+      try {
+        manifest = await yt.videos.streamsClient.getManifest(id);
+      } catch (e) {
+        print(e);
+        app.chat.addItem(ChatItem('', e.toString()));
+        return '';
+      }
       yt.close();
       // final stream = manifest.muxed.withHighestBitrate();
       final qualities = manifest.muxed.getAllVideoQualities().toList();

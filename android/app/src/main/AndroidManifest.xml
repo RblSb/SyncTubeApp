@@ -9,7 +9,9 @@
         android:name="${applicationName}"
         android:label="SyncTube"
         android:icon="@mipmap/ic_launcher"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="true"
+        android:networkSecurityConfig="@xml/network_security_config">
+        <!-- ^ networkSecurityConfig for ota_update -->
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"
@@ -43,6 +45,19 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- for ota_update -->
+        <provider
+    android:name="sk.fourq.otaupdate.OtaUpdateFileProvider"
+    android:authorities="${applicationId}.ota_update_provider"
+    android:exported="false"
+    android:grantUriPermissions="true">
+            <meta-data
+        android:name="android.support.FILE_PROVIDER_PATHS"
+        android:resource="@xml/filepaths" />
+        </provider>
     </application>
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- for ota_update -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
 </manifest>

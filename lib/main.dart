@@ -1,12 +1,23 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:app_links/app_links.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:ota_update/ota_update.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:synctube/settings.dart';
 import 'app.dart';
+import 'package:http/http.dart' as http;
 
-void main() {
+void main() async {
+  // for Android 7 and below
+  WidgetsFlutterBinding.ensureInitialized();
+  ByteData data = await PlatformAssetBundle().load('assets/ca/ISRGRootX1.pem');
+  SecurityContext.defaultContext
+      .setTrustedCertificatesBytes(data.buffer.asUint8List());
   runApp(Main());
 }
 
@@ -218,6 +229,18 @@ class _ServerListPageState extends State<ServerListPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
+        actions: [
+          PopupMenuButton(itemBuilder: (context) {
+            return [
+              PopupMenuItem<int>(
+                value: 0,
+                child: Text("Check for updates"),
+              ),
+            ];
+          }, onSelected: (value) {
+            if (value == 0) checkForUpdates(context);
+          }),
+        ],
       ),
       body: Column(
         children: [
@@ -232,6 +255,60 @@ class _ServerListPageState extends State<ServerListPage> {
         child: Icon(Icons.add),
       ),
     );
+  }
+
+  void checkForUpdates(BuildContext context) async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    final buildNumber = int.parse(packageInfo.buildNumber);
+    final updateNumber = await checkUpdateBuildNumber();
+    if (buildNumber >= updateNumber || updateNumber == -1) {
+      var text = "No updates found";
+      if (updateNumber == -1) text = "Failed to check updates";
+      showAlert(text);
+      return;
+    }
+    final url = 'https://tube.syncme.site/SyncTubeApp/SyncTube.apk';
+    try {
+      OtaUpdate().execute(url).listen((event) {
+        print('OtaEvent: $event');
+      });
+    } catch (e) {
+      showAlert('Failed to make OTA update. Details: $e');
+    }
+  }
+
+  void showAlert(String text) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          content: Text(text),
+        );
+      },
+    );
+  }
+
+  Future<int> checkUpdateBuildNumber() async {
+    final pubspecUrl = 'https://tube.syncme.site/SyncTubeApp/pubspec.yaml';
+    http.Response res;
+    try {
+      res = await http.get(Uri.parse(pubspecUrl)).timeout(Duration(seconds: 5));
+    } catch (e) {
+      print(e);
+      throw e;
+    }
+    if (res.statusCode != 200) return -1;
+    try {
+      final lines = utf8.decode(res.bodyBytes).split('\n');
+      for (final line in lines) {
+        if (!line.startsWith('version:')) continue;
+        final num = line.substring(line.lastIndexOf("+") + 1);
+        return int.parse(num);
+      }
+    } catch (e) {
+      print(e);
+    }
+    return -1;
   }
 }
 
