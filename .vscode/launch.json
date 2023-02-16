@@ -4,11 +4,13 @@
 		{
 			"name": "Flutter",
 			"request": "launch",
-			"type": "dart",
-			"args": [
-				"--enable-experiment=non-nullable",
-				"--no-sound-null-safety"
-			],
-		}
+			"type": "dart"
+		},
+		// {
+		// 	"name": "Flutter (profile)",
+		// 	"request": "launch",
+		// 	"type": "dart",
+		// 	"flutterMode": "profile"
+		// }
 	]
 }

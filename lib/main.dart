@@ -9,6 +9,7 @@ import 'package:ota_update/ota_update.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:synctube/settings.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 import 'app.dart';
 import 'package:http/http.dart' as http;
 
@@ -41,6 +42,7 @@ class Main extends StatelessWidget {
       },
       child: MaterialApp(
         title: 'SyncTube',
+        // showPerformanceOverlay: true,
         theme: theme,
         home: ServerListPage(title: 'Latest Servers'),
       ),
@@ -60,6 +62,7 @@ class ServerListPage extends StatefulWidget {
 class _ServerListPageState extends State<ServerListPage> {
   final List<ServerListItem> items = [];
   Offset? _tapPosition;
+  final latestApkUrl = 'https://tube.syncme.site/SyncTubeApp/SyncTube.apk';
 
   @override
   void initState() {
@@ -234,11 +237,69 @@ class _ServerListPageState extends State<ServerListPage> {
             return [
               PopupMenuItem<int>(
                 value: 0,
-                child: Text("Check for updates"),
+                child: Text('Check for updates'),
               ),
+              PopupMenuItem<int>(
+                value: 1,
+                child: Text('About'),
+              ),
+              PopupMenuItem<int>(
+                value: 2,
+                child: Text('TV Mode: ${Settings.isTV ? 'On' : 'Off'}'),
+              ),
+              // PopupMenuItem<int>(
+              //   value: 3,
+              //   enabled: Settings.isTV,
+              //   child: Text(
+              //       'Force ExoPlayer: ${Settings.forceExoPlayer ? 'On' : 'Off'}'),
+              // ),
             ];
           }, onSelected: (value) {
-            if (value == 0) checkForUpdates(context);
+            switch (value) {
+              case 0:
+                checkForUpdates(context);
+                break;
+              case 1:
+                (() async {
+                  final packageInfo = await PackageInfo.fromPlatform();
+                  final version = packageInfo.version;
+                  final buildNumber = packageInfo.buildNumber;
+                  showAboutDialog(
+                      context: context,
+                      applicationName: packageInfo.appName,
+                      applicationVersion: '$version ($buildNumber)',
+                      applicationLegalese:
+                          'If you have problem with update check, you can download apk manually:',
+                      children: [
+                        TextButton(
+                          onPressed: () => {
+                            launchUrlString(
+                              latestApkUrl,
+                              mode: LaunchMode.externalApplication,
+                            ),
+                          },
+                          child: Text('Download latest apk'),
+                        ),
+                        TextButton(
+                          onPressed: () => {
+                            launchUrlString(
+                              'https://github.com/RblSb/SyncTubeApp',
+                              mode: LaunchMode.externalApplication,
+                            ),
+                          },
+                          child: Text('Official Repository'),
+                        )
+                      ]);
+                })();
+                break;
+              case 2:
+                Settings.isTV = !Settings.isTV;
+                break;
+              case 3:
+                // Settings.forceExoPlayer = !Settings.forceExoPlayer;
+                break;
+              default:
+            }
           }),
         ],
       ),
@@ -262,16 +323,13 @@ class _ServerListPageState extends State<ServerListPage> {
     final buildNumber = int.parse(packageInfo.buildNumber);
     final updateNumber = await checkUpdateBuildNumber();
     if (buildNumber >= updateNumber || updateNumber == -1) {
-      var text = "No updates found";
-      if (updateNumber == -1) text = "Failed to check updates";
+      var text = 'No updates found';
+      if (updateNumber == -1) text = 'Failed to check updates';
       showAlert(text);
       return;
     }
-    final url = 'https://tube.syncme.site/SyncTubeApp/SyncTube.apk';
     try {
-      OtaUpdate().execute(url).listen((event) {
-        print('OtaEvent: $event');
-      });
+      startDownloadingDialog(latestApkUrl);
     } catch (e) {
       showAlert('Failed to make OTA update. Details: $e');
     }
@@ -283,6 +341,43 @@ class _ServerListPageState extends State<ServerListPage> {
       builder: (context) {
         return AlertDialog(
           content: Text(text),
+        );
+      },
+    );
+  }
+
+  void startDownloadingDialog(String url) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        String contentText = 'Connecting...';
+        var isStarted = false;
+        return StatefulBuilder(
+          builder: (context, setState) {
+            if (!isStarted) {
+              isStarted = true;
+              OtaUpdate().execute(url).listen((event) {
+                print('OtaEvent: ${event.status.name}: ${event.value}');
+                setState(() {
+                  switch (event.status) {
+                    case OtaStatus.DOWNLOADING:
+                      contentText = 'Downloading... ${event.value}%';
+                      break;
+                    case OtaStatus.INSTALLING:
+                      Navigator.pop(context);
+                      break;
+                    default:
+                      contentText = '${event.status.name}';
+                      if (event.value != null)
+                        contentText += ': ${event.value}';
+                  }
+                });
+              });
+            }
+            return AlertDialog(
+              content: Text(contentText),
+            );
+          },
         );
       },
     );
@@ -302,7 +397,7 @@ class _ServerListPageState extends State<ServerListPage> {
       final lines = utf8.decode(res.bodyBytes).split('\n');
       for (final line in lines) {
         if (!line.startsWith('version:')) continue;
-        final num = line.substring(line.lastIndexOf("+") + 1);
+        final num = line.substring(line.lastIndexOf('+') + 1);
         return int.parse(num);
       }
     } catch (e) {

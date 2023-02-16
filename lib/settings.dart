@@ -91,7 +91,8 @@ class Settings extends StatelessWidget {
     SystemChrome.restoreSystemUIOverlays();
   }
 
-  static bool isTV = false;
+  static var isTV = false;
+  static var forceExoPlayer = false;
 
   static List<DeviceOrientation> prefferedOrientations = [];
 

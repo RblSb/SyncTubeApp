@@ -174,8 +174,8 @@ class ChatModel extends ChangeNotifier {
           return item;
         }).toList();
         for (final block in list) {
-          final double start = block["segment"][0];
-          final double end = block["segment"][1];
+          final double start = block['segment'][0];
+          final double end = block['segment'][1];
           final pos = await _app.player.getPosition();
           final time = pos.inMilliseconds / 1000;
           if (time > start - 1 && time < end) {
@@ -236,7 +236,7 @@ class ChatModel extends ChangeNotifier {
   void mergeRedundantArgs(List<String> args, int pos, int newLength) {
     final count = args.length - (newLength - 1);
     if (count < 2) return;
-    args.insert(pos, args.sublist(pos, pos + count).join(" "));
+    args.insert(pos, args.sublist(pos, pos + count).join(' '));
     args.removeRange(pos + 1, pos + count + 1);
   }
 

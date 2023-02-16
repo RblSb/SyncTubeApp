@@ -68,6 +68,9 @@ android {
         debug {
             signingConfig keystorePropertiesFile.exists() ? signingConfigs.release : signingConfigs.debug
         }
+        profile {
+            signingConfig keystorePropertiesFile.exists() ? signingConfigs.release : signingConfigs.debug
+        }
         release {
             signingConfig signingConfigs.release
         }
