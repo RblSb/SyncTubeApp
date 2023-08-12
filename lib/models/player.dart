@@ -143,8 +143,8 @@ class PlayerModel extends ChangeNotifier {
     if (url.contains('youtu')) url = await getYoutubeVideoUrl(url);
     pause();
     final prevController = controller;
-    controller = VideoPlayerController.network(
-      url,
+    controller = VideoPlayerController.networkUrl(
+      Uri.parse(url),
       // closedCaptionFile: _loadCaptions(item),
       videoPlayerOptions: VideoPlayerOptions(
         mixWithOthers: true,
@@ -169,7 +169,7 @@ class PlayerModel extends ChangeNotifier {
 
   Future<double> getVideoDuration(String url) async {
     if (url.contains('youtu')) url = await getYoutubeVideoUrl(url);
-    final controller = VideoPlayerController.network(url);
+    final controller = VideoPlayerController.networkUrl(Uri.parse(url));
     Duration? duration;
     try {
       await controller.initialize();
@@ -188,6 +188,11 @@ class PlayerModel extends ChangeNotifier {
     }
     if (url.contains('youtube.com/embed/')) {
       return RegExp(r'embed\/([A-z0-9_-]+)').firstMatch(url)!.group(1)!;
+    }
+    if (url.contains('youtube.com/shorts/')) {
+      return RegExp(r'/youtube\.com\/shorts\/([A-z0-9_-]+)')
+          .firstMatch(url)!
+          .group(1)!;
     }
     final r = RegExp(r'v=([A-z0-9_-]+)');
     if (!r.hasMatch(url)) return '';

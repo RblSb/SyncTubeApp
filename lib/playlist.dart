@@ -20,102 +20,120 @@ class Playlist extends StatelessWidget {
     const btnPadding = EdgeInsets.all(paddingNum);
     final isActive = pos == playlist.pos;
     final time = item.isIframe ? '' : duration(item.duration);
-    return Container(
-      decoration: BoxDecoration(
-        color: isActive
-            ? Theme.of(context).primaryColor
-            : Theme.of(context).canvasColor,
-        border: Border(
-          bottom: BorderSide(
-            color: Theme.of(context).playlistItemBorder,
+    return LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+      double parentWidth = constraints.maxWidth;
+      final iconConstraints = parentWidth > 150
+          ? null
+          : BoxConstraints(
+              minWidth: 40,
+              minHeight: 50,
+            );
+      return Container(
+        decoration: BoxDecoration(
+          color: isActive
+              ? Theme.of(context).primaryColor
+              : Theme.of(context).canvasColor,
+          border: Border(
+            bottom: BorderSide(
+              color: Theme.of(context).playlistItemBorder,
+            ),
           ),
         ),
-      ),
-      padding: containerPadding,
-      child: Wrap(
-        children: <Widget>[
-          GestureDetector(
-            onLongPress: () {
-              Clipboard.setData(ClipboardData(text: item.url));
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    'Video URL is copied',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  backgroundColor: Colors.black45,
-                ),
-              );
-            },
-            child: Row(
-              children: [
-                Padding(
-                  padding: btnPadding,
-                  child: Text(time),
-                ),
-                Expanded(
-                  child: Container(
-                    padding: btnPadding,
-                    child: Text(
-                      item.title,
-                      overflow: TextOverflow.fade,
-                      softWrap: false,
-                      style: const TextStyle(fontSize: 18),
+        padding: containerPadding,
+        child: Wrap(
+          children: <Widget>[
+            GestureDetector(
+              onLongPress: () {
+                Clipboard.setData(ClipboardData(text: item.url));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Video URL is copied',
+                      style: TextStyle(color: Colors.white),
                     ),
+                    backgroundColor: Colors.black45,
+                  ),
+                );
+              },
+              child: Row(
+                children: [
+                  Padding(
+                    padding: btnPadding,
+                    child: Text(time),
+                  ),
+                  Expanded(
+                    child: Container(
+                      padding: btnPadding,
+                      child: Text(
+                        item.title,
+                        overflow: TextOverflow.fade,
+                        softWrap: false,
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: iconConstraints,
+                  onPressed: () => playlist.sendPlayItem(pos),
+                  tooltip: 'Play item',
+                  icon: Icon(
+                    Icons.play_arrow,
+                    size: 30,
+                    color: Theme.of(context).icon,
+                  ),
+                ),
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: iconConstraints,
+                  onPressed: () => playlist.sendSetNextItem(pos),
+                  tooltip: 'Set item as next',
+                  icon: Icon(
+                    Icons.arrow_upward,
+                    size: 30,
+                    color: Theme.of(context).icon,
+                  ),
+                ),
+                if (parentWidth > 200)
+                  IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: iconConstraints,
+                    onPressed: () => playlist.sendToggleItemType(pos),
+                    tooltip: 'Lock/unlock item',
+                    icon: Icon(
+                      item.isTemp ? Icons.lock_open : Icons.lock,
+                      size: 30,
+                      color: Theme.of(context).icon,
+                    ),
+                  ),
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: iconConstraints,
+                  onPressed: () {
+                    final item = playlist.getItem(pos);
+                    if (item == null) return;
+                    playlist.sendRemoveItem(item.url);
+                  },
+                  tooltip: 'Remove item',
+                  icon: Icon(
+                    Icons.clear,
+                    size: 30,
+                    color: Theme.of(context).icon,
                   ),
                 ),
               ],
             ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              IconButton(
-                padding: EdgeInsets.zero,
-                onPressed: () => playlist.sendPlayItem(pos),
-                tooltip: 'Play item',
-                icon: Icon(
-                  Icons.play_arrow,
-                  size: 30,
-                  color: Theme.of(context).icon,
-                ),
-              ),
-              IconButton(
-                onPressed: () => playlist.sendSetNextItem(pos),
-                tooltip: 'Set item as next',
-                icon: Icon(
-                  Icons.arrow_upward,
-                  size: 30,
-                  color: Theme.of(context).icon,
-                ),
-              ),
-              IconButton(
-                onPressed: () => playlist.sendToggleItemType(pos),
-                tooltip: 'Lock/unlock item',
-                icon: Icon(
-                  item.isTemp ? Icons.lock_open : Icons.lock,
-                  size: 30,
-                  color: Theme.of(context).icon,
-                ),
-              ),
-              IconButton(
-                onPressed: () {
-                  final item = playlist.getItem(pos);
-                  if (item == null) return;
-                  playlist.sendRemoveItem(item.url);
-                },
-                tooltip: 'Remove item',
-                icon: Icon(
-                  Icons.clear,
-                  size: 30,
-                  color: Theme.of(context).icon,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    });
   }
 
   String duration(double timeNum) {

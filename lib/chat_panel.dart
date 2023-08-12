@@ -11,46 +11,50 @@ class ChatPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final panel = context.watch<ChatPanelModel>();
-    return Container(
-      // padding: EdgeInsets.symmetric(horizontal: paddingNum),
-      color: Theme.of(context).chatPanelBackground,
-      child: Row(
-        children: <Widget>[
-          const Spacer(flex: 3),
-          IconButton(
-            onPressed: () => panel.togglePanel(MainTab.playlist),
-            tooltip: 'Show playlist',
-            icon: Icon(
-              Icons.list,
-              color: panel.mainTab == MainTab.playlist
-                  ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).icon,
-              size: 30,
+    return LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+      double parentW = constraints.maxWidth;
+      return Container(
+        // padding: EdgeInsets.symmetric(horizontal: paddingNum),
+        color: Theme.of(context).chatPanelBackground,
+        child: Row(
+          children: <Widget>[
+            const Spacer(flex: 3),
+            IconButton(
+              onPressed: () => panel.togglePanel(MainTab.playlist),
+              tooltip: 'Show playlist',
+              icon: Icon(
+                Icons.list,
+                color: panel.mainTab == MainTab.playlist
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).icon,
+                size: 30,
+              ),
             ),
-          ),
-          const Spacer(flex: 2),
-          TextButton(
-            onPressed: () => showUsersSnackBar(context),
-            child: _onlineButton(panel, context),
-          ),
-          const Spacer(flex: 100),
-          leaderButton(panel, context),
-          const Spacer(flex: 5),
-          IconButton(
-            onPressed: () => panel.togglePanel(MainTab.settings),
-            tooltip: 'Show settings',
-            icon: Icon(
-              Icons.settings,
-              color: panel.mainTab == MainTab.settings
-                  ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).icon,
-              size: 30,
+            const Spacer(flex: 2),
+            TextButton(
+              onPressed: () => showUsersSnackBar(context),
+              child: _onlineButton(panel, context),
             ),
-          ),
-          const Spacer(flex: 3),
-        ],
-      ),
-    );
+            const Spacer(flex: 100),
+            leaderButton(panel, context, parentW),
+            const Spacer(flex: 5),
+            IconButton(
+              onPressed: () => panel.togglePanel(MainTab.settings),
+              tooltip: 'Show settings',
+              icon: Icon(
+                Icons.settings,
+                color: panel.mainTab == MainTab.settings
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).icon,
+                size: 30,
+              ),
+            ),
+            const Spacer(flex: 3),
+          ],
+        ),
+      );
+    });
   }
 
   static void showUsersSnackBar(BuildContext context) {
@@ -75,12 +79,14 @@ class ChatPanel extends StatelessWidget {
     );
   }
 
-  Widget leaderButton(ChatPanelModel panel, BuildContext context) {
+  Widget leaderButton(
+      ChatPanelModel panel, BuildContext context, double parentW) {
+    final btnPadding = parentW > 270 ? 18.0 : 16.0;
     return OutlinedButton(
       style: OutlinedButton.styleFrom(
         foregroundColor: Colors.white,
         minimumSize: Size(60, 34),
-        padding: EdgeInsets.symmetric(horizontal: 18),
+        padding: EdgeInsets.symmetric(horizontal: btnPadding),
         side: BorderSide(
           color: panel.isLeader()
               ? Theme.of(context).leaderActiveBorder
