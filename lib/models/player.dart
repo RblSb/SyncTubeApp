@@ -269,6 +269,9 @@ class PlayerModel extends ChangeNotifier {
     }
     var subsUrl = item.subs ?? '';
     if (subsUrl.isEmpty) return null;
+    if (!subsUrl.startsWith('http')) {
+      subsUrl = 'http://$subsUrl';
+    }
     // if (subsUrl == '') {
     //   if (item.duration < 60 * 5) return null;
     //   final i = item.url.lastIndexOf('.mp4');
