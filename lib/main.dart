@@ -30,7 +30,6 @@ class Main extends StatelessWidget {
       colorScheme: ColorScheme.fromSwatch(
         brightness: Brightness.dark,
         primarySwatch: Colors.blue,
-        primaryColorDark: Colors.grey[900],
         accentColor: Colors.grey[300],
         cardColor: Color.fromARGB(255, 30, 30, 30),
         backgroundColor: Color.fromARGB(255, 15, 15, 15),

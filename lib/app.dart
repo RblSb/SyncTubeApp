@@ -266,10 +266,11 @@ class _AppState extends State<App> with WidgetsBindingObserver {
 
   Future<AddVideo?> _addUrlDialog(BuildContext context) async {
     final clipboard = await Clipboard.getData('text/plain');
-    final defaultUrl = 'http://';
+    final defaultUrl = '';
     var url = defaultUrl;
     final clipboardText = clipboard?.text ?? '';
     if (clipboardText.contains('mp4') ||
+        clipboardText.contains('mp3') ||
         clipboardText.contains('m3u8') ||
         clipboardText.contains('youtu')) {
       url = clipboardText;
@@ -289,9 +290,12 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     final addVideo = await showDialog<AddVideo>(
       context: context,
       builder: (BuildContext context) {
+        final bgAlpha = app.playlist.isEmpty() ? 255 : 200;
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
+              backgroundColor:
+                  Theme.of(context).dialogBackgroundColor.withAlpha(bgAlpha),
               insetPadding: EdgeInsets.zero,
               scrollable: true,
               content: SingleChildScrollView(
