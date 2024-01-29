@@ -9,7 +9,7 @@ import 'wsdata.dart';
 class Playlist extends StatelessWidget {
   const Playlist({Key? key}) : super(key: key);
 
-  Widget plailistItem(
+  Widget playlistItem(
     BuildContext context,
     PlaylistModel playlist, {
     required VideoList item,
@@ -42,7 +42,7 @@ class Playlist extends StatelessWidget {
         ),
         padding: containerPadding,
         child: Wrap(
-          children: <Widget>[
+          children: [
             GestureDetector(
               onLongPress: () {
                 Clipboard.setData(ClipboardData(text: item.url));
@@ -157,7 +157,7 @@ class Playlist extends StatelessWidget {
       itemCount: playlist.length,
       itemBuilder: (context, index) {
         final item = playlist.getItem(index)!;
-        return plailistItem(
+        return playlistItem(
           context,
           playlist,
           item: item,

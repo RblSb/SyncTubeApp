@@ -12,7 +12,7 @@ class Settings extends StatelessWidget {
   Widget build(BuildContext context) {
     final app = context.watch<AppModel>();
     return ListView(
-      children: <Widget>[
+      children: [
         ListTile(
           title: const Text('Orientation'),
           trailing: Text('${app.prefferedOrientationType()}'),

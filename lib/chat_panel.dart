@@ -18,7 +18,7 @@ class ChatPanel extends StatelessWidget {
         // padding: EdgeInsets.symmetric(horizontal: paddingNum),
         color: Theme.of(context).chatPanelBackground,
         child: Row(
-          children: <Widget>[
+          children: [
             const Spacer(flex: 3),
             IconButton(
               onPressed: () => panel.togglePanel(MainTab.playlist),

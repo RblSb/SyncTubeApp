@@ -26,7 +26,7 @@ class Main extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = ThemeData.from(
-      // useMaterial3: true,
+      useMaterial3: false,
       colorScheme: ColorScheme.fromSwatch(
         brightness: Brightness.dark,
         primarySwatch: Colors.blue,
@@ -62,7 +62,8 @@ class ServerListPage extends StatefulWidget {
 class _ServerListPageState extends State<ServerListPage> {
   final List<ServerListItem> items = [];
   Offset? _tapPosition;
-  final latestApkUrl = 'https://tube.syncme.site/SyncTubeApp/SyncTube.apk';
+  final latestApkUrl = 'http://82.146.45.136/SyncTubeApp/SyncTube.apk';
+  final pubspecUrl = 'http://82.146.45.136/SyncTubeApp/pubspec.yaml';
 
   @override
   void initState() {
@@ -384,7 +385,6 @@ class _ServerListPageState extends State<ServerListPage> {
   }
 
   Future<int> checkUpdateBuildNumber() async {
-    final pubspecUrl = 'https://tube.syncme.site/SyncTubeApp/pubspec.yaml';
     http.Response res;
     try {
       res = await http.get(Uri.parse(pubspecUrl)).timeout(Duration(seconds: 5));

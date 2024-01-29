@@ -111,7 +111,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           direction: orientation == Orientation.landscape
               ? Axis.horizontal
               : Axis.vertical,
-          children: <Widget>[
+          children: [
             Selector<AppModel, bool>(
                 selector: (context, app) => app.isChatVisible,
                 builder: (context, isChatVisible, child) {
@@ -155,7 +155,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                   visible: isChatVisible,
                   child: Expanded(
                     child: Column(
-                      children: <Widget>[
+                      children: [
                         if (orientation == Orientation.portrait &&
                             !_isKeyboardVisible())
                           ChatPanel(),
@@ -248,7 +248,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       builder: (context) => AlertDialog(
         title: const Text('Are you sure?'),
         content: const Text('Do you want to exit channel?'),
-        actions: <Widget>[
+        actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             child: const Text('No'),
@@ -302,7 +302,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
+                  children: [
                     TextFormField(
                       initialValue: data.item.url,
                       autofocus: url == defaultUrl,
@@ -327,7 +327,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                   ],
                 ),
               ),
-              actions: <Widget>[
+              actions: [
                 TextButton(
                   child: const Text('Queue next'),
                   onPressed: () {
