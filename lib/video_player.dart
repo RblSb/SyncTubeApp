@@ -302,20 +302,21 @@ class TvControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FocusScope(
-      child: RawKeyboardListener(
+      child: KeyboardListener(
         focusNode: focusNode,
         autofocus: true,
-        onKey: (value) {
+        onKeyEvent: (value) {
           if (!focusNode.hasFocus) return;
-          if (value.isKeyPressed(LogicalKeyboardKey.arrowUp)) {
+          final isKeyPressed = HardwareKeyboard.instance.isLogicalKeyPressed;
+          if (isKeyPressed(LogicalKeyboardKey.arrowUp)) {
             ChatPanel.showUsersSnackBar(context);
           }
-          if (value.isKeyPressed(LogicalKeyboardKey.select)) {
+          if (isKeyPressed(LogicalKeyboardKey.select)) {
             final player = context.read<PlayerModel>();
             player.toggleControls(!player.showControls);
             player.hideControlsWithDelay();
           }
-          if (value.isKeyPressed(LogicalKeyboardKey.arrowLeft)) {
+          if (isKeyPressed(LogicalKeyboardKey.arrowLeft)) {
             () async {
               final volume = await PerfectVolumeControl.getVolume();
               var newVolume = volume - 0.1;
@@ -323,7 +324,7 @@ class TvControls extends StatelessWidget {
               PerfectVolumeControl.setVolume(newVolume);
             }();
           }
-          if (value.isKeyPressed(LogicalKeyboardKey.arrowRight)) {
+          if (isKeyPressed(LogicalKeyboardKey.arrowRight)) {
             () async {
               final volume = await PerfectVolumeControl.getVolume();
               var newVolume = volume + 0.1;

@@ -34,6 +34,11 @@ class ChatPanel extends StatelessWidget {
             const Spacer(flex: 2),
             TextButton(
               onPressed: () => showUsersSnackBar(context),
+              style: ButtonStyle(
+                padding: MaterialStateProperty.all(
+                  EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+                ),
+              ),
               child: _onlineButton(panel, context),
             ),
             const Spacer(flex: 100),

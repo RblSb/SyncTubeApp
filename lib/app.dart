@@ -77,8 +77,10 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         ),
         child: GestureDetector(
           onTap: () => removeFocus(),
-          child: WillPopScope(
-            onWillPop: () => _onWillPop(context),
+          child: PopScope(
+            // canPop: canPop,
+            canPop: false,
+            onPopInvoked: (didPop) => _onWillPop(context),
             child: Selector<AppModel, bool>(
               selector: (context, app) => app.hasSystemUi,
               builder: (context, hasSystemUi, _) =>
@@ -231,6 +233,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     SystemChrome.restoreSystemUIOverlays();
   }
 
+  // var canPop = false;
   Future<bool> _onWillPop(BuildContext context) async {
     if (!Settings.isTV) {
       if (!app.isChatVisible) {
@@ -245,19 +248,28 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     }
     bool? dialog = await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Are you sure?'),
-        content: const Text('Do you want to exit channel?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('No'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Yes'),
-          ),
-        ],
+      builder: (context) => PopScope(
+        canPop: true,
+        child: AlertDialog(
+          title: const Text('Are you sure?'),
+          content: const Text('Do you want to exit channel?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+              child: const Text('No'),
+            ),
+            TextButton(
+              onPressed: () {
+                // canPop = true;
+                Navigator.of(context).pop(true);
+                Navigator.of(context).pop(true);
+              },
+              child: const Text('Yes'),
+            ),
+          ],
+        ),
       ),
     );
     SystemChrome.restoreSystemUIOverlays();

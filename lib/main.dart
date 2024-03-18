@@ -26,7 +26,7 @@ class Main extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = ThemeData.from(
-      useMaterial3: false,
+      // useMaterial3: false,
       colorScheme: ColorScheme.fromSwatch(
         brightness: Brightness.dark,
         primarySwatch: Colors.blue,
