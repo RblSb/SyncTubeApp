@@ -297,9 +297,11 @@ class PlayerModel extends ChangeNotifier {
       return RawCaptionFile([]);
     }
     if (response.statusCode == 200) {
-      final data = utf8.decode(response.bodyBytes);
+      var data = utf8.decode(response.bodyBytes);
       if (url.endsWith('.srt')) {
-        return SubRipCaptionFile(data);
+        data = parseSrt(data);
+        return WebVTTCaptionFile(data);
+        // return SubRipCaptionFile(data);
       } else if (url.endsWith('.vtt')) {
         return WebVTTCaptionFile(data);
       } else {
@@ -308,6 +310,59 @@ class PlayerModel extends ChangeNotifier {
     } else {
       return RawCaptionFile([]);
     }
+  }
+
+  static String parseSrt(String text) {
+    final subs = <Map<String, String>>[];
+    final lines = text.replaceAll('\r\n', '\n').split('\n');
+    final blocks = getSrtBlocks(lines);
+    final badTimeReg = RegExp(r'(,[\d]+)');
+    for (final lines in blocks) {
+      if (lines.length < 3) continue;
+      final textLines = lines.getRange(2, lines.length).toList();
+      final time = lines[1].replaceAllMapped(badTimeReg, (match) {
+        final ms = match.group(1)!;
+        return ms.length < 4 ? ms.padRight(4, '0') : ms;
+      });
+      subs.add({
+        'counter': lines[0],
+        'time': time.replaceAll(',', '.'),
+        'text': textLines.join('\n').trim(),
+      });
+    }
+    var data = 'WEBVTT\n\n';
+    for (final sub in subs) {
+      data += '${sub['counter']}\n';
+      data += '${sub['time']}\n';
+      data += '${sub['text']}\n\n';
+    }
+    return data;
+  }
+
+  static List<List<String>> getSrtBlocks(List<String> lines) {
+    final blocks = <List<String>>[];
+    final isNumLineReg = RegExp(r'^(\d+)$');
+    // [id, time, firstTextLine, ... lastTextLine]
+    var block = <String>[];
+    for (var i = 0; i < lines.length; i++) {
+      final line = lines[i];
+      if (blocks.isEmpty && line.isEmpty) continue;
+      final prevLine = i > 0 ? lines[i - 1] : '';
+      final nextLine = i < lines.length - 1 ? lines[i + 1] : '';
+      // block id line
+      if (prevLine.isEmpty &&
+          isNumLineReg.hasMatch(line) &&
+          nextLine.contains('-->')) {
+        // push previously collected block and start new one
+        if (block.isNotEmpty) {
+          blocks.add(block);
+          block = [];
+        }
+      }
+      block.add(line);
+    }
+    if (block.isNotEmpty) blocks.add(block);
+    return blocks;
   }
 
   static Future<ClosedCaptionFile> getYoutubeSubtitles(String url) async {

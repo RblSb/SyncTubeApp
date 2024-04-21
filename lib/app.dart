@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -246,34 +247,44 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         return false;
       }
     }
+    BuildContext? dialogContext;
     bool? dialog = await showDialog(
       context: context,
-      builder: (context) => PopScope(
-        canPop: true,
-        child: AlertDialog(
-          title: const Text('Are you sure?'),
-          content: const Text('Do you want to exit channel?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(false);
-              },
-              child: const Text('No'),
-            ),
-            TextButton(
-              onPressed: () {
-                // canPop = true;
-                Navigator.of(context).pop(true);
-                Navigator.of(context).pop(true);
-              },
-              child: const Text('Yes'),
-            ),
-          ],
-        ),
-      ),
+      useRootNavigator: true,
+      builder: (context) {
+        dialogContext = context;
+        return PopScope(
+          canPop: true,
+          child: AlertDialog(
+            title: const Text('Are you sure?'),
+            content: const Text('Do you want to exit channel?'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(false);
+                },
+                child: const Text('No'),
+              ),
+              TextButton(
+                onPressed: () {
+                  // canPop = true;
+                  Navigator.of(context).pop(true);
+                },
+                child: const Text('Yes'),
+              ),
+            ],
+          ),
+        );
+      },
     );
     SystemChrome.restoreSystemUIOverlays();
-    return dialog ?? false;
+    final result = dialog ?? false;
+    if (result) {
+      // todo bug with stayed dialog in release mode, idk
+      if (kReleaseMode) Navigator.of(context).pop();
+      if (dialogContext != null) Navigator.of(dialogContext!).pop();
+    }
+    return result;
   }
 
   Future<AddVideo?> _addUrlDialog(BuildContext context) async {
