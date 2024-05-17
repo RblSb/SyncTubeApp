@@ -95,7 +95,9 @@ class AppModel extends ChangeNotifier {
       chatPanel.isConnected = false;
       player.pause();
       reconnect();
-    }, onError: (error) {});
+    }, onError: (error) {
+      print(error);
+    });
   }
 
   void reconnect() {

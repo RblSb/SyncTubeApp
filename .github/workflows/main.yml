@@ -70,6 +70,9 @@ jobs:
           echo "$KEY_FILE" | base64 --decode > android/app/release.jks
           echo "$KEY_PROPS" > android/key.properties
 
+      - name: Setup Java 17
+        run: echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
+
       - name: Build
         working-directory: ${{github.workspace}}
         run: |

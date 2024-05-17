@@ -87,7 +87,7 @@ class _ServerListPageState extends State<ServerListPage> {
     });
 
     final _appLinks = AppLinks();
-    _appLinks.allUriLinkStream.listen((uri) {
+    _appLinks.uriLinkStream.listen((uri) {
       deepLinkListener(uri);
     });
   }

@@ -35,7 +35,7 @@ class ChatPanel extends StatelessWidget {
             TextButton(
               onPressed: () => showUsersSnackBar(context),
               style: ButtonStyle(
-                padding: MaterialStateProperty.all(
+                padding: WidgetStateProperty.all(
                   EdgeInsets.symmetric(horizontal: 5, vertical: 5),
                 ),
               ),

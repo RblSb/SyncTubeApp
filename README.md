@@ -11,7 +11,7 @@ Or try to download from [this link](https://nightly.link/RblSb/SyncTubeApp/workf
 
 ### Development
 
-- Install [Flutter](https://flutter.dev/docs/development/tools/sdk/releases) (1.22.0+).
+- Install [Flutter](https://flutter.dev/docs/development/tools/sdk/releases).
 - Install VSCode and [Flutter](https://marketplace.visualstudio.com/items?itemName=Dart-Code.flutter) extension.
 - Open project, connect device with usb, press F5 for debug build with hot-reload.
 
