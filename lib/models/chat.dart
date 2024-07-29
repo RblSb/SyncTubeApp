@@ -53,7 +53,12 @@ class ChatModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setEmotes(List<Emotes> emotes) {
+  void setEmotes(List<Emotes> emotes, String relativeHost) {
+    for (final emote in emotes) {
+      if (emote.image.startsWith('/')) {
+        emote.image = '$relativeHost${emote.image}';
+      }
+    }
     _emotes = emotes;
     emotesPattern = RegExp('(' +
         escapeRegExp(

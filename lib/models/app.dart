@@ -155,7 +155,7 @@ class AppModel extends ChangeNotifier {
         );
         playlist.setPlaylistLock(type.isPlaylistOpen);
         player.loadVideo(playlist.pos);
-        chat.setEmotes(type.config.emotes);
+        chat.setEmotes(type.config.emotes, getChannelLink());
         chatPanel.notifyListeners();
         if (chat.isUnknownClient) tryAutologin();
         break;

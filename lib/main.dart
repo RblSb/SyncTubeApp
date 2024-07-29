@@ -192,7 +192,9 @@ class _ServerListPageState extends State<ServerListPage> {
     if (!link.contains('://')) link = 'http://$link';
     final uri = Uri.parse(link);
     final protocol = uri.scheme == 'https' ? 'wss' : 'ws';
-    final port = uri.port == 80 ? '' : ':${uri.port}';
+    var port = uri.port == 0 ? '' : ':${uri.port}';
+    if (uri.scheme == 'http' && uri.port == 80) port = '';
+    if (uri.scheme == 'https' && uri.port == 443) port = '';
     final url = '$protocol://${uri.host}$port${uri.path}';
     Navigator.of(context).popUntil((route) => route.isFirst);
     Navigator.push(
