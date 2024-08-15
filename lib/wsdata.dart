@@ -190,6 +190,7 @@ class WsData {
 }
 
 class Connected {
+  late String uuid;
   late Config config;
   late List<History> history;
   late List<Client> clients;
@@ -201,7 +202,8 @@ class Connected {
   late String globalIp;
 
   Connected(
-      {required this.config,
+      {required this.uuid,
+      required this.config,
       required this.history,
       required this.clients,
       required this.isUnknownClient,
@@ -212,6 +214,7 @@ class Connected {
       required this.globalIp});
 
   Connected.fromJson(Map<String, dynamic> json) {
+    uuid = json['uuid'];
     config = new Config.fromJson(json['config']);
     if (json['history'] != null) {
       history = [];
@@ -240,6 +243,7 @@ class Connected {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['uuid'] = this.uuid;
     data['config'] = this.config.toJson();
     data['history'] = this.history.map((v) => v.toJson()).toList();
     data['clients'] = this.clients.map((v) => v.toJson()).toList();

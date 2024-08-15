@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/status.dart' as status;
 import 'package:youtube_explode_dart/youtube_explode_dart.dart' as youtube;
@@ -35,6 +36,7 @@ class AppModel extends ChangeNotifier {
 
   Timer? _getTimeTimer;
   Timer? _reconnectionTimer;
+  Timer? _disconnectNotificationTimer;
 
   int synchThreshold = 2;
   int _prefferedOrientation = 0;
@@ -89,11 +91,18 @@ class AppModel extends ChangeNotifier {
     if (Settings.isTV) isChatVisible = false;
   }
 
-  void connect() {
-    _channel = IOWebSocketChannel.connect(wsUrl);
+  void connect() async {
+    final prefs = await SharedPreferences.getInstance();
+    final uuid = prefs.getString('uuid');
+    var url = wsUrl;
+    if (uuid != null) url += '?uuid=$uuid';
+    _channel = IOWebSocketChannel.connect(url);
     _wsSubscription = _channel.stream.listen(onMessage, onDone: () {
       chatPanel.isConnected = false;
-      player.pause();
+      _disconnectNotificationTimer ??= Timer(const Duration(seconds: 5), () {
+        if (chatPanel.isConnected) return;
+        player.pause();
+      });
       reconnect();
     }, onError: (error) {
       print(error);
@@ -103,7 +112,7 @@ class AppModel extends ChangeNotifier {
   void reconnect() {
     if (chatPanel.isConnected) return;
     _wsSubscription.cancel();
-    _reconnectionTimer = Timer(const Duration(seconds: 3), () {
+    _reconnectionTimer = Timer(const Duration(seconds: 1), () {
       print('Try to reconnect...');
       connect();
     });
@@ -136,7 +145,10 @@ class AppModel extends ChangeNotifier {
     switch (data.type) {
       case 'Connected':
         chatPanel.isConnected = true;
+        _disconnectNotificationTimer?.cancel();
+        _disconnectNotificationTimer = null;
         final type = data.connected!;
+        saveUUID(type.uuid);
         config = type.config;
         _getTimeTimer?.cancel();
         _getTimeTimer =
@@ -144,6 +156,7 @@ class AppModel extends ChangeNotifier {
           if (playlist.isEmpty()) return;
           send(WsData(type: 'GetTime'));
         });
+        final prevActiveUrl = playlist.getItem(playlist.pos)?.url ?? '';
         playlist.setPos(type.itemPos);
         playlist.update(type.videoList);
         clients = type.clients;
@@ -154,7 +167,10 @@ class AppModel extends ChangeNotifier {
           type.history.map((e) => ChatItem(e.name, e.text, e.time)).toList(),
         );
         playlist.setPlaylistLock(type.isPlaylistOpen);
-        player.loadVideo(playlist.pos);
+        final activeUrl = playlist.getItem(playlist.pos)?.url ?? '';
+        if (prevActiveUrl != activeUrl) {
+          player.loadVideo(playlist.pos);
+        }
         chat.setEmotes(type.config.emotes, getChannelLink());
         chatPanel.notifyListeners();
         if (chat.isUnknownClient) tryAutologin();
@@ -528,5 +544,10 @@ class AppModel extends ChangeNotifier {
     _wsSubscription.cancel();
     _channel.sink.close(status.goingAway);
     super.dispose();
+  }
+
+  Future<void> saveUUID(String uuid) async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString('uuid', uuid);
   }
 }
