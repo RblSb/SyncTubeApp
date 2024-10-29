@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:web_socket_channel/io.dart';
@@ -180,9 +181,8 @@ class AppModel extends ChangeNotifier {
       case 'Login':
         final type = data.login!;
         clients = type.clients!;
-        Client? newPersonal =
-            clients.firstWhere((client) => client.name == type.clientName);
-        // ignore: unnecessary_null_comparison
+        Client? newPersonal = clients
+            .firstWhereOrNull((client) => client.name == type.clientName);
         if (newPersonal == null) return;
         _personal = newPersonal;
         chatPanel.notifyListeners();

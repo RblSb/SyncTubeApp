@@ -291,10 +291,11 @@ packages:
   ota_update:
     dependency: "direct main"
     description:
-      name: ota_update
-      sha256: "8c47531b655f8fcf9961dc7758a933a9ccbcbe1c77a7ec52e5c5cfc2ec367ba7"
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: patch-1
+      resolved-ref: "0aa1d08d301e884142a3837edebc28ba927a13f2"
+      url: "https://github.com/eduardohr-muniz/ota_update.git"
+    source: git
     version: "6.0.0"
   package_info_plus:
     dependency: "direct main"
@@ -344,14 +345,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.3.0"
-  perfect_volume_control:
-    dependency: "direct main"
-    description:
-      name: perfect_volume_control
-      sha256: "9bc513e4a2b6151f7d04fc917271c40bdd44cbe67224d52a314302879d2a30f8"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.5"
   petitparser:
     dependency: transitive
     description:

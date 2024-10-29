@@ -1,7 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:perfect_volume_control/perfect_volume_control.dart';
+// import 'package:perfect_volume_control/perfect_volume_control.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:video_player/video_player.dart';
@@ -316,22 +316,22 @@ class TvControls extends StatelessWidget {
             player.toggleControls(!player.showControls);
             player.hideControlsWithDelay();
           }
-          if (isKeyPressed(LogicalKeyboardKey.arrowLeft)) {
-            () async {
-              final volume = await PerfectVolumeControl.getVolume();
-              var newVolume = volume - 0.1;
-              if (newVolume < 0) newVolume = 0;
-              PerfectVolumeControl.setVolume(newVolume);
-            }();
-          }
-          if (isKeyPressed(LogicalKeyboardKey.arrowRight)) {
-            () async {
-              final volume = await PerfectVolumeControl.getVolume();
-              var newVolume = volume + 0.1;
-              if (newVolume > 1) newVolume = 1;
-              PerfectVolumeControl.setVolume(newVolume);
-            }();
-          }
+          // if (isKeyPressed(LogicalKeyboardKey.arrowLeft)) {
+          //   () async {
+          //     final volume = await PerfectVolumeControl.getVolume();
+          //     var newVolume = volume - 0.1;
+          //     if (newVolume < 0) newVolume = 0;
+          //     PerfectVolumeControl.setVolume(newVolume);
+          //   }();
+          // }
+          // if (isKeyPressed(LogicalKeyboardKey.arrowRight)) {
+          //   () async {
+          //     final volume = await PerfectVolumeControl.getVolume();
+          //     var newVolume = volume + 0.1;
+          //     if (newVolume > 1) newVolume = 1;
+          //     PerfectVolumeControl.setVolume(newVolume);
+          //   }();
+          // }
         },
         child: child,
       ),
