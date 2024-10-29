@@ -81,7 +81,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           child: PopScope(
             // canPop: canPop,
             canPop: false,
-            onPopInvoked: (didPop) => _onWillPop(context),
+            onPopInvokedWithResult: (didPop, result) => _onWillPop(context),
             child: Selector<AppModel, bool>(
               selector: (context, app) => app.hasSystemUi,
               builder: (context, hasSystemUi, _) =>

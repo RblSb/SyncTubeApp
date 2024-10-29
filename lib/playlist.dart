@@ -25,7 +25,7 @@ class Playlist extends StatelessWidget {
         decoration: BoxDecoration(
           color: isActive
               ? Theme.of(context).primaryColor
-              : Theme.of(context).canvasColor,
+              : Theme.of(context).scaffoldBackgroundColor,
           border: Border(
             bottom: BorderSide(
               color: Theme.of(context).playlistItemBorder,

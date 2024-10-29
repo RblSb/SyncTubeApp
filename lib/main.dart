@@ -25,6 +25,7 @@ void main() async {
 class Main extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    const backgroundColor = const Color.fromARGB(255, 15, 15, 15);
     final theme = ThemeData.from(
       // useMaterial3: false,
       colorScheme: ColorScheme.fromSwatch(
@@ -32,9 +33,11 @@ class Main extends StatelessWidget {
         primarySwatch: Colors.blue,
         accentColor: Colors.grey[300],
         cardColor: Color.fromARGB(255, 30, 30, 30),
-        backgroundColor: Color.fromARGB(255, 15, 15, 15),
+        backgroundColor: backgroundColor,
         errorColor: Colors.red[900],
       ),
+    ).copyWith(
+      scaffoldBackgroundColor: backgroundColor,
     );
     return Shortcuts(
       shortcuts: {

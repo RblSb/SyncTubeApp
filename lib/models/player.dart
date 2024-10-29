@@ -229,7 +229,8 @@ class PlayerModel extends ChangeNotifier {
       final streamUrl = stream.url.toString();
       return streamUrl;
     } catch (e) {
-      print('getYoutubeVideoUrl for url $url');
+      print('getYoutubeVideoUrl error for url $url');
+      print(e);
       yt.close();
       return '';
     }
