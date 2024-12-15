@@ -65,8 +65,8 @@ class ServerListPage extends StatefulWidget {
 class _ServerListPageState extends State<ServerListPage> {
   final List<ServerListItem> items = [];
   Offset? _tapPosition;
-  final latestApkUrl = 'http://82.146.45.136/SyncTubeApp/SyncTube.apk';
-  final pubspecUrl = 'http://82.146.45.136/SyncTubeApp/pubspec.yaml';
+  final latestApkUrl = 'http://178.218.221.47/SyncTubeApp/SyncTube.apk';
+  final pubspecUrl = 'http://178.218.221.47/SyncTubeApp/pubspec.yaml';
 
   @override
   void initState() {

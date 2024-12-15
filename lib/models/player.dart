@@ -205,7 +205,8 @@ class PlayerModel extends ChangeNotifier {
       final id = extractVideoId(url);
       StreamManifest manifest;
       try {
-        manifest = await yt.videos.streamsClient.getManifest(id);
+        manifest = await yt.videos.streamsClient
+            .getManifest(id, ytClients: [YoutubeApiClient.androidVr]);
       } catch (e) {
         print(e);
         app.chat.addItem(ChatItem('', e.toString()));
