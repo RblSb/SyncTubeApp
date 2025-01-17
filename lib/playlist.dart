@@ -87,7 +87,7 @@ class Playlist extends StatelessWidget {
     BuildContext context, {
     required VideoList item,
   }) {
-    final time = item.isIframe ? '' : duration(item.duration);
+    final time = item.playerType == 'IframeType' ? '' : duration(item.duration);
     const btnPadding = EdgeInsets.all(5.0);
     return GestureDetector(
       onLongPress: () {

@@ -27,6 +27,8 @@ class WsData {
   UpdatePlaylist? updatePlaylist;
   TogglePlaylistLock? togglePlaylistLock;
 
+  static int version = 2;
+
   WsData(
       {required this.type,
       this.connected,
@@ -268,6 +270,8 @@ class Config {
   late bool localAdmins;
   late String templateUrl;
   late String youtubeApiKey;
+  // in newer versions
+  late double? cacheStorageLimitGiB;
   late Permissions? permissions;
   late List<Emotes> emotes;
   late List<Filters> filters;
@@ -285,6 +289,7 @@ class Config {
       required this.localAdmins,
       required this.templateUrl,
       required this.youtubeApiKey,
+      required this.cacheStorageLimitGiB,
       required this.permissions,
       required this.emotes,
       required this.filters,
@@ -302,6 +307,7 @@ class Config {
     localAdmins = json['localAdmins'];
     templateUrl = json['templateUrl'];
     youtubeApiKey = json['youtubeApiKey'];
+    cacheStorageLimitGiB = json['cacheStorageLimitGiB']?.toDouble();
     permissions = json['permissions'] != null
         ? new Permissions.fromJson(json['permissions'])
         : null;
@@ -333,6 +339,7 @@ class Config {
     data['localAdmins'] = this.localAdmins;
     data['templateUrl'] = this.templateUrl;
     data['youtubeApiKey'] = this.youtubeApiKey;
+    data['cacheStorageLimitGiB'] = this.cacheStorageLimitGiB;
     if (this.permissions != null) {
       data['permissions'] = this.permissions?.toJson();
     }
@@ -514,16 +521,19 @@ class VideoList {
   late double duration;
   late String? subs;
   late bool isTemp;
-  late bool isIframe;
+  late bool doCache;
+  late String playerType;
 
-  VideoList(
-      {required this.url,
-      required this.title,
-      required this.author,
-      required this.duration,
-      this.subs,
-      required this.isTemp,
-      required this.isIframe});
+  VideoList({
+    required this.url,
+    required this.title,
+    required this.author,
+    required this.duration,
+    this.subs,
+    required this.isTemp,
+    required this.doCache,
+    required this.playerType,
+  });
 
   VideoList.fromJson(Map<String, dynamic> json) {
     url = json['url'];
@@ -532,7 +542,12 @@ class VideoList {
     duration = json['duration'].toDouble();
     subs = json['subs'];
     isTemp = json['isTemp'];
-    isIframe = json['isIframe'];
+    doCache = json['doCache'] ?? false;
+    playerType = json['playerType'] ?? 'RawType';
+    if (WsData.version == 1) {
+      final isIframe = json['isIframe'] ?? false;
+      if (isIframe) playerType = 'IframeType';
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -543,7 +558,12 @@ class VideoList {
     data['duration'] = this.duration;
     data['subs'] = this.subs;
     data['isTemp'] = this.isTemp;
-    data['isIframe'] = this.isIframe;
+    if (WsData.version == 2) {
+      data['doCache'] = this.doCache;
+      data['playerType'] = this.playerType;
+    } else if (WsData.version == 1) {
+      data['isIframe'] = false;
+    }
     return data;
   }
 }

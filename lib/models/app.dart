@@ -122,7 +122,7 @@ class AppModel extends ChangeNotifier {
   String getChannelLink() {
     final uri = Uri.parse(wsUrl);
     final protocol = uri.scheme == 'wss' ? 'https' : 'http';
-    return '$protocol://${uri.host}';
+    return '$protocol://${uri.host}' + (uri.hasPort ? ':${uri.port}' : '');
   }
 
   void send(WsData data) {
@@ -151,6 +151,8 @@ class AppModel extends ChangeNotifier {
         final type = data.connected!;
         saveUUID(type.uuid);
         config = type.config;
+        WsData.version = config?.cacheStorageLimitGiB == null ? 1 : 2;
+        print('Server version: ${WsData.version}');
         _getTimeTimer?.cancel();
         _getTimeTimer =
             Timer.periodic(Duration(seconds: synchThreshold), (Timer timer) {
@@ -480,6 +482,10 @@ class AppModel extends ChangeNotifier {
   }
 
   void sendVideoItem(AddVideo data) async {
+    if (data.item.url.startsWith('/')) {
+      final relativeHost = getChannelLink();
+      data.item.url = '$relativeHost${data.item.url}';
+    }
     if (!data.item.url.startsWith('http')) {
       data.item.url = 'http://${data.item.url}';
     }

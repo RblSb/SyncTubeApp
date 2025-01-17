@@ -287,6 +287,14 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     return result;
   }
 
+  onUrlUpdate(AddVideo data, String url) {
+    data.item.url = url;
+    final playerType =
+        PlayerModel.extractVideoId(url).isEmpty ? 'RawType' : 'YoutubeType';
+    data.item.playerType = playerType;
+    data.item.doCache = playerType == 'YoutubeType';
+  }
+
   Future<AddVideo?> _addUrlDialog(BuildContext context) async {
     final clipboard = await Clipboard.getData('text/plain');
     final defaultUrl = '';
@@ -306,10 +314,13 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         author: '',
         duration: 0.0,
         isTemp: true,
-        isIframe: false,
+        playerType: '',
+        doCache: false,
       ),
       atEnd: true,
     );
+    onUrlUpdate(data, url);
+
     final addVideo = await showDialog<AddVideo>(
       context: context,
       builder: (BuildContext context) {
@@ -327,13 +338,14 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     TextFormField(
-                      initialValue: data.item.url,
-                      autofocus: url == defaultUrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Video URL',
-                      ),
-                      onChanged: (value) => data.item.url = value,
-                    ),
+                        initialValue: data.item.url,
+                        autofocus: url == defaultUrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Video URL',
+                        ),
+                        onChanged: (value) {
+                          onUrlUpdate(data, value);
+                        }),
                     TextFormField(
                       decoration: const InputDecoration(
                         labelText: 'Subtitles URL',

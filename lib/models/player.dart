@@ -115,7 +115,7 @@ class PlayerModel extends ChangeNotifier {
   bool isIframe() {
     final item = playlist.getItem(playlist.pos);
     if (item == null) return false;
-    return item.isIframe;
+    return item.playerType == "IframeType";
   }
 
   String getCurrentItemTitle() {
@@ -129,7 +129,7 @@ class PlayerModel extends ChangeNotifier {
     initPlayerFuture = null;
     final item = playlist.getItem(playlist.pos);
     if (item == null) return;
-    if (item.isIframe) {
+    if (isIframe()) {
       final old = controller;
       controller = null;
       initPlayerFuture = Future.microtask(() => null);
@@ -140,6 +140,10 @@ class PlayerModel extends ChangeNotifier {
       return;
     }
     var url = item.url;
+    if (url.startsWith('/')) {
+      final relativeHost = app.getChannelLink();
+      url = '$relativeHost${url}';
+    }
     if (url.contains('youtu')) url = await getYoutubeVideoUrl(url);
     pause();
     final prevController = controller;
