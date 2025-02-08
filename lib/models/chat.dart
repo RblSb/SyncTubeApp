@@ -1,6 +1,6 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:synctube/models/player.dart';
-import 'dart:collection';
 import './app.dart';
 import '../chat.dart';
 import '../wsdata.dart';
@@ -47,10 +47,23 @@ class ChatModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addItem(ChatItem item) {
+  ChatItem addItem(ChatItem item) {
+    if (item.isProgressItem) {
+      _items.removeWhere((item) => item.isProgressItem);
+    }
     _items.insert(0, item);
     if (_items.length > 200) _items.removeLast();
     notifyListeners();
+    return item;
+  }
+
+  void removeProgressItem() {
+    _items.removeWhere((item) => item.isProgressItem);
+    notifyListeners();
+  }
+
+  ChatItem? findProgressItem() {
+    return _items.firstWhereOrNull((item) => item.isProgressItem);
   }
 
   void setEmotes(List<Emotes> emotes, String relativeHost) {
@@ -165,7 +178,11 @@ class ChatModel extends ChangeNotifier {
   void skipYoutubeAd() {
     final item = _app.playlist.getItem(_app.playlist.pos);
     if (item == null) return;
-    final id = PlayerModel.extractVideoId(item.url);
+    var itemUrl = item.url;
+    if (itemUrl.contains('/cache/')) {
+      itemUrl = itemUrl.replaceAll("/cache/", "youtu.be/");
+    }
+    final id = PlayerModel.extractVideoId(itemUrl);
     if (id.isEmpty) return;
     final url = 'https://sponsor.ajay.app/api/skipSegments?videoID=$id';
     final response = http.get(Uri.parse(url)).timeout(Duration(seconds: 5));

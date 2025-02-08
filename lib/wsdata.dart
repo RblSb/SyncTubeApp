@@ -8,6 +8,7 @@ class WsData {
   Logout? logout;
   Message? message;
   ServerMessage? serverMessage;
+  Progress? progress;
   UpdateClients? updateClients;
   BanClient? banClient;
   KickClient? kickClient;
@@ -36,6 +37,7 @@ class WsData {
       this.logout,
       this.message,
       this.serverMessage,
+      this.progress,
       this.updateClients,
       this.banClient,
       this.kickClient,
@@ -67,6 +69,9 @@ class WsData {
         json['message'] != null ? new Message.fromJson(json['message']) : null;
     serverMessage = json['serverMessage'] != null
         ? new ServerMessage.fromJson(json['serverMessage'])
+        : null;
+    progress = json['progress'] != null
+        ? new Progress.fromJson(json['progress'])
         : null;
     updateClients = json['updateClients'] != null
         ? new UpdateClients.fromJson(json['updateClients'])
@@ -132,6 +137,9 @@ class WsData {
     }
     if (this.serverMessage != null) {
       data['serverMessage'] = this.serverMessage?.toJson();
+    }
+    if (this.progress != null) {
+      data['progress'] = this.progress?.toJson();
     }
     if (this.updateClients != null) {
       data['updateClients'] = this.updateClients?.toJson();
@@ -700,6 +708,28 @@ class ServerMessage {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['textId'] = this.textId;
     return data;
+  }
+}
+
+class Progress {
+  late String type;
+  late double ratio;
+  late String? data;
+
+  Progress({required this.type, required this.ratio, required this.data});
+
+  Progress.fromJson(Map<String, dynamic> json) {
+    type = json['type'];
+    ratio = json['ratio'].toDouble();
+    data = json['data'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> json = new Map<String, dynamic>();
+    json['type'] = this.type;
+    json['ratio'] = this.ratio;
+    json['data'] = this.data;
+    return json;
   }
 }
 

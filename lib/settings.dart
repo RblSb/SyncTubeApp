@@ -93,6 +93,7 @@ class Settings extends StatelessWidget {
 
   static var isTV = false;
   static var forceExoPlayer = false;
+  static var doCache = false;
 
   static List<DeviceOrientation> prefferedOrientations = [];
 

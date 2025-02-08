@@ -287,12 +287,19 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     return result;
   }
 
-  onUrlUpdate(AddVideo data, String url) {
-    data.item.url = url;
+  String getPlayerType(String url) {
     final playerType =
         PlayerModel.extractVideoId(url).isEmpty ? 'RawType' : 'YoutubeType';
+    return playerType;
+  }
+
+  onUrlUpdate(AddVideo data, String url) {
+    data.item.url = url;
+    final playerType = getPlayerType(url);
     data.item.playerType = playerType;
-    data.item.doCache = playerType == 'YoutubeType';
+    final hasCacheSupport = playerType == 'YoutubeType';
+    data.item.doCache = Settings.doCache;
+    if (!hasCacheSupport) data.item.doCache = false;
   }
 
   Future<AddVideo?> _addUrlDialog(BuildContext context) async {
@@ -315,7 +322,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         duration: 0.0,
         isTemp: true,
         playerType: '',
-        doCache: false,
+        doCache: Settings.doCache,
       ),
       atEnd: true,
     );
@@ -345,6 +352,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                         ),
                         onChanged: (value) {
                           onUrlUpdate(data, value);
+                          setState(() => {});
                         }),
                     TextFormField(
                       decoration: const InputDecoration(
@@ -352,13 +360,15 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                       ),
                       onChanged: (value) => data.item.subs = value,
                     ),
-                    CheckboxListTile(
-                      title: const Text('Add as temporary'),
-                      value: data.item.isTemp,
-                      onChanged: (flag) => setState(() {
-                        data.item.isTemp = flag == true;
-                      }),
-                    ),
+                    if (getPlayerType(data.item.url) == 'YoutubeType')
+                      CheckboxListTile(
+                        title: const Text('Cache'),
+                        value: data.item.doCache,
+                        onChanged: (flag) => setState(() {
+                          data.item.doCache = flag == true;
+                          Settings.doCache = data.item.doCache;
+                        }),
+                      ),
                   ],
                 ),
               ),

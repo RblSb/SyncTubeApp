@@ -243,6 +243,18 @@ class AppModel extends ChangeNotifier {
         chat.addItem(ChatItem('', text));
         if (!isChatVisible && !Settings.isTV) player.showMessageIcon = true;
         break;
+      case 'Progress':
+        final type = data.progress!;
+        final percent = type.ratio * 100;
+        final text = '${type.type}... ${percent.toStringAsFixed(1)}%';
+        chat.addItem(ChatItem.fromProgress('', text));
+        if (type.ratio == 1) {
+          Future.delayed(
+            const Duration(seconds: 1),
+            () => chat.removeProgressItem(),
+          );
+        }
+        break;
       case 'UpdateClients':
         final type = data.updateClients!;
         clients = type.clients;
@@ -494,16 +506,31 @@ class AppModel extends ChangeNotifier {
       sendYoutubePlaylist(data);
       return;
     }
-    final futures = await Future.wait([
-      player.getVideoDuration(url),
-      player.getVideoTitle(url),
-    ]);
-    final duration = futures[0] as double;
-    if (duration == 0) {
-      chat.addItem(ChatItem('Failed to add video.', ''));
-      return;
+    double duration = 0;
+    String title = "";
+    var getRawData = true;
+    if (url.contains('youtu')) {
+      final info = await player.getYoutubeInfo(url);
+      if (info != null) {
+        duration = info.duration;
+        title = info.title;
+        getRawData = false;
+      }
     }
-    final title = futures[1] as String;
+
+    if (getRawData) {
+      final List<Object> futures = await Future.wait([
+        player.getVideoDuration(url),
+        player.getVideoTitle(url),
+      ]);
+      duration = futures[0] as double;
+      if (duration == 0) {
+        chat.addItem(ChatItem('Failed to add video.', ''));
+        return;
+      }
+      title = futures[1] as String;
+    }
+
     data.item.duration = duration;
     data.item.title = title;
     send(WsData(

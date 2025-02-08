@@ -45,6 +45,7 @@ class Main extends StatelessWidget {
       },
       child: MaterialApp(
         title: 'SyncTube',
+        debugShowCheckedModeBanner: false,
         // showPerformanceOverlay: true,
         theme: theme,
         home: ServerListPage(title: 'Latest Servers'),

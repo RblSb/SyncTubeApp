@@ -268,6 +268,54 @@ class PlayerModel extends ChangeNotifier {
     }
   }
 
+  Future<({double duration, String title})?> getYoutubeInfo(String url) async {
+    try {
+      final videoId = PlayerModel.extractVideoId(url);
+      if (videoId.isEmpty) return null;
+
+      final apiKey = app.config!.youtubeApiKey;
+
+      final response = await http
+          .get(Uri.parse('https://www.googleapis.com/youtube/v3/videos'
+              '?part=snippet,contentDetails'
+              '&fields=items(snippet/title,contentDetails/duration)'
+              '&id=$videoId'
+              '&key=$apiKey'));
+
+      if (response.statusCode != 200) return null;
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final items = data['items'] as List<dynamic>?;
+      if (items == null || items.isEmpty) return null;
+
+      final item = items.first as Map<String, dynamic>;
+      final title = (item['snippet'] as Map)['title'] as String? ?? 'Raw Video';
+      final duration = _convertYoutubeDuration(
+        (item['contentDetails'] as Map)['duration'] as String? ?? '',
+      );
+
+      return (duration: duration, title: title);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  double _convertYoutubeDuration(String duration) {
+    final hoursMatch = RegExp(r'(\d+)H').firstMatch(duration);
+    final minutesMatch = RegExp(r'(\d+)M').firstMatch(duration);
+    final secondsMatch = RegExp(r'(\d+)S').firstMatch(duration);
+
+    final hours = hoursMatch != null ? int.parse(hoursMatch.group(1)!) : 0;
+    final minutes =
+        minutesMatch != null ? int.parse(minutesMatch.group(1)!) : 0;
+    final seconds =
+        secondsMatch != null ? int.parse(secondsMatch.group(1)!) : 0;
+
+    final total = hours * 3600 + minutes * 60 + seconds;
+    // 99 hours for live streams
+    return total == 0 ? 356400.0 : total.toDouble();
+  }
+
   Future<ClosedCaptionFile>? _loadCaptions(VideoList item) {
     if (item.url.contains('youtu')) {
       item.subs = item.url;

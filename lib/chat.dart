@@ -30,6 +30,7 @@ class ChatItem {
   final String name;
   final String text;
   late String date;
+  bool isProgressItem = false;
 
   ChatItem(this.name, this.text, [String? date]) {
     if (date != null) {
@@ -39,6 +40,11 @@ class ChatItem {
       return;
     }
     this.date = dateToTimestamp(DateTime.now());
+  }
+
+  ChatItem.fromProgress(this.name, this.text, [String? date]) {
+    this.date = '';
+    isProgressItem = true;
   }
 
   String getLocalDateFromUtc(String utcDate) {
