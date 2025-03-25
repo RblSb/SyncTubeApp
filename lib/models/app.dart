@@ -47,6 +47,7 @@ class AppModel extends ChangeNotifier {
   bool _hasBackgroundAudio = true;
   bool isInBackground = false;
   Config? config;
+  List<String> playersCacheSupport = [];
 
   bool get hasBackgroundAudio => _hasBackgroundAudio;
 
@@ -151,6 +152,7 @@ class AppModel extends ChangeNotifier {
         final type = data.connected!;
         saveUUID(type.uuid);
         config = type.config;
+        playersCacheSupport = type.playersCacheSupport;
         WsData.version = config?.cacheStorageLimitGiB == null ? 1 : 2;
         print('Server version: ${WsData.version}');
         _getTimeTimer?.cancel();
@@ -245,8 +247,13 @@ class AppModel extends ChangeNotifier {
         break;
       case 'Progress':
         final type = data.progress!;
+        if (type.type == 'Canceled') {
+          chat.removeProgressItem();
+          return;
+        }
         final percent = type.ratio * 100;
-        final text = '${type.type}... ${percent.toStringAsFixed(1)}%';
+        var text = '${type.type}...';
+        if (percent != 0) text += ' ${percent.toStringAsFixed(1)}%';
         chat.addItem(ChatItem.fromProgress('', text));
         if (type.ratio == 1) {
           Future.delayed(
@@ -575,7 +582,7 @@ class AppModel extends ChangeNotifier {
     _getTimeTimer?.cancel();
     _reconnectionTimer?.cancel();
     _wsSubscription.cancel();
-    _channel.sink.close(status.goingAway);
+    _channel.sink.close(status.normalClosure);
     super.dispose();
   }
 

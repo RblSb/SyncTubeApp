@@ -15,7 +15,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 1.0.0+28
+version: 1.0.0+29
 
 environment:
   sdk: ">=3.2.2 <4.0.0"
@@ -36,7 +36,7 @@ dependencies:
 
   shared_preferences: ^2.5.1
 
-  video_player: 2.9.2
+  video_player: 2.9.3
 
   # perfect_volume_control: ^1.0.5
 
@@ -56,9 +56,9 @@ dependencies:
 
   package_info_plus: ^8.2.1
 
-  app_links: ^6.2.0
+  app_links: ^6.4.0
 
-  # ota_update: ^6.0.0
+  # ota_update: ^7.0.0 # after flutter upgrade
   ota_update:
     git:
       url: https://github.com/eduardohr-muniz/ota_update.git

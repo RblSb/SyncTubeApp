@@ -6,7 +6,7 @@ class ChatPanelModel extends ChangeNotifier {
   ChatPanelModel(this._app);
 
   final AppModel _app;
-  bool _serverPlay = false;
+  bool _serverPlay = true;
 
   bool get serverPlay => _serverPlay;
 

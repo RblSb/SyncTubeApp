@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -79,9 +78,11 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         child: GestureDetector(
           onTap: () => removeFocus(),
           child: PopScope(
-            // canPop: canPop,
             canPop: false,
-            onPopInvokedWithResult: (didPop, result) => _onWillPop(context),
+            onPopInvokedWithResult: (didPop, result) {
+              if (didPop) return;
+              _onWillPop(context);
+            },
             child: Selector<AppModel, bool>(
               selector: (context, app) => app.hasSystemUi,
               builder: (context, hasSystemUi, _) =>
@@ -230,11 +231,11 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   }
 
   void removeFocus() {
+    FocusScope.of(context).focusedChild?.unfocus();
     FocusScope.of(context).unfocus();
     SystemChrome.restoreSystemUIOverlays();
   }
 
-  // var canPop = false;
   Future<bool> _onWillPop(BuildContext context) async {
     if (!Settings.isTV) {
       if (!app.isChatVisible) {
@@ -247,12 +248,10 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         return false;
       }
     }
-    BuildContext? dialogContext;
     bool? dialog = await showDialog(
       context: context,
       useRootNavigator: true,
       builder: (context) {
-        dialogContext = context;
         return PopScope(
           canPop: true,
           child: AlertDialog(
@@ -267,7 +266,6 @@ class _AppState extends State<App> with WidgetsBindingObserver {
               ),
               TextButton(
                 onPressed: () {
-                  // canPop = true;
                   Navigator.of(context).pop(true);
                 },
                 child: const Text('Yes'),
@@ -277,13 +275,9 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         );
       },
     );
-    SystemChrome.restoreSystemUIOverlays();
+    removeFocus();
     final result = dialog ?? false;
-    if (result) {
-      // todo bug with stayed dialog in release mode, idk
-      if (kReleaseMode) Navigator.of(context).pop();
-      if (dialogContext != null) Navigator.of(dialogContext!).pop();
-    }
+    if (result) Navigator.of(context).pop();
     return result;
   }
 
@@ -297,8 +291,8 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     data.item.url = url;
     final playerType = getPlayerType(url);
     data.item.playerType = playerType;
-    final hasCacheSupport = playerType == 'YoutubeType';
-    data.item.doCache = Settings.doCache;
+    final hasCacheSupport = app.playersCacheSupport.contains(playerType);
+    data.item.doCache = Settings.checkedCache.contains(playerType);
     if (!hasCacheSupport) data.item.doCache = false;
   }
 
@@ -322,7 +316,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         duration: 0.0,
         isTemp: true,
         playerType: '',
-        doCache: Settings.doCache,
+        doCache: Settings.checkedCache.contains(getPlayerType(url)),
       ),
       atEnd: true,
     );
@@ -360,13 +354,18 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                       ),
                       onChanged: (value) => data.item.subs = value,
                     ),
-                    if (getPlayerType(data.item.url) == 'YoutubeType')
+                    if (app.playersCacheSupport
+                        .contains(getPlayerType(data.item.url)))
                       CheckboxListTile(
                         title: const Text('Cache'),
                         value: data.item.doCache,
                         onChanged: (flag) => setState(() {
                           data.item.doCache = flag == true;
-                          Settings.doCache = data.item.doCache;
+                          final playerType = getPlayerType(data.item.url);
+                          Settings.setPlayerCacheCheckbox(
+                            playerType,
+                            data.item.doCache,
+                          );
                         }),
                       ),
                   ],

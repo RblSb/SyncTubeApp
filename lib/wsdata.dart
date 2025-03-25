@@ -210,18 +210,21 @@ class Connected {
   late bool isPlaylistOpen;
   late int itemPos;
   late String globalIp;
+  late List<String> playersCacheSupport = [];
 
-  Connected(
-      {required this.uuid,
-      required this.config,
-      required this.history,
-      required this.clients,
-      required this.isUnknownClient,
-      required this.clientName,
-      required this.videoList,
-      required this.isPlaylistOpen,
-      required this.itemPos,
-      required this.globalIp});
+  Connected({
+    required this.uuid,
+    required this.config,
+    required this.history,
+    required this.clients,
+    required this.isUnknownClient,
+    required this.clientName,
+    required this.videoList,
+    required this.isPlaylistOpen,
+    required this.itemPos,
+    required this.globalIp,
+    required this.playersCacheSupport,
+  });
 
   Connected.fromJson(Map<String, dynamic> json) {
     uuid = json['uuid'];
@@ -249,6 +252,13 @@ class Connected {
     isPlaylistOpen = json['isPlaylistOpen'];
     itemPos = json['itemPos'];
     globalIp = json['globalIp'];
+
+    if (json['playersCacheSupport'] != null) {
+      playersCacheSupport = [];
+      json['playersCacheSupport'].forEach((v) {
+        playersCacheSupport.add(v);
+      });
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -263,6 +273,7 @@ class Connected {
     data['isPlaylistOpen'] = this.isPlaylistOpen;
     data['itemPos'] = this.itemPos;
     data['globalIp'] = this.globalIp;
+    data['playersCacheSupport'] = this.playersCacheSupport;
     return data;
   }
 }

@@ -92,8 +92,7 @@ class Settings extends StatelessWidget {
   }
 
   static var isTV = false;
-  static var forceExoPlayer = false;
-  static var doCache = false;
+  static List<String> checkedCache = [];
 
   static List<DeviceOrientation> prefferedOrientations = [];
 
@@ -133,10 +132,18 @@ class Settings extends StatelessWidget {
     }
   }
 
+  static setPlayerCacheCheckbox(String playerType, bool checked) async {
+    final prefs = await SharedPreferences.getInstance();
+    checkedCache.remove(playerType);
+    if (checked) checkedCache.add(playerType);
+    prefs.setStringList('checkedCache', checkedCache);
+  }
+
   static void applySettings(AppModel app) async {
     final prefs = await SharedPreferences.getInstance();
     setPrefferedOrientation(app, prefs.getInt('prefferedOrientation') ?? 0);
     setSystemUi(app, prefs.getBool('hasSystemUi') ?? false);
     app.hasBackgroundAudio = prefs.getBool('backgroundAudio') ?? true;
+    checkedCache = prefs.getStringList('checkedCache') ?? [];
   }
 }
