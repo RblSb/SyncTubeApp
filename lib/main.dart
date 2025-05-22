@@ -1,6 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
-
 import 'package:app_links/app_links.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
@@ -14,11 +12,6 @@ import 'app.dart';
 import 'package:http/http.dart' as http;
 
 void main() async {
-  // for Android 7 and below
-  WidgetsFlutterBinding.ensureInitialized();
-  ByteData data = await PlatformAssetBundle().load('assets/ca/ISRGRootX1.pem');
-  SecurityContext.defaultContext
-      .setTrustedCertificatesBytes(data.buffer.asUint8List());
   runApp(Main());
 }
 
@@ -38,6 +31,7 @@ class Main extends StatelessWidget {
       ),
     ).copyWith(
       scaffoldBackgroundColor: backgroundColor,
+      dialogTheme: const DialogThemeData(backgroundColor: backgroundColor),
     );
     return Shortcuts(
       shortcuts: {
@@ -78,8 +72,8 @@ class _ServerListPageState extends State<ServerListPage> {
   void init() async {
     Settings.isTV = await _checkTvMode();
 
-    final prefs = await SharedPreferences.getInstance();
-    var strings = prefs.getStringList('serverListItems') ?? [];
+    final prefs = await SharedPreferencesAsync();
+    var strings = await prefs.getStringList('serverListItems') ?? [];
     print(strings);
     if (strings.length == 0) {
       strings = ['Example', 'https://synctube.onrender.com/'];
@@ -127,13 +121,13 @@ class _ServerListPageState extends State<ServerListPage> {
   }
 
   void writeItems() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferencesAsync();
     List<String> strings = [];
     for (var item in items) {
       strings.add(item.name);
       strings.add(item.url);
     }
-    prefs.setStringList('serverListItems', strings);
+    await prefs.setStringList('serverListItems', strings);
   }
 
   void addItem(ServerListItem? item) {

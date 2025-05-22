@@ -30,7 +30,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: 3.24.5
+          # flutter-version: 3.24.5
 
   build:
     runs-on: ${{ matrix.os }}
@@ -60,7 +60,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: 3.24.5
+          # flutter-version: 3.24.5
 
       - name: Create signing files
         working-directory: ${{github.workspace}}

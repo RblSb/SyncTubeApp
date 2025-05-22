@@ -94,8 +94,8 @@ class AppModel extends ChangeNotifier {
   }
 
   void connect() async {
-    final prefs = await SharedPreferences.getInstance();
-    final uuid = prefs.getString('uuid');
+    final prefs = await SharedPreferencesAsync();
+    final uuid = await prefs.getString('uuid');
     var url = wsUrl;
     if (uuid != null) url += '?uuid=$uuid';
     _channel = IOWebSocketChannel.connect(url);
@@ -587,7 +587,7 @@ class AppModel extends ChangeNotifier {
   }
 
   Future<void> saveUUID(String uuid) async {
-    final prefs = await SharedPreferences.getInstance();
-    prefs.setString('uuid', uuid);
+    final prefs = await SharedPreferencesAsync();
+    await prefs.setString('uuid', uuid);
   }
 }

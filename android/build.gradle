@@ -17,8 +17,8 @@ tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
 
-allprojects {
-    tasks.withType(JavaCompile) {
-        options.compilerArgs << "-Xlint:-options"
-    }
-}
+// allprojects {
+//     tasks.withType(JavaCompile) {
+//         options.compilerArgs << "-Xlint:-options"
+//     }
+// }

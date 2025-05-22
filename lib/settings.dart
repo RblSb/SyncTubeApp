@@ -17,21 +17,21 @@ class Settings extends StatelessWidget {
           title: const Text('Orientation'),
           trailing: Text('${app.prefferedOrientationType()}'),
           onTap: () async {
-            final prefs = await SharedPreferences.getInstance();
+            final prefs = await SharedPreferencesAsync();
             final key = 'prefferedOrientation';
-            var state = prefs.getInt(key) ?? 0;
+            var state = await prefs.getInt(key) ?? 0;
             state++;
             if (state > 1) state = 0;
             setPrefferedOrientation(app, state);
-            prefs.setInt(key, state);
+            await prefs.setInt(key, state);
           },
         ),
         SwitchListTile(
           title: const Text('System UI'),
           value: app.hasSystemUi,
           onChanged: (state) async {
-            final prefs = await SharedPreferences.getInstance();
-            prefs.setBool('hasSystemUi', state);
+            final prefs = await SharedPreferencesAsync();
+            await prefs.setBool('hasSystemUi', state);
             setSystemUi(app, state);
           },
         ),
@@ -39,8 +39,8 @@ class Settings extends StatelessWidget {
           title: const Text('Background audio'),
           value: app.hasBackgroundAudio,
           onChanged: (state) async {
-            final prefs = await SharedPreferences.getInstance();
-            prefs.setBool('backgroundAudio', state);
+            final prefs = await SharedPreferencesAsync();
+            await prefs.setBool('backgroundAudio', state);
             app.hasBackgroundAudio = state;
           },
         ),
@@ -56,33 +56,33 @@ class Settings extends StatelessWidget {
   }
 
   static Future<String> getSavedName() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('savedName') ?? '';
+    final prefs = await SharedPreferencesAsync();
+    return await prefs.getString('savedName') ?? '';
   }
 
   static Future<List<String>> getSavedNameAndHash() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferencesAsync();
     return [
-      prefs.getString('savedName') ?? '',
-      prefs.getString('savedHash') ?? '',
+      await prefs.getString('savedName') ?? '',
+      await prefs.getString('savedHash') ?? '',
     ];
   }
 
   static void resetNameAndHash() async {
-    final prefs = await SharedPreferences.getInstance();
-    prefs.setString('savedName', '');
-    prefs.setString('savedHash', '');
+    final prefs = await SharedPreferencesAsync();
+    await prefs.setString('savedName', '');
+    await prefs.setString('savedHash', '');
   }
 
   static void nextOrientationView(AppModel app) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferencesAsync();
     final key = 'prefferedOrientation';
-    var state = prefs.getInt(key) ?? 0;
+    var state = await prefs.getInt(key) ?? 0;
     switch (state) {
       case 0:
         state++;
         setPrefferedOrientation(app, state);
-        prefs.setInt(key, state);
+        await prefs.setInt(key, state);
         break;
       case 1:
         app.isChatVisible = !app.isChatVisible;
@@ -133,17 +133,18 @@ class Settings extends StatelessWidget {
   }
 
   static setPlayerCacheCheckbox(String playerType, bool checked) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferencesAsync();
     checkedCache.remove(playerType);
     if (checked) checkedCache.add(playerType);
-    prefs.setStringList('checkedCache', checkedCache);
+    await prefs.setStringList('checkedCache', checkedCache);
   }
 
   static void applySettings(AppModel app) async {
-    final prefs = await SharedPreferences.getInstance();
-    setPrefferedOrientation(app, prefs.getInt('prefferedOrientation') ?? 0);
-    setSystemUi(app, prefs.getBool('hasSystemUi') ?? false);
-    app.hasBackgroundAudio = prefs.getBool('backgroundAudio') ?? true;
-    checkedCache = prefs.getStringList('checkedCache') ?? [];
+    final prefs = await SharedPreferencesAsync();
+    setPrefferedOrientation(
+        app, await prefs.getInt('prefferedOrientation') ?? 0);
+    setSystemUi(app, await prefs.getBool('hasSystemUi') ?? false);
+    app.hasBackgroundAudio = await prefs.getBool('backgroundAudio') ?? true;
+    checkedCache = await prefs.getStringList('checkedCache') ?? [];
   }
 }

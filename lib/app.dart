@@ -329,8 +329,10 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              backgroundColor:
-                  Theme.of(context).dialogBackgroundColor.withAlpha(bgAlpha),
+              backgroundColor: Theme.of(context)
+                  .dialogTheme
+                  .backgroundColor!
+                  .withAlpha(bgAlpha),
               insetPadding: EdgeInsets.zero,
               scrollable: true,
               content: SingleChildScrollView(

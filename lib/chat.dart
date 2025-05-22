@@ -299,9 +299,12 @@ class _ChatState extends State<Chat> {
                 onSubmitted: (String text) async {
                   textController.clear();
                   if (chat.showPasswordField) {
+                    final prefs = await SharedPreferencesAsync();
+                    final hash = chat.passwordHash(text);
+                    await prefs.setString('savedHash', hash);
                     chat.sendLogin(Login(
                       clientName: await Settings.getSavedName(),
-                      passHash: chat.passwordHash(text),
+                      passHash: hash,
                       isUnknownClient: null,
                       clients: null,
                     ));
@@ -313,8 +316,8 @@ class _ChatState extends State<Chat> {
                       isUnknownClient: null,
                       clients: null,
                     ));
-                    final prefs = await SharedPreferences.getInstance();
-                    prefs.setString('savedName', text);
+                    final prefs = await SharedPreferencesAsync();
+                    await prefs.setString('savedName', text);
                   } else {
                     chat.sendMessage(text);
                   }
