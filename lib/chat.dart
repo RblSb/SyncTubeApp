@@ -2,12 +2,12 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
-import 'models/chat.dart';
 import 'color_scheme.dart';
 import 'emotes_tab.dart';
+import 'models/app.dart';
+import 'models/chat.dart';
 import 'settings.dart';
 import 'wsdata.dart';
 
@@ -210,6 +210,17 @@ class _ChatState extends State<Chat> {
     return chat.isUnknownClient ? 'Your Name' : 'Send a message...';
   }
 
+  Future<String> _getCurrentLogin(AppModel appModel, String channelUrl) async {
+    final prefs = await Settings.getChannelPreferences(channelUrl);
+    if (prefs.login.isNotEmpty) return prefs.login;
+    try {
+      if (appModel.personalName.isNotEmpty) {
+        return appModel.personalName;
+      }
+    } catch (_) {}
+    return '';
+  }
+
   @override
   Widget build(BuildContext context) {
     final chat = context.watch<ChatModel>();
@@ -298,26 +309,33 @@ class _ChatState extends State<Chat> {
                 },
                 onSubmitted: (String text) async {
                   textController.clear();
+                  final appModel =
+                      Provider.of<AppModel>(context, listen: false);
+                  final channelUrl = appModel.wsUrl;
                   if (chat.showPasswordField) {
-                    final prefs = await SharedPreferencesAsync();
                     final hash = chat.passwordHash(text);
-                    await prefs.setString('savedHash', hash);
+                    final login = await _getCurrentLogin(appModel, channelUrl);
                     chat.sendLogin(Login(
-                      clientName: await Settings.getSavedName(),
+                      clientName: login,
                       passHash: hash,
                       isUnknownClient: null,
                       clients: null,
                     ));
+                    await Settings.setChannelPreferences(
+                      channelUrl,
+                      ChannelPreferences(login: login, hash: hash),
+                    );
                   } else if (chat.isUnknownClient) {
-                    // if (text.length == 0) return;
                     chat.sendLogin(Login(
                       clientName: text,
                       passHash: null,
                       isUnknownClient: null,
                       clients: null,
                     ));
-                    final prefs = await SharedPreferencesAsync();
-                    await prefs.setString('savedName', text);
+                    await Settings.setChannelPreferences(
+                      channelUrl,
+                      ChannelPreferences(login: text, hash: ''),
+                    );
                   } else {
                     chat.sendMessage(text);
                   }

@@ -1,15 +1,17 @@
 import 'dart:convert';
+
 import 'package:app_links/app_links.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import 'package:ota_update/ota_update.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:synctube/settings.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+
 import 'app.dart';
-import 'package:http/http.dart' as http;
 
 void main() async {
   runApp(Main());
@@ -60,8 +62,8 @@ class ServerListPage extends StatefulWidget {
 class _ServerListPageState extends State<ServerListPage> {
   final List<ServerListItem> items = [];
   Offset? _tapPosition;
-  final latestApkUrl = 'http://178.218.221.47/SyncTubeApp/SyncTube.apk';
-  final pubspecUrl = 'http://178.218.221.47/SyncTubeApp/pubspec.yaml';
+  final latestApkUrl = 'http://synctube.nya.pub/SyncTubeApp/SyncTube.apk';
+  final pubspecUrl = 'http://synctube.nya.pub/SyncTubeApp/pubspec.yaml';
 
   @override
   void initState() {

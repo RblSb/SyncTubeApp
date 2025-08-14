@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,14 +8,13 @@ import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/status.dart' as status;
 import 'package:youtube_explode_dart/youtube_explode_dart.dart' as youtube;
 
+import '../chat.dart';
 import '../settings.dart';
+import '../wsdata.dart';
 import './chat.dart';
+import './chat_panel.dart';
 import './player.dart';
 import './playlist.dart';
-import './chat_panel.dart';
-
-import '../chat.dart';
-import '../wsdata.dart';
 
 enum MainTab {
   chat,
@@ -23,6 +23,7 @@ enum MainTab {
 }
 
 class AppModel extends ChangeNotifier {
+  String get personalName => _personal.name;
   String wsUrl;
   late IOWebSocketChannel _channel;
   late StreamSubscription<dynamic> _wsSubscription;
@@ -199,7 +200,7 @@ class AppModel extends ChangeNotifier {
       case 'LoginError':
         chat.isUnknownClient = true;
         chat.showPasswordField = false;
-        Settings.resetNameAndHash();
+        Settings.resetChannelPreferences(wsUrl);
         break;
       case 'Logout':
         final type = data.logout!;
@@ -207,7 +208,7 @@ class AppModel extends ChangeNotifier {
         _personal = Client(name: type.clientName, group: 0);
         chat.isUnknownClient = true;
         chat.showPasswordField = false;
-        Settings.resetNameAndHash();
+        Settings.resetChannelPreferences(wsUrl);
         notifyListeners();
         break;
       case 'Message':
@@ -387,11 +388,11 @@ class AppModel extends ChangeNotifier {
   }
 
   void tryAutologin() async {
-    final arr = await Settings.getSavedNameAndHash();
-    if (arr[0] == '') return;
+    final prefs = await Settings.getChannelPreferences(wsUrl);
+    if (prefs.login == '') return;
     chat.sendLogin(Login(
-      clientName: arr[0],
-      passHash: arr[1] == '' ? null : arr[1],
+      clientName: prefs.login,
+      passHash: prefs.hash == '' ? null : prefs.hash,
       isUnknownClient: null,
       clients: null,
     ));

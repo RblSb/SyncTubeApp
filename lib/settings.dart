@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:native_device_orientation/native_device_orientation.dart';
@@ -6,6 +8,27 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'models/app.dart';
 import 'wsdata.dart';
+
+class ChannelPreferences {
+  final String login;
+  final String hash;
+
+  ChannelPreferences({required this.login, required this.hash});
+
+  factory ChannelPreferences.fromJson(Map<String, dynamic> json) {
+    return ChannelPreferences(
+      login: json['login'] ?? '',
+      hash: json['hash'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'login': login,
+      'hash': hash,
+    };
+  }
+}
 
 class Settings extends StatelessWidget {
   @override
@@ -55,23 +78,34 @@ class Settings extends StatelessWidget {
     );
   }
 
-  static Future<String> getSavedName() async {
+  /// Get ChannelPreferences for a given channelUrl (server list key)
+  static Future<ChannelPreferences> getChannelPreferences(
+      String channelUrl) async {
     final prefs = await SharedPreferencesAsync();
-    return await prefs.getString('savedName') ?? '';
+    final jsonString = await prefs.getString('channelPrefs_$channelUrl');
+    if (jsonString == null || jsonString.isEmpty) {
+      return ChannelPreferences(login: '', hash: '');
+    }
+    try {
+      final Map<String, dynamic> map = jsonDecode(jsonString);
+      return ChannelPreferences.fromJson(map);
+    } catch (_) {
+      return ChannelPreferences(login: '', hash: '');
+    }
   }
 
-  static Future<List<String>> getSavedNameAndHash() async {
+  /// Set ChannelPreferences for a given channelUrl (server list key)
+  static Future<void> setChannelPreferences(
+      String channelUrl, ChannelPreferences prefsObj) async {
     final prefs = await SharedPreferencesAsync();
-    return [
-      await prefs.getString('savedName') ?? '',
-      await prefs.getString('savedHash') ?? '',
-    ];
+    final jsonString = jsonEncode(prefsObj.toJson());
+    await prefs.setString('channelPrefs_$channelUrl', jsonString);
   }
 
-  static void resetNameAndHash() async {
+  /// Reset ChannelPreferences for a given channelUrl (server list key)
+  static Future<void> resetChannelPreferences(String channelUrl) async {
     final prefs = await SharedPreferencesAsync();
-    await prefs.setString('savedName', '');
-    await prefs.setString('savedHash', '');
+    await prefs.remove('channelPrefs_$channelUrl');
   }
 
   static void nextOrientationView(AppModel app) async {
@@ -142,9 +176,12 @@ class Settings extends StatelessWidget {
   static void applySettings(AppModel app) async {
     final prefs = await SharedPreferencesAsync();
     setPrefferedOrientation(
-        app, await prefs.getInt('prefferedOrientation') ?? 0);
+      app,
+      await prefs.getInt('prefferedOrientation') ?? 0,
+    );
     setSystemUi(app, await prefs.getBool('hasSystemUi') ?? false);
     app.hasBackgroundAudio = await prefs.getBool('backgroundAudio') ?? true;
     checkedCache = await prefs.getStringList('checkedCache') ?? [];
+    // ChannelPreferences are per-channel, so not loaded globally here
   }
 }
