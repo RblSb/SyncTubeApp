@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'app.dart';
+
 import '../wsdata.dart';
+import 'app.dart';
 
 class PlaylistModel extends ChangeNotifier {
   PlaylistModel(this._app);
@@ -14,31 +15,39 @@ class PlaylistModel extends ChangeNotifier {
   int get pos => _pos;
 
   void sendPlayItem(int pos) {
-    _app.send(WsData(
-      type: 'PlayItem',
-      playItem: PlayItem(pos: pos),
-    ));
+    _app.send(
+      WsData(
+        type: 'PlayItem',
+        playItem: PlayItem(pos: pos),
+      ),
+    );
   }
 
   void sendSetNextItem(int pos) {
-    _app.send(WsData(
-      type: 'SetNextItem',
-      setNextItem: PlayItem(pos: pos),
-    ));
+    _app.send(
+      WsData(
+        type: 'SetNextItem',
+        setNextItem: PlayItem(pos: pos),
+      ),
+    );
   }
 
   void sendToggleItemType(int pos) {
-    _app.send(WsData(
-      type: 'ToggleItemType',
-      toggleItemType: PlayItem(pos: pos),
-    ));
+    _app.send(
+      WsData(
+        type: 'ToggleItemType',
+        toggleItemType: PlayItem(pos: pos),
+      ),
+    );
   }
 
   void sendRemoveItem(String url) {
-    _app.send(WsData(
-      type: 'RemoveVideo',
-      removeVideo: RemoveVideo(url: url),
-    ));
+    _app.send(
+      WsData(
+        type: 'RemoveVideo',
+        removeVideo: RemoveVideo(url: url),
+      ),
+    );
   }
 
   void setPos(int pos) {

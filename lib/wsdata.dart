@@ -30,32 +30,33 @@ class WsData {
 
   static int version = 2;
 
-  WsData(
-      {required this.type,
-      this.connected,
-      this.login,
-      this.logout,
-      this.message,
-      this.serverMessage,
-      this.progress,
-      this.updateClients,
-      this.banClient,
-      this.kickClient,
-      this.addVideo,
-      this.removeVideo,
-      this.skipVideo,
-      this.pause,
-      this.play,
-      this.getTime,
-      this.setTime,
-      this.setRate,
-      this.rewind,
-      this.setLeader,
-      this.playItem,
-      this.setNextItem,
-      this.toggleItemType,
-      this.updatePlaylist,
-      this.togglePlaylistLock});
+  WsData({
+    required this.type,
+    this.connected,
+    this.login,
+    this.logout,
+    this.message,
+    this.serverMessage,
+    this.progress,
+    this.updateClients,
+    this.banClient,
+    this.kickClient,
+    this.addVideo,
+    this.removeVideo,
+    this.skipVideo,
+    this.pause,
+    this.play,
+    this.getTime,
+    this.setTime,
+    this.setRate,
+    this.rewind,
+    this.setLeader,
+    this.playItem,
+    this.setNextItem,
+    this.toggleItemType,
+    this.updatePlaylist,
+    this.togglePlaylistLock,
+  });
 
   WsData.fromJson(Map<String, dynamic> json) {
     type = json['type'];
@@ -63,10 +64,12 @@ class WsData {
         ? new Connected.fromJson(json['connected'])
         : null;
     login = json['login'] != null ? new Login.fromJson(json['login']) : null;
-    logout =
-        json['logout'] != null ? new Logout.fromJson(json['logout']) : null;
-    message =
-        json['message'] != null ? new Message.fromJson(json['message']) : null;
+    logout = json['logout'] != null
+        ? new Logout.fromJson(json['logout'])
+        : null;
+    message = json['message'] != null
+        ? new Message.fromJson(json['message'])
+        : null;
     serverMessage = json['serverMessage'] != null
         ? new ServerMessage.fromJson(json['serverMessage'])
         : null;
@@ -93,12 +96,15 @@ class WsData {
     kickClient = json['kickClient'] != null
         ? new KickClient.fromJson(json['kickClient'])
         : null;
-    getTime =
-        json['getTime'] != null ? new GetTime.fromJson(json['getTime']) : null;
-    setTime =
-        json['setTime'] != null ? new Pause.fromJson(json['setTime']) : null;
-    setRate =
-        json['setRate'] != null ? new SetRate.fromJson(json['setRate']) : null;
+    getTime = json['getTime'] != null
+        ? new GetTime.fromJson(json['getTime'])
+        : null;
+    setTime = json['setTime'] != null
+        ? new Pause.fromJson(json['setTime'])
+        : null;
+    setRate = json['setRate'] != null
+        ? new SetRate.fromJson(json['setRate'])
+        : null;
     rewind = json['rewind'] != null ? new Pause.fromJson(json['rewind']) : null;
     setLeader = json['setLeader'] != null
         ? new SetLeader.fromJson(json['setLeader'])
@@ -297,23 +303,24 @@ class Config {
   late bool? isVerbose;
   late String? salt;
 
-  Config(
-      {required this.port,
-      required this.channelName,
-      required this.maxLoginLength,
-      required this.maxMessageLength,
-      required this.serverChatHistory,
-      required this.totalVideoLimit,
-      required this.userVideoLimit,
-      required this.localAdmins,
-      required this.templateUrl,
-      required this.youtubeApiKey,
-      required this.cacheStorageLimitGiB,
-      required this.permissions,
-      required this.emotes,
-      required this.filters,
-      required this.isVerbose,
-      required this.salt});
+  Config({
+    required this.port,
+    required this.channelName,
+    required this.maxLoginLength,
+    required this.maxMessageLength,
+    required this.serverChatHistory,
+    required this.totalVideoLimit,
+    required this.userVideoLimit,
+    required this.localAdmins,
+    required this.templateUrl,
+    required this.youtubeApiKey,
+    required this.cacheStorageLimitGiB,
+    required this.permissions,
+    required this.emotes,
+    required this.filters,
+    required this.isVerbose,
+    required this.salt,
+  });
 
   Config.fromJson(Map<String, dynamic> json) {
     port = json['port'];
@@ -456,11 +463,12 @@ class Filters {
   late String flags;
   late String replace;
 
-  Filters(
-      {required this.name,
-      required this.regex,
-      required this.flags,
-      required this.replace});
+  Filters({
+    required this.name,
+    required this.regex,
+    required this.flags,
+    required this.replace,
+  });
 
   Filters.fromJson(Map<String, dynamic> json) {
     name = json['name'];
@@ -593,11 +601,12 @@ class Login {
   late List<Client>? clients;
   late bool? isUnknownClient;
 
-  Login(
-      {required this.clientName,
-      required this.passHash,
-      required this.clients,
-      required this.isUnknownClient});
+  Login({
+    required this.clientName,
+    required this.passHash,
+    required this.clients,
+    required this.isUnknownClient,
+  });
 
   Login.fromJson(Map<String, dynamic> json) {
     clientName = json['clientName'];
@@ -662,10 +671,11 @@ class Logout {
   late String clientName;
   late List<Client> clients;
 
-  Logout(
-      {required this.oldClientName,
-      required this.clientName,
-      required this.clients});
+  Logout({
+    required this.oldClientName,
+    required this.clientName,
+    required this.clients,
+  });
 
   Logout.fromJson(Map<String, dynamic> json) {
     oldClientName = json['oldClientName'];

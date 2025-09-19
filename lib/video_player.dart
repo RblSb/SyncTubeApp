@@ -5,11 +5,12 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:video_player/video_player.dart';
+
 import 'chat_panel.dart';
+import 'color_scheme.dart';
 import 'models/chat_panel.dart';
 import 'models/player.dart';
 import 'settings.dart';
-import 'color_scheme.dart';
 
 class VideoPlayerScreen extends StatelessWidget {
   VideoPlayerScreen({Key? key}) : super(key: key);
@@ -209,7 +210,11 @@ class _PlayPauseOverlay extends StatelessWidget {
                 child: VideoProgressIndicator(
                   player.controller!,
                   padding: const EdgeInsets.only(
-                      bottom: 15, top: 5, left: 15, right: 15),
+                    bottom: 15,
+                    top: 5,
+                    left: 15,
+                    right: 15,
+                  ),
                   colors: VideoProgressColors(
                     playedColor: const Color.fromRGBO(200, 0, 0, 0.75),
                     bufferedColor: const Color.fromRGBO(200, 200, 200, 0.5),

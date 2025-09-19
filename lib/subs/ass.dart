@@ -12,7 +12,7 @@ final _drawingMode = RegExp(r'\\p[124]');
 /// Represents a [ClosedCaptionFile], parsed from the ASS file format.
 class AssCaptionFile extends ClosedCaptionFile {
   AssCaptionFile(this.fileContents)
-      : _captions = _parseCaptionsFromAssString(fileContents);
+    : _captions = _parseCaptionsFromAssString(fileContents);
 
   final String fileContents;
   final List<Caption> _captions;

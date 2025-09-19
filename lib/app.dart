@@ -1,18 +1,19 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:native_device_orientation/native_device_orientation.dart';
 import 'package:provider/provider.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
-import 'models/player.dart';
-import 'models/app.dart';
-import 'playlist.dart';
+import 'chat.dart';
 import 'chat_panel.dart';
+import 'models/app.dart';
+import 'models/player.dart';
+import 'playlist.dart';
 import 'settings.dart';
 import 'video_player.dart';
 import 'wsdata.dart';
-import 'chat.dart';
-import 'package:native_device_orientation/native_device_orientation.dart';
 // import 'color_scheme.dart';
 
 typedef WsDataFunc = void Function(WsData data);
@@ -40,19 +41,22 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     WakelockPlus.enable();
     WidgetsBinding.instance.addObserver(this);
     final nativeOrientation = NativeDeviceOrientationCommunicator();
-    final orientationStream =
-        nativeOrientation.onOrientationChanged(useSensor: true);
+    final orientationStream = nativeOrientation.onOrientationChanged(
+      useSensor: true,
+    );
     orientationListener = orientationStream.listen((event) {
       switch (event) {
         case NativeDeviceOrientation.landscapeLeft:
           if (Settings.prefferedOrientations.isEmpty) return;
-          SystemChrome.setPreferredOrientations(
-              [DeviceOrientation.landscapeLeft]);
+          SystemChrome.setPreferredOrientations([
+            DeviceOrientation.landscapeLeft,
+          ]);
           break;
         case NativeDeviceOrientation.landscapeRight:
           if (Settings.prefferedOrientations.isEmpty) return;
-          SystemChrome.setPreferredOrientations(
-              [DeviceOrientation.landscapeRight]);
+          SystemChrome.setPreferredOrientations([
+            DeviceOrientation.landscapeRight,
+          ]);
           break;
         default:
       }
@@ -117,41 +121,42 @@ class _AppState extends State<App> with WidgetsBindingObserver {
               : Axis.vertical,
           children: [
             Selector<AppModel, bool>(
-                selector: (context, app) => app.isChatVisible,
-                builder: (context, isChatVisible, child) {
-                  return Selector<PlayerModel, double>(
-                    selector: (context, player) {
-                      final isInit =
-                          player.controller?.value.isInitialized ?? false;
-                      if (!isInit) return 16 / 9;
-                      return player.controller?.value.aspectRatio ?? 16 / 9;
-                    },
-                    builder: (context, ratio, child) {
-                      final media = MediaQuery.of(context);
-                      return Container(
-                        color: Colors.black,
-                        padding: EdgeInsets.only(
-                          top: _isKeyboardVisible() ? media.padding.top : 0,
-                        ),
-                        width: orientation == Orientation.landscape
-                            ? isChatVisible
+              selector: (context, app) => app.isChatVisible,
+              builder: (context, isChatVisible, child) {
+                return Selector<PlayerModel, double>(
+                  selector: (context, player) {
+                    final isInit =
+                        player.controller?.value.isInitialized ?? false;
+                    if (!isInit) return 16 / 9;
+                    return player.controller?.value.aspectRatio ?? 16 / 9;
+                  },
+                  builder: (context, ratio, child) {
+                    final media = MediaQuery.of(context);
+                    return Container(
+                      color: Colors.black,
+                      padding: EdgeInsets.only(
+                        top: _isKeyboardVisible() ? media.padding.top : 0,
+                      ),
+                      width: orientation == Orientation.landscape
+                          ? isChatVisible
                                 ? media.size.width / 1.5
                                 : media.size.width
-                            : double.infinity,
-                        height: playerHeight(ratio),
-                        child: Column(
-                          children: [
-                            if (orientation == Orientation.landscape &&
-                                !_isKeyboardVisible() &&
-                                isChatVisible)
-                              ChatPanel(),
-                            Expanded(child: VideoPlayerScreen()),
-                          ],
-                        ),
-                      );
-                    },
-                  );
-                }),
+                          : double.infinity,
+                      height: playerHeight(ratio),
+                      child: Column(
+                        children: [
+                          if (orientation == Orientation.landscape &&
+                              !_isKeyboardVisible() &&
+                              isChatVisible)
+                            ChatPanel(),
+                          Expanded(child: VideoPlayerScreen()),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
             Selector<AppModel, bool>(
               selector: (context, app) => app.isChatVisible,
               builder: (context, isChatVisible, child) {
@@ -282,8 +287,9 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   }
 
   String getPlayerType(String url) {
-    final playerType =
-        PlayerModel.extractVideoId(url).isEmpty ? 'RawType' : 'YoutubeType';
+    final playerType = PlayerModel.extractVideoId(url).isEmpty
+        ? 'RawType'
+        : 'YoutubeType';
     return playerType;
   }
 
@@ -307,6 +313,11 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         clipboardText.contains('youtu')) {
       url = clipboardText;
     }
+    if (clipboardText.endsWith('.ts')) {
+      url = clipboardText.replaceAll('240.mp4', '1080.mp4');
+      // `1080.mp4:hls:seg-123-v1-a1.ts` => `1080.mp4:hls:manifest.m3u8`
+      url = url.replaceAll(RegExp(r'seg-[^:]+\.ts$'), 'manifest.m3u8');
+    }
     final data = AddVideo(
       item: VideoList(
         url: url,
@@ -329,10 +340,9 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              backgroundColor: Theme.of(context)
-                  .dialogTheme
-                  .backgroundColor!
-                  .withAlpha(bgAlpha),
+              backgroundColor: Theme.of(
+                context,
+              ).dialogTheme.backgroundColor!.withAlpha(bgAlpha),
               insetPadding: EdgeInsets.zero,
               scrollable: true,
               content: SingleChildScrollView(
@@ -341,23 +351,25 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     TextFormField(
-                        initialValue: data.item.url,
-                        autofocus: url == defaultUrl,
-                        decoration: const InputDecoration(
-                          labelText: 'Video URL',
-                        ),
-                        onChanged: (value) {
-                          onUrlUpdate(data, value);
-                          setState(() => {});
-                        }),
+                      initialValue: data.item.url,
+                      autofocus: url == defaultUrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Video URL',
+                      ),
+                      onChanged: (value) {
+                        onUrlUpdate(data, value);
+                        setState(() => {});
+                      },
+                    ),
                     TextFormField(
                       decoration: const InputDecoration(
                         labelText: 'Subtitles URL',
                       ),
                       onChanged: (value) => data.item.subs = value,
                     ),
-                    if (app.playersCacheSupport
-                        .contains(getPlayerType(data.item.url)))
+                    if (app.playersCacheSupport.contains(
+                      getPlayerType(data.item.url),
+                    ))
                       CheckboxListTile(
                         title: const Text('Cache'),
                         value: data.item.doCache,
@@ -407,10 +419,13 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     app.dispose();
     orientationListener?.cancel();
     SystemChrome.setPreferredOrientations([]);
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: [
-      SystemUiOverlay.top,
-      SystemUiOverlay.bottom,
-    ]);
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.manual,
+      overlays: [
+        SystemUiOverlay.top,
+        SystemUiOverlay.bottom,
+      ],
+    );
     WakelockPlus.disable();
     WidgetsBinding.instance.removeObserver(this);
   }

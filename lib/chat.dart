@@ -20,8 +20,9 @@ class Chat extends StatefulWidget {
   _ChatState createState() => _ChatState();
 }
 
-final _imgPattern =
-    RegExp(r"(https?:\/\/[^']*\.)(png|jpg|gif|jpeg|webp)([^' ,]*)");
+final _imgPattern = RegExp(
+  r"(https?:\/\/[^']*\.)(png|jpg|gif|jpeg|webp)([^' ,]*)",
+);
 final _urlPattern = RegExp(r"(^|[^'])(https?:\/\/[^' \t]*)");
 final _textPattern = RegExp(r'[^\t]+');
 
@@ -92,20 +93,22 @@ class ChatItem {
       _imgPattern,
       onMatch: (match) {
         final link = match.group(1)! + match.group(2)! + match.group(3)!;
-        childs.add(_OrderedSpan(
-          match.start,
-          WidgetSpan(
-            child: InkWell(
-              child: Image.network(
-                link,
-                fit: BoxFit.scaleDown,
-                height: MediaQuery.of(context).size.height / 4,
+        childs.add(
+          _OrderedSpan(
+            match.start,
+            WidgetSpan(
+              child: InkWell(
+                child: Image.network(
+                  link,
+                  fit: BoxFit.scaleDown,
+                  height: MediaQuery.of(context).size.height / 4,
+                ),
+                onTap: () =>
+                    launchUrlString(link, mode: LaunchMode.externalApplication),
               ),
-              onTap: () =>
-                  launchUrlString(link, mode: LaunchMode.externalApplication),
             ),
           ),
-        ));
+        );
         return tabChar * link.length;
       },
       onNonMatch: (text) => text,
@@ -115,17 +118,20 @@ class ChatItem {
       _urlPattern,
       onMatch: (match) {
         final link = match.group(2)!;
-        childs.add(_OrderedSpan(
-          match.start,
-          TextSpan(
+        childs.add(
+          _OrderedSpan(
+            match.start,
+            TextSpan(
               text: link,
               style: TextStyle(color: Colors.blue),
               recognizer: TapGestureRecognizer()
                 ..onTap = () async {
                   if (await canLaunchUrlString(link))
                     launchUrlString(link, mode: LaunchMode.externalApplication);
-                }),
-        ));
+                },
+            ),
+          ),
+        );
         return match.group(1)! + tabChar * link.length;
       },
       onNonMatch: (text) => text,
@@ -134,12 +140,14 @@ class ChatItem {
     text.splitMapJoin(
       _textPattern,
       onMatch: (match) {
-        childs.add(_OrderedSpan(
-          match.start,
-          TextSpan(
-            text: match.group(0),
+        childs.add(
+          _OrderedSpan(
+            match.start,
+            TextSpan(
+              text: match.group(0),
+            ),
           ),
-        ));
+        );
         return tabChar;
       },
       onNonMatch: (text) => tabChar,
@@ -160,12 +168,14 @@ class ChatItem {
         final emote = chat.emotes.firstWhere(
           (element) => element.name == text,
         );
-        childs.add(_OrderedSpan(
-          match.start,
-          WidgetSpan(
-            child: Image.network(emote.image),
+        childs.add(
+          _OrderedSpan(
+            match.start,
+            WidgetSpan(
+              child: Image.network(emote.image),
+            ),
           ),
-        ));
+        );
         return tabChar * text.length;
       },
       onNonMatch: (text) => text,
@@ -289,7 +299,7 @@ class _ChatState extends State<Chat> {
                     FilteringTextInputFormatter.deny(RegExp('[&^<>\'"]')),
                   chat.isUnknownClient
                       ? LengthLimitingTextInputFormatter(chat.maxLoginLength)
-                      : LengthLimitingTextInputFormatter(chat.maxMessageLength)
+                      : LengthLimitingTextInputFormatter(chat.maxMessageLength),
                 ],
                 textCapitalization: TextCapitalization.sentences,
                 controller: textController,
@@ -309,29 +319,35 @@ class _ChatState extends State<Chat> {
                 },
                 onSubmitted: (String text) async {
                   textController.clear();
-                  final appModel =
-                      Provider.of<AppModel>(context, listen: false);
+                  final appModel = Provider.of<AppModel>(
+                    context,
+                    listen: false,
+                  );
                   final channelUrl = appModel.wsUrl;
                   if (chat.showPasswordField) {
                     final hash = chat.passwordHash(text);
                     final login = await _getCurrentLogin(appModel, channelUrl);
-                    chat.sendLogin(Login(
-                      clientName: login,
-                      passHash: hash,
-                      isUnknownClient: null,
-                      clients: null,
-                    ));
+                    chat.sendLogin(
+                      Login(
+                        clientName: login,
+                        passHash: hash,
+                        isUnknownClient: null,
+                        clients: null,
+                      ),
+                    );
                     await Settings.setChannelPreferences(
                       channelUrl,
                       ChannelPreferences(login: login, hash: hash),
                     );
                   } else if (chat.isUnknownClient) {
-                    chat.sendLogin(Login(
-                      clientName: text,
-                      passHash: null,
-                      isUnknownClient: null,
-                      clients: null,
-                    ));
+                    chat.sendLogin(
+                      Login(
+                        clientName: text,
+                        passHash: null,
+                        isUnknownClient: null,
+                        clients: null,
+                      ),
+                    );
                     await Settings.setChannelPreferences(
                       channelUrl,
                       ChannelPreferences(login: text, hash: ''),
@@ -384,7 +400,7 @@ class _ChatState extends State<Chat> {
           EmotesTab(
             emotes: chat.emotes,
             input: textController,
-          )
+          ),
       ],
     );
   }

@@ -21,20 +21,21 @@ class Main extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const backgroundColor = const Color.fromARGB(255, 15, 15, 15);
-    final theme = ThemeData.from(
-      // useMaterial3: false,
-      colorScheme: ColorScheme.fromSwatch(
-        brightness: Brightness.dark,
-        primarySwatch: Colors.blue,
-        accentColor: Colors.grey[300],
-        cardColor: Color.fromARGB(255, 30, 30, 30),
-        backgroundColor: backgroundColor,
-        errorColor: Colors.red[900],
-      ),
-    ).copyWith(
-      scaffoldBackgroundColor: backgroundColor,
-      dialogTheme: const DialogThemeData(backgroundColor: backgroundColor),
-    );
+    final theme =
+        ThemeData.from(
+          // useMaterial3: false,
+          colorScheme: ColorScheme.fromSwatch(
+            brightness: Brightness.dark,
+            primarySwatch: Colors.blue,
+            accentColor: Colors.grey[300],
+            cardColor: Color.fromARGB(255, 30, 30, 30),
+            backgroundColor: backgroundColor,
+            errorColor: Colors.red[900],
+          ),
+        ).copyWith(
+          scaffoldBackgroundColor: backgroundColor,
+          dialogTheme: const DialogThemeData(backgroundColor: backgroundColor),
+        );
     return Shortcuts(
       shortcuts: {
         LogicalKeySet(LogicalKeyboardKey.select): const ActivateIntent(),
@@ -236,38 +237,40 @@ class _ServerListPageState extends State<ServerListPage> {
       appBar: AppBar(
         title: Text(widget.title),
         actions: [
-          PopupMenuButton(itemBuilder: (context) {
-            return [
-              PopupMenuItem<int>(
-                value: 0,
-                child: Text('Check for updates'),
-              ),
-              PopupMenuItem<int>(
-                value: 1,
-                child: Text('About'),
-              ),
-              PopupMenuItem<int>(
-                value: 2,
-                child: Text('TV Mode: ${Settings.isTV ? 'On' : 'Off'}'),
-              ),
-              // PopupMenuItem<int>(
-              //   value: 3,
-              //   enabled: Settings.isTV,
-              //   child: Text(
-              //       'Force ExoPlayer: ${Settings.forceExoPlayer ? 'On' : 'Off'}'),
-              // ),
-            ];
-          }, onSelected: (value) {
-            switch (value) {
-              case 0:
-                checkForUpdates(context);
-                break;
-              case 1:
-                (() async {
-                  final packageInfo = await PackageInfo.fromPlatform();
-                  final version = packageInfo.version;
-                  final buildNumber = packageInfo.buildNumber;
-                  showAboutDialog(
+          PopupMenuButton(
+            itemBuilder: (context) {
+              return [
+                PopupMenuItem<int>(
+                  value: 0,
+                  child: Text('Check for updates'),
+                ),
+                PopupMenuItem<int>(
+                  value: 1,
+                  child: Text('About'),
+                ),
+                PopupMenuItem<int>(
+                  value: 2,
+                  child: Text('TV Mode: ${Settings.isTV ? 'On' : 'Off'}'),
+                ),
+                // PopupMenuItem<int>(
+                //   value: 3,
+                //   enabled: Settings.isTV,
+                //   child: Text(
+                //       'Force ExoPlayer: ${Settings.forceExoPlayer ? 'On' : 'Off'}'),
+                // ),
+              ];
+            },
+            onSelected: (value) {
+              switch (value) {
+                case 0:
+                  checkForUpdates(context);
+                  break;
+                case 1:
+                  (() async {
+                    final packageInfo = await PackageInfo.fromPlatform();
+                    final version = packageInfo.version;
+                    final buildNumber = packageInfo.buildNumber;
+                    showAboutDialog(
                       context: context,
                       applicationName: packageInfo.appName,
                       applicationVersion: '$version ($buildNumber)',
@@ -291,19 +294,21 @@ class _ServerListPageState extends State<ServerListPage> {
                             ),
                           },
                           child: Text('Official Repository'),
-                        )
-                      ]);
-                })();
-                break;
-              case 2:
-                Settings.isTV = !Settings.isTV;
-                break;
-              case 3:
-                // Settings.forceExoPlayer = !Settings.forceExoPlayer;
-                break;
-              default:
-            }
-          }),
+                        ),
+                      ],
+                    );
+                  })();
+                  break;
+                case 2:
+                  Settings.isTV = !Settings.isTV;
+                  break;
+                case 3:
+                  // Settings.forceExoPlayer = !Settings.forceExoPlayer;
+                  break;
+                default:
+              }
+            },
+          ),
         ],
       ),
       body: Column(
@@ -427,8 +432,10 @@ String genServerNameFromLink(String link) {
   return name;
 }
 
-Future<ServerListItem?> _serverItemDialog(BuildContext context,
-    [ServerListItem? item]) async {
+Future<ServerListItem?> _serverItemDialog(
+  BuildContext context, [
+  ServerListItem? item,
+]) async {
   if (item == null) item = ServerListItem('', '');
   if (item.url.isEmpty) {
     final clipboard = await Clipboard.getData('text/plain');

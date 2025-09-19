@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'color_scheme.dart';
 import 'models/app.dart';
 import 'models/chat_panel.dart';
-import 'color_scheme.dart';
 
 class ChatPanel extends StatelessWidget {
   const ChatPanel({Key? key}) : super(key: key);
@@ -12,62 +12,65 @@ class ChatPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final panel = context.watch<ChatPanelModel>();
     return LayoutBuilder(
-        builder: (BuildContext context, BoxConstraints constraints) {
-      double parentW = constraints.maxWidth;
-      return Container(
-        // padding: EdgeInsets.symmetric(horizontal: paddingNum),
-        color: Theme.of(context).chatPanelBackground,
-        child: Row(
-          children: [
-            const Spacer(flex: 3),
-            IconButton(
-              onPressed: () => panel.togglePanel(MainTab.playlist),
-              tooltip: 'Show playlist',
-              icon: Icon(
-                Icons.list,
-                color: panel.mainTab == MainTab.playlist
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).icon,
-                size: 30,
-              ),
-            ),
-            const Spacer(flex: 2),
-            TextButton(
-              onPressed: () => showUsersSnackBar(context),
-              style: ButtonStyle(
-                padding: WidgetStateProperty.all(
-                  EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+      builder: (BuildContext context, BoxConstraints constraints) {
+        double parentW = constraints.maxWidth;
+        return Container(
+          // padding: EdgeInsets.symmetric(horizontal: paddingNum),
+          color: Theme.of(context).chatPanelBackground,
+          child: Row(
+            children: [
+              const Spacer(flex: 3),
+              IconButton(
+                onPressed: () => panel.togglePanel(MainTab.playlist),
+                tooltip: 'Show playlist',
+                icon: Icon(
+                  Icons.list,
+                  color: panel.mainTab == MainTab.playlist
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).icon,
+                  size: 30,
                 ),
               ),
-              child: _onlineButton(panel, context),
-            ),
-            const Spacer(flex: 100),
-            leaderButton(panel, context, parentW),
-            const Spacer(flex: 5),
-            IconButton(
-              onPressed: () => panel.togglePanel(MainTab.settings),
-              tooltip: 'Show settings',
-              icon: Icon(
-                Icons.settings,
-                color: panel.mainTab == MainTab.settings
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).icon,
-                size: 30,
+              const Spacer(flex: 2),
+              TextButton(
+                onPressed: () => showUsersSnackBar(context),
+                style: ButtonStyle(
+                  padding: WidgetStateProperty.all(
+                    EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+                  ),
+                ),
+                child: _onlineButton(panel, context),
               ),
-            ),
-            const Spacer(flex: 3),
-          ],
-        ),
-      );
-    });
+              const Spacer(flex: 100),
+              leaderButton(panel, context, parentW),
+              const Spacer(flex: 5),
+              IconButton(
+                onPressed: () => panel.togglePanel(MainTab.settings),
+                tooltip: 'Show settings',
+                icon: Icon(
+                  Icons.settings,
+                  color: panel.mainTab == MainTab.settings
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).icon,
+                  size: 30,
+                ),
+              ),
+              const Spacer(flex: 3),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   static void showUsersSnackBar(BuildContext context) {
     final panel = context.read<ChatPanelModel>();
-    final text = panel.clients.map((c) {
-      if (c.isLeader) return '${c.name} (Leader)';
-      return c.name;
-    }).join(', ');
+    final text = panel.clients
+        .map((c) {
+          if (c.isLeader) return '${c.name} (Leader)';
+          return c.name;
+        })
+        .join(', ');
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -85,7 +88,10 @@ class ChatPanel extends StatelessWidget {
   }
 
   Widget leaderButton(
-      ChatPanelModel panel, BuildContext context, double parentW) {
+    ChatPanelModel panel,
+    BuildContext context,
+    double parentW,
+  ) {
     final btnPadding = parentW > 270 ? 18.0 : 16.0;
     return OutlinedButton(
       style: OutlinedButton.styleFrom(
@@ -103,8 +109,9 @@ class ChatPanel extends StatelessWidget {
       ),
       child: Text(
         'Leader',
-        style:
-            panel.isLeader() ? null : TextStyle(color: Theme.of(context).icon),
+        style: panel.isLeader()
+            ? null
+            : TextStyle(color: Theme.of(context).icon),
       ),
       onPressed: panel.requestLeader,
       onLongPress: panel.requestLeaderAndPause,

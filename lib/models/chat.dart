@@ -1,12 +1,14 @@
+import 'dart:convert';
+
 import 'package:collection/collection.dart';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:synctube/models/player.dart';
-import './app.dart';
+
 import '../chat.dart';
 import '../wsdata.dart';
-import 'package:crypto/crypto.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import './app.dart';
 
 class ChatModel extends ChangeNotifier {
   ChatModel(this._app);
@@ -73,11 +75,13 @@ class ChatModel extends ChangeNotifier {
       }
     }
     _emotes = emotes;
-    emotesPattern = RegExp('(' +
-        escapeRegExp(
-          emotes.map((e) => e.name).join('\t'),
-        ).replaceAll('\t', '|') +
-        ')');
+    emotesPattern = RegExp(
+      '(' +
+          escapeRegExp(
+            emotes.map((e) => e.name).join('\t'),
+          ).replaceAll('\t', '|') +
+          ')',
+    );
     notifyListeners();
   }
 
@@ -90,10 +94,12 @@ class ChatModel extends ChangeNotifier {
   }
 
   void sendLogin(Login login) {
-    _app.send(WsData(
-      type: 'Login',
-      login: login,
-    ));
+    _app.send(
+      WsData(
+        type: 'Login',
+        login: login,
+      ),
+    );
   }
 
   String passwordHash(String password) {
@@ -106,10 +112,12 @@ class ChatModel extends ChangeNotifier {
     if (text.startsWith('/')) {
       if (handleCommands(text.substring(1))) return;
     }
-    _app.send(WsData(
-      type: 'Message',
-      message: Message(clientName: '', text: text),
-    ));
+    _app.send(
+      WsData(
+        type: 'Message',
+        message: Message(clientName: '', text: text),
+      ),
+    );
   }
 
   bool handleCommands(String command) {
@@ -121,35 +129,41 @@ class ChatModel extends ChangeNotifier {
         final name = elementAt(args, 0) ?? '';
         final time = parseSimpleDate(elementAt(args, 1));
         if (time <= 0) return true;
-        _app.send(WsData(
-          type: 'BanClient',
-          banClient: BanClient(
-            name: name,
-            time: time,
+        _app.send(
+          WsData(
+            type: 'BanClient',
+            banClient: BanClient(
+              name: name,
+              time: time,
+            ),
           ),
-        ));
+        );
         return true;
       case 'unban':
       case 'removeBan':
         mergeRedundantArgs(args, 0, 1);
         final name = elementAt(args, 0) ?? '';
-        _app.send(WsData(
-          type: 'BanClient',
-          banClient: BanClient(
-            name: name,
-            time: 0,
+        _app.send(
+          WsData(
+            type: 'BanClient',
+            banClient: BanClient(
+              name: name,
+              time: 0,
+            ),
           ),
-        ));
+        );
         return true;
       case 'kick':
         mergeRedundantArgs(args, 0, 1);
         final name = elementAt(args, 0) ?? '';
-        _app.send(WsData(
-          type: 'KickClient',
-          kickClient: KickClient(
-            name: name,
+        _app.send(
+          WsData(
+            type: 'KickClient',
+            kickClient: KickClient(
+              name: name,
+            ),
           ),
-        ));
+        );
         return true;
       case 'clear':
         if (_app.isAdmin())
@@ -164,13 +178,17 @@ class ChatModel extends ChangeNotifier {
       case 'ad':
         skipYoutubeAd();
         return false;
+      case 'crash':
+        _app.send(WsData(type: 'CrashTest'));
       default:
     }
     if (matchSimpleDate.hasMatch(command)) {
-      _app.send(WsData(
-        type: 'Rewind',
-        rewind: Pause(time: parseSimpleDate(command).toDouble()),
-      ));
+      _app.send(
+        WsData(
+          type: 'Rewind',
+          rewind: Pause(time: parseSimpleDate(command).toDouble()),
+        ),
+      );
     }
     return false;
   }
@@ -201,10 +219,12 @@ class ChatModel extends ChangeNotifier {
           final pos = await _app.player.getPosition();
           final time = pos.inMilliseconds / 1000;
           if (time > start - 1 && time < end) {
-            _app.send(WsData(
-              type: 'Rewind',
-              rewind: Pause(time: end - time - 1),
-            ));
+            _app.send(
+              WsData(
+                type: 'Rewind',
+                rewind: Pause(time: end - time - 1),
+              ),
+            );
           }
         }
       } catch (err) {
@@ -218,8 +238,9 @@ class ChatModel extends ChangeNotifier {
     return null;
   }
 
-  final matchSimpleDate =
-      RegExp(r'^-?([0-9]+d)?([0-9]+h)?([0-9]+m)?([0-9]+s?)?$');
+  final matchSimpleDate = RegExp(
+    r'^-?([0-9]+d)?([0-9]+h)?([0-9]+m)?([0-9]+s?)?$',
+  );
 
   int parseSimpleDate(String? text) {
     if (text == null) return 0;
@@ -247,7 +268,8 @@ class ChatModel extends ChangeNotifier {
       return _time(block) * 60;
     else if (block.endsWith('h'))
       return _time(block) * 60 * 60;
-    else if (block.endsWith('d')) return _time(block) * 60 * 60 * 24;
+    else if (block.endsWith('d'))
+      return _time(block) * 60 * 60 * 24;
     return int.parse(block);
   }
 

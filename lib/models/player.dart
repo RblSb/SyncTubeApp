@@ -2,17 +2,18 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:video_player/video_player.dart';
-import 'package:http/http.dart' as http;
 import 'package:youtube_explode_dart/youtube_explode_dart.dart' as youtube;
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
+
 import '../chat.dart';
-import './app.dart';
-import './playlist.dart';
 import '../subs/ass.dart';
 import '../subs/raw.dart';
 import '../wsdata.dart';
+import './app.dart';
+import './playlist.dart';
 
 class PlayerModel extends ChangeNotifier {
   VideoPlayerController? controller;
@@ -162,9 +163,11 @@ class PlayerModel extends ChangeNotifier {
       controller?.setClosedCaptionFile(_loadCaptions(item)).whenComplete(() {
         notifyListeners();
       });
-      app.send(WsData(
-        type: 'VideoLoaded',
-      ));
+      app.send(
+        WsData(
+          type: 'VideoLoaded',
+        ),
+      );
     });
     // app.chat.addItem(ChatItem('', 'VideoLoaded'))
     _isFitWidth = false;
@@ -194,9 +197,9 @@ class PlayerModel extends ChangeNotifier {
       return RegExp(r'embed\/([A-z0-9_-]+)').firstMatch(url)!.group(1)!;
     }
     if (url.contains('youtube.com/shorts/')) {
-      return RegExp(r'/youtube\.com\/shorts\/([A-z0-9_-]+)')
-          .firstMatch(url)!
-          .group(1)!;
+      return RegExp(
+        r'/youtube\.com\/shorts\/([A-z0-9_-]+)',
+      ).firstMatch(url)!.group(1)!;
     }
     final r = RegExp(r'v=([A-z0-9_-]+)');
     if (!r.hasMatch(url)) return '';
@@ -209,8 +212,10 @@ class PlayerModel extends ChangeNotifier {
       final id = extractVideoId(url);
       StreamManifest manifest;
       try {
-        manifest = await yt.videos.streamsClient
-            .getManifest(id, ytClients: [YoutubeApiClient.androidVr]);
+        manifest = await yt.videos.streamsClient.getManifest(
+          id,
+          ytClients: [YoutubeApiClient.androidVr],
+        );
       } catch (e) {
         print(e);
         app.chat.addItem(ChatItem('', e.toString()));
@@ -275,12 +280,15 @@ class PlayerModel extends ChangeNotifier {
 
       final apiKey = app.config!.youtubeApiKey;
 
-      final response = await http
-          .get(Uri.parse('https://www.googleapis.com/youtube/v3/videos'
-              '?part=snippet,contentDetails'
-              '&fields=items(snippet/title,contentDetails/duration)'
-              '&id=$videoId'
-              '&key=$apiKey'));
+      final response = await http.get(
+        Uri.parse(
+          'https://www.googleapis.com/youtube/v3/videos'
+          '?part=snippet,contentDetails'
+          '&fields=items(snippet/title,contentDetails/duration)'
+          '&id=$videoId'
+          '&key=$apiKey',
+        ),
+      );
 
       if (response.statusCode != 200) return null;
 
@@ -306,10 +314,12 @@ class PlayerModel extends ChangeNotifier {
     final secondsMatch = RegExp(r'(\d+)S').firstMatch(duration);
 
     final hours = hoursMatch != null ? int.parse(hoursMatch.group(1)!) : 0;
-    final minutes =
-        minutesMatch != null ? int.parse(minutesMatch.group(1)!) : 0;
-    final seconds =
-        secondsMatch != null ? int.parse(secondsMatch.group(1)!) : 0;
+    final minutes = minutesMatch != null
+        ? int.parse(minutesMatch.group(1)!)
+        : 0;
+    final seconds = secondsMatch != null
+        ? int.parse(secondsMatch.group(1)!)
+        : 0;
 
     final total = hours * 3600 + minutes * 60 + seconds;
     // 99 hours for live streams
@@ -336,7 +346,8 @@ class PlayerModel extends ChangeNotifier {
   }
 
   static Future<ClosedCaptionFile> _loadYoutubeCaptionsFuture(
-      VideoList item) async {
+    VideoList item,
+  ) async {
     final subs = await getYoutubeSubtitles(item.url);
     if (subs.captions.isEmpty) item.subs = '';
     return subs;
@@ -473,15 +484,19 @@ class PlayerModel extends ChangeNotifier {
     final posD = await controller?.position ?? Duration();
     final time = posD.inMilliseconds / 1000;
     if (state) {
-      app.send(WsData(
-        type: 'Play',
-        play: Pause(time: time),
-      ));
+      app.send(
+        WsData(
+          type: 'Play',
+          play: Pause(time: time),
+        ),
+      );
     } else {
-      app.send(WsData(
-        type: 'Pause',
-        pause: Pause(time: time),
-      ));
+      app.send(
+        WsData(
+          type: 'Pause',
+          pause: Pause(time: time),
+        ),
+      );
     }
   }
 

@@ -80,7 +80,8 @@ class Settings extends StatelessWidget {
 
   /// Get ChannelPreferences for a given channelUrl (server list key)
   static Future<ChannelPreferences> getChannelPreferences(
-      String channelUrl) async {
+    String channelUrl,
+  ) async {
     final prefs = await SharedPreferencesAsync();
     final jsonString = await prefs.getString('channelPrefs_$channelUrl');
     if (jsonString == null || jsonString.isEmpty) {
@@ -96,7 +97,9 @@ class Settings extends StatelessWidget {
 
   /// Set ChannelPreferences for a given channelUrl (server list key)
   static Future<void> setChannelPreferences(
-      String channelUrl, ChannelPreferences prefsObj) async {
+    String channelUrl,
+    ChannelPreferences prefsObj,
+  ) async {
     final prefs = await SharedPreferencesAsync();
     final jsonString = jsonEncode(prefsObj.toJson());
     await prefs.setString('channelPrefs_$channelUrl', jsonString);
@@ -157,10 +160,13 @@ class Settings extends StatelessWidget {
   static void setSystemUi(AppModel app, bool flag) {
     app.hasSystemUi = flag;
     if (flag) {
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: [
-        SystemUiOverlay.bottom,
-        SystemUiOverlay.top,
-      ]);
+      SystemChrome.setEnabledSystemUIMode(
+        SystemUiMode.manual,
+        overlays: [
+          SystemUiOverlay.bottom,
+          SystemUiOverlay.top,
+        ],
+      );
     } else {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: []);
     }

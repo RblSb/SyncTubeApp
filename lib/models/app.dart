@@ -100,16 +100,20 @@ class AppModel extends ChangeNotifier {
     var url = wsUrl;
     if (uuid != null) url += '?uuid=$uuid';
     _channel = IOWebSocketChannel.connect(url);
-    _wsSubscription = _channel.stream.listen(onMessage, onDone: () {
-      chatPanel.isConnected = false;
-      _disconnectNotificationTimer ??= Timer(const Duration(seconds: 5), () {
-        if (chatPanel.isConnected) return;
-        player.pause();
-      });
-      reconnect();
-    }, onError: (error) {
-      print(error);
-    });
+    _wsSubscription = _channel.stream.listen(
+      onMessage,
+      onDone: () {
+        chatPanel.isConnected = false;
+        _disconnectNotificationTimer ??= Timer(const Duration(seconds: 5), () {
+          if (chatPanel.isConnected) return;
+          player.pause();
+        });
+        reconnect();
+      },
+      onError: (error) {
+        print(error);
+      },
+    );
   }
 
   void reconnect() {
@@ -157,8 +161,9 @@ class AppModel extends ChangeNotifier {
         WsData.version = config?.cacheStorageLimitGiB == null ? 1 : 2;
         print('Server version: ${WsData.version}');
         _getTimeTimer?.cancel();
-        _getTimeTimer =
-            Timer.periodic(Duration(seconds: synchThreshold), (Timer timer) {
+        _getTimeTimer = Timer.periodic(Duration(seconds: synchThreshold), (
+          Timer timer,
+        ) {
           if (playlist.isEmpty()) return;
           send(WsData(type: 'GetTime'));
         });
@@ -167,8 +172,9 @@ class AppModel extends ChangeNotifier {
         playlist.update(type.videoList);
         clients = type.clients;
         chat.isUnknownClient = type.isUnknownClient;
-        _personal =
-            clients.firstWhere((client) => client.name == type.clientName);
+        _personal = clients.firstWhere(
+          (client) => client.name == type.clientName,
+        );
         chat.setItems(
           type.history.map((e) => ChatItem(e.name, e.text, e.time)).toList(),
         );
@@ -186,8 +192,9 @@ class AppModel extends ChangeNotifier {
       case 'Login':
         final type = data.login!;
         clients = type.clients!;
-        Client? newPersonal = clients
-            .firstWhereOrNull((client) => client.name == type.clientName);
+        Client? newPersonal = clients.firstWhereOrNull(
+          (client) => client.name == type.clientName,
+        );
         if (newPersonal == null) return;
         _personal = newPersonal;
         chatPanel.notifyListeners();
@@ -266,8 +273,9 @@ class AppModel extends ChangeNotifier {
       case 'UpdateClients':
         final type = data.updateClients!;
         clients = type.clients;
-        _personal =
-            type.clients.firstWhere((client) => client.name == _personal.name);
+        _personal = type.clients.firstWhere(
+          (client) => client.name == _personal.name,
+        );
         chatPanel.notifyListeners();
         break;
       case 'AddVideo':
@@ -390,12 +398,14 @@ class AppModel extends ChangeNotifier {
   void tryAutologin() async {
     final prefs = await Settings.getChannelPreferences(wsUrl);
     if (prefs.login == '') return;
-    chat.sendLogin(Login(
-      clientName: prefs.login,
-      passHash: prefs.hash == '' ? null : prefs.hash,
-      isUnknownClient: null,
-      clients: null,
-    ));
+    chat.sendLogin(
+      Login(
+        clientName: prefs.login,
+        passHash: prefs.hash == '' ? null : prefs.hash,
+        isUnknownClient: null,
+        clients: null,
+      ),
+    );
   }
 
   void onTimeGet(GetTime type) async {
@@ -415,10 +425,12 @@ class AppModel extends ChangeNotifier {
       // if video is loading on leader
       // move other clients back in time
       if ((time - newTime).abs() < synchThreshold) return;
-      send(WsData(
-        type: 'SetTime',
-        setTime: Pause(time: time),
-      ));
+      send(
+        WsData(
+          type: 'SetTime',
+          setTime: Pause(time: time),
+        ),
+      );
       return;
     }
     final duration = player.getDuration();
@@ -460,10 +472,12 @@ class AppModel extends ChangeNotifier {
 
   void requestLeader() {
     final name = _personal.isLeader ? '' : _personal.name;
-    send(WsData(
-      type: 'SetLeader',
-      setLeader: SetLeader(clientName: name),
-    ));
+    send(
+      WsData(
+        type: 'SetLeader',
+        setLeader: SetLeader(clientName: name),
+      ),
+    );
     chatPanel.notifyListeners();
   }
 
@@ -541,16 +555,20 @@ class AppModel extends ChangeNotifier {
 
     data.item.duration = duration;
     data.item.title = title;
-    send(WsData(
-      type: 'AddVideo',
-      addVideo: data,
-    ));
+    send(
+      WsData(
+        type: 'AddVideo',
+        addVideo: data,
+      ),
+    );
   }
 
   void sendYoutubePlaylist(AddVideo data) async {
     final yt = youtube.YoutubeExplode();
-    final playlist =
-        await yt.playlists.getVideos(data.item.url).take(50).toList();
+    final playlist = await yt.playlists
+        .getVideos(data.item.url)
+        .take(50)
+        .toList();
     yt.close();
     final items = data.atEnd ? playlist : sortItemsForQueueNext(playlist);
     for (final video in items) {
@@ -558,10 +576,12 @@ class AppModel extends ChangeNotifier {
       data.item.duration = video.duration!.inMilliseconds / 1000;
       data.item.title = video.title;
       data.item.url = video.url;
-      send(WsData(
-        type: 'AddVideo',
-        addVideo: data,
-      ));
+      send(
+        WsData(
+          type: 'AddVideo',
+          addVideo: data,
+        ),
+      );
     }
   }
 

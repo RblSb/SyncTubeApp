@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
-import './app.dart';
+
 import '../wsdata.dart';
+import './app.dart';
 
 class ChatPanelModel extends ChangeNotifier {
   ChatPanelModel(this._app);
@@ -36,10 +37,12 @@ class ChatPanelModel extends ChangeNotifier {
     _app.player.pause();
     final posD = await _app.player.getPosition();
     final time = posD.inMilliseconds / 1000;
-    _app.send(WsData(
-      type: 'Pause',
-      pause: Pause(time: time),
-    ));
+    _app.send(
+      WsData(
+        type: 'Pause',
+        pause: Pause(time: time),
+      ),
+    );
   }
 
   togglePanel(MainTab newTab) => _app.togglePanel(newTab);
