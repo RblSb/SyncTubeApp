@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:native_device_orientation/native_device_orientation.dart';
@@ -8,13 +10,13 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 
 import 'chat.dart';
 import 'chat_panel.dart';
+import 'file_uploader.dart';
 import 'models/app.dart';
 import 'models/player.dart';
 import 'playlist.dart';
 import 'settings.dart';
 import 'video_player.dart';
 import 'wsdata.dart';
-// import 'color_scheme.dart';
 
 typedef WsDataFunc = void Function(WsData data);
 
@@ -33,10 +35,13 @@ class App extends StatefulWidget {
 }
 
 class _AppState extends State<App> with WidgetsBindingObserver {
+  late FileUploader fileUploader;
+
   @override
   void initState() {
     super.initState();
     app = AppModel(widget.url);
+    fileUploader = FileUploader(widget.url);
     Settings.applySettings(app);
     WakelockPlus.enable();
     WidgetsBinding.instance.addObserver(this);
@@ -299,7 +304,65 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     data.item.playerType = playerType;
     final hasCacheSupport = app.playersCacheSupport.contains(playerType);
     data.item.doCache = Settings.checkedCache.contains(playerType);
+    if (url.startsWith('/')) data.item.doCache = false;
     if (!hasCacheSupport) data.item.doCache = false;
+  }
+
+  Future<void> _pickAndUploadFile(
+    BuildContext context,
+    AddVideo data,
+    StateSetter setState,
+    TextEditingController urlController,
+  ) async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.video,
+        allowMultiple: false,
+      );
+
+      if (result == null || result.files.isEmpty) return;
+
+      final file = File(result.files.first.path!);
+
+      setState(() {
+        // Show uploading state
+      });
+
+      await fileUploader.uploadFile(
+        file,
+        onLastChunkUploaded: (url) {
+          urlController.text = url;
+          onUrlUpdate(data, url);
+          setState(() {});
+        },
+        onMessage: (message, isError) {
+          if (isError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(message),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+      );
+
+      // if (response?.url != null) {
+      //   ScaffoldMessenger.of(context).showSnackBar(
+      //     const SnackBar(
+      //       content: Text('File uploaded successfully!'),
+      //       backgroundColor: Colors.green,
+      //     ),
+      //   );
+      // }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error picking file: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Future<AddVideo?> _addUrlDialog(BuildContext context) async {
@@ -337,6 +400,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       context: context,
       builder: (BuildContext context) {
         final bgAlpha = app.playlist.isEmpty() ? 255 : 200;
+        final urlController = TextEditingController(text: data.item.url);
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
@@ -351,16 +415,69 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     TextFormField(
-                      initialValue: data.item.url,
+                      controller: urlController,
                       autofocus: url == defaultUrl,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Video URL',
+                        suffixIcon: ValueListenableBuilder<double>(
+                          valueListenable: fileUploader.uploadProgress,
+                          builder: (context, progress, child) {
+                            // OutlinedButton
+                            return TextButton(
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.white,
+                                minimumSize: Size(30, 30),
+                                padding: EdgeInsets.only(top: 16),
+                                // side: BorderSide(
+                                //   color: Theme.of(context).cardColor,
+                                // ),
+                                // shape: RoundedRectangleBorder(
+                                //   borderRadius: BorderRadius.circular(
+                                //     30,
+                                //   ),
+                                // ),
+                              ),
+                              onPressed: progress > 0 && progress < 1
+                                  ? null
+                                  : () => _pickAndUploadFile(
+                                      context,
+                                      data,
+                                      setState,
+                                      urlController,
+                                    ),
+                              child: const Icon(
+                                Icons.upload_rounded,
+                                size: 20,
+                              ),
+                            );
+                          },
+                        ),
                       ),
                       onChanged: (value) {
                         onUrlUpdate(data, value);
                         setState(() => {});
                       },
                     ),
+
+                    const SizedBox(height: 8),
+                    ValueListenableBuilder<double>(
+                      valueListenable: fileUploader.uploadProgress,
+                      builder: (context, progress, child) {
+                        return Column(
+                          children: [
+                            if (progress > 0 && progress < 1) ...[
+                              const SizedBox(height: 8),
+                              LinearProgressIndicator(value: progress),
+                              Text(
+                                '${(progress * 100).toStringAsFixed(0)}%',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ],
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 16),
                     TextFormField(
                       decoration: const InputDecoration(
                         labelText: 'Subtitles URL',
@@ -417,6 +534,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     print('app disposed');
     super.dispose();
     app.dispose();
+    fileUploader.dispose();
     orientationListener?.cancel();
     SystemChrome.setPreferredOrientations([]);
     SystemChrome.setEnabledSystemUIMode(

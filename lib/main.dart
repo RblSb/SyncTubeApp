@@ -196,7 +196,7 @@ class _ServerListPageState extends State<ServerListPage> {
     var port = uri.port == 0 ? '' : ':${uri.port}';
     if (uri.scheme == 'http' && uri.port == 80) port = '';
     if (uri.scheme == 'https' && uri.port == 443) port = '';
-    final url = '$protocol://${uri.host}$port${uri.path}';
+    final url = '$protocol://${uri.host}$port';
     Navigator.of(context).popUntil((route) => route.isFirst);
     Navigator.push(
       context,
