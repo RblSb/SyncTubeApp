@@ -289,14 +289,12 @@ class Config {
   late String channelName;
   late int maxLoginLength;
   late int maxMessageLength;
-  late int serverChatHistory;
   late int totalVideoLimit;
   late int userVideoLimit;
-  late bool localAdmins;
   late String templateUrl;
   late String youtubeApiKey;
   // in newer versions
-  late double? cacheStorageLimitGiB;
+  late int serverVersion;
   late Permissions? permissions;
   late List<Emotes> emotes;
   late List<Filters> filters;
@@ -308,13 +306,11 @@ class Config {
     required this.channelName,
     required this.maxLoginLength,
     required this.maxMessageLength,
-    required this.serverChatHistory,
     required this.totalVideoLimit,
     required this.userVideoLimit,
-    required this.localAdmins,
     required this.templateUrl,
     required this.youtubeApiKey,
-    required this.cacheStorageLimitGiB,
+    required this.serverVersion,
     required this.permissions,
     required this.emotes,
     required this.filters,
@@ -327,13 +323,16 @@ class Config {
     channelName = json['channelName'];
     maxLoginLength = json['maxLoginLength'];
     maxMessageLength = json['maxMessageLength'];
-    serverChatHistory = json['serverChatHistory'];
     totalVideoLimit = json['totalVideoLimit'];
     userVideoLimit = json['userVideoLimit'];
-    localAdmins = json['localAdmins'];
     templateUrl = json['templateUrl'];
     youtubeApiKey = json['youtubeApiKey'];
-    cacheStorageLimitGiB = json['cacheStorageLimitGiB']?.toDouble();
+
+    int? version = json['serverVersion'];
+    final cacheStorageLimitGiB = json['cacheStorageLimitGiB']?.toDouble();
+    version ??= cacheStorageLimitGiB == null ? 1 : 2;
+    serverVersion = version;
+
     permissions = json['permissions'] != null
         ? new Permissions.fromJson(json['permissions'])
         : null;
@@ -359,13 +358,11 @@ class Config {
     data['channelName'] = this.channelName;
     data['maxLoginLength'] = this.maxLoginLength;
     data['maxMessageLength'] = this.maxMessageLength;
-    data['serverChatHistory'] = this.serverChatHistory;
     data['totalVideoLimit'] = this.totalVideoLimit;
     data['userVideoLimit'] = this.userVideoLimit;
-    data['localAdmins'] = this.localAdmins;
     data['templateUrl'] = this.templateUrl;
     data['youtubeApiKey'] = this.youtubeApiKey;
-    data['cacheStorageLimitGiB'] = this.cacheStorageLimitGiB;
+    data['serverVersion'] = this.serverVersion;
     if (this.permissions != null) {
       data['permissions'] = this.permissions?.toJson();
     }

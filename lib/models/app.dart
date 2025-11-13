@@ -158,7 +158,7 @@ class AppModel extends ChangeNotifier {
         saveUUID(type.uuid);
         config = type.config;
         playersCacheSupport = type.playersCacheSupport;
-        WsData.version = config?.cacheStorageLimitGiB == null ? 1 : 2;
+        WsData.version = type.config.serverVersion;
         print('Server version: ${WsData.version}');
         _getTimeTimer?.cancel();
         _getTimeTimer = Timer.periodic(Duration(seconds: synchThreshold), (
@@ -325,6 +325,8 @@ class AppModel extends ChangeNotifier {
         player.seekTo(
           Duration(milliseconds: ms),
         );
+        player.toggleControls(true);
+        player.hideControlsWithDelay();
         break;
       case 'Play':
         chatPanel.serverPlay = true;
