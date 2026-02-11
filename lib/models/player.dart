@@ -333,15 +333,13 @@ class PlayerModel extends ChangeNotifier {
     }
     var subsUrl = item.subs ?? '';
     if (subsUrl.isEmpty) return null;
+    if (subsUrl.startsWith('/')) {
+      final relativeHost = app.getChannelLink();
+      subsUrl = '$relativeHost${subsUrl}';
+    }
     if (!subsUrl.startsWith('http')) {
       subsUrl = 'http://$subsUrl';
     }
-    // if (subsUrl == '') {
-    //   if (item.duration < 60 * 5) return null;
-    //   final i = item.url.lastIndexOf('.mp4');
-    //   if (i == -1) return null;
-    //   subsUrl = item.url.replaceFirst('.mp4', '.ass', i);
-    // }
     return compute(_loadCaptionsFuture, subsUrl);
   }
 
@@ -382,6 +380,7 @@ class PlayerModel extends ChangeNotifier {
     final lines = text.replaceAll('\r\n', '\n').split('\n');
     final blocks = getSrtBlocks(lines);
     final badTimeReg = RegExp(r'(,[\d]+)');
+
     for (final lines in blocks) {
       if (lines.length < 3) continue;
       final textLines = lines.getRange(2, lines.length).toList();
@@ -389,12 +388,28 @@ class PlayerModel extends ChangeNotifier {
         final ms = match.group(1)!;
         return ms.length < 4 ? ms.padRight(4, '0') : ms;
       });
-      subs.add({
-        'counter': lines[0],
-        'time': time.replaceAll(',', '.'),
-        'text': textLines.join('\n').trim(),
-      });
+      final normalizedTime = time.replaceAll(',', '.');
+
+      // find last index that has different timing. will be `length - 1` element most of the time
+      final lastDifferentTimeI = subs.lastIndexWhere(
+        (sub) => sub['time'] != normalizedTime,
+      );
+      final i = lastDifferentTimeI + 1;
+
+      final text = textLines.join('\n').trim();
+      if (i < subs.length) {
+        // Merge text with existing subtitle (add at top like in web case)
+        subs[i]['text'] = '$text\n${subs[i]['text']}';
+      } else {
+        // Add new subtitle
+        subs.add({
+          'counter': lines[0],
+          'time': normalizedTime,
+          'text': text,
+        });
+      }
     }
+
     var data = 'WEBVTT\n\n';
     for (final sub in subs) {
       data += '${sub['counter']}\n';

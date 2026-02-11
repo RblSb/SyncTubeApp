@@ -525,6 +525,7 @@ class AppModel extends ChangeNotifier {
     if (!data.item.url.startsWith('http')) {
       data.item.url = 'http://${data.item.url}';
     }
+    data.item.url = Uri.encodeFull(data.item.url);
     final url = data.item.url;
     if (url.contains('youtube.com/playlist')) {
       sendYoutubePlaylist(data);

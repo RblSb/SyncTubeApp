@@ -376,8 +376,9 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         clipboardText.contains('youtu')) {
       url = clipboardText;
     }
-    if (clipboardText.endsWith('.ts')) {
-      url = clipboardText.replaceAll('240.mp4', '1080.mp4');
+    if (url.endsWith('.ts')) {
+      url = url.replaceAll('240.mp4', '1080.mp4');
+      url = url.replaceAll('360.mp4', '1080.mp4');
       // `1080.mp4:hls:seg-123-v1-a1.ts` => `1080.mp4:hls:manifest.m3u8`
       url = url.replaceAll(RegExp(r'seg-[^:]+\.ts$'), 'manifest.m3u8');
     }
