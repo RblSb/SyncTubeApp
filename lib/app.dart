@@ -130,10 +130,9 @@ class _AppState extends State<App> with WidgetsBindingObserver {
               builder: (context, isChatVisible, child) {
                 return Selector<PlayerModel, double>(
                   selector: (context, player) {
-                    final isInit =
-                        player.controller?.value.isInitialized ?? false;
+                    final isInit = player.isVideoLoaded();
                     if (!isInit) return 16 / 9;
-                    return player.controller?.value.aspectRatio ?? 16 / 9;
+                    return player.player?.aspectRatio ?? 16 / 9;
                   },
                   builder: (context, ratio, child) {
                     final media = MediaQuery.of(context);

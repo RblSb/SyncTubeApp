@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,6 +12,7 @@ import 'chat_panel.dart';
 import 'color_scheme.dart';
 import 'models/chat_panel.dart';
 import 'models/player.dart';
+import 'players/raw_player.dart';
 import 'settings.dart';
 
 class VideoPlayerScreen extends StatelessWidget {
@@ -30,10 +33,10 @@ class VideoPlayerScreen extends StatelessWidget {
           case ConnectionState.done:
             if (Settings.isTV) {
               return TvControls(
-                child: buildPlayer(player),
+                child: buildPlayer(context, player),
               );
             }
-            return buildPlayer(player);
+            return buildPlayer(context, player);
           default:
             return GestureDetector(
               child: Settings.isTV
@@ -56,9 +59,9 @@ class VideoPlayerScreen extends StatelessWidget {
     );
   }
 
-  Widget buildPlayer(PlayerModel player) {
+  Widget buildPlayer(BuildContext context, PlayerModel player) {
     if (player.isIframe()) return iframeWidget(player);
-    final captionText = player.controller?.value.caption.text;
+    final captionText = player.player?.captionText;
     return GestureDetector(
       onDoubleTap: () => Settings.nextOrientationView(player.app),
       onLongPress: () {
@@ -70,12 +73,14 @@ class VideoPlayerScreen extends StatelessWidget {
           Stack(
             fit: StackFit.expand,
             children: [
-              FittedBox(
-                fit: player.isFitWidth ? BoxFit.fitWidth : BoxFit.contain,
-                child: SizedBox(
-                  width: player.controller?.value.aspectRatio ?? 16 / 9,
-                  height: 1,
-                  child: VideoPlayer(player.controller!),
+              Center(
+                child: FittedBox(
+                  fit: player.isFitWidth ? BoxFit.fitWidth : BoxFit.contain,
+                  child: SizedBox(
+                    width: (player.player?.aspectRatio ?? 16 / 9) * 720,
+                    height: 720,
+                    child: player.player?.build(context) ?? Container(),
+                  ),
                 ),
               ),
             ],
@@ -137,7 +142,7 @@ class VideoPlayerScreen extends StatelessWidget {
   }
 }
 
-class _PlayPauseOverlay extends StatelessWidget {
+class _PlayPauseOverlay extends StatefulWidget {
   const _PlayPauseOverlay({
     Key? key,
     required this.player,
@@ -145,15 +150,58 @@ class _PlayPauseOverlay extends StatelessWidget {
 
   final PlayerModel player;
 
-  void _onPlayButton() {
-    if (!player.isPlaying()) player.toggleControls(false);
-    player.userSetPlayerState(!player.isPlaying());
+  @override
+  State<_PlayPauseOverlay> createState() => _PlayPauseOverlayState();
+}
+
+class _PlayPauseOverlayState extends State<_PlayPauseOverlay> {
+  Duration _position = Duration.zero;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(milliseconds: 500), (timer) async {
+      final pos = await widget.player.getPosition();
+      if (mounted && pos != _position) {
+        setState(() {
+          _position = pos;
+        });
+      }
+    });
   }
 
-  String _timeText(VideoPlayerValue? value) {
-    if (value == null) return '';
-    final p = _stringDuration(value.position);
-    final d = _stringDuration(value.duration);
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _onPlayButton() {
+    if (!widget.player.isPlaying()) widget.player.toggleControls(false);
+    widget.player.userSetPlayerState(!widget.player.isPlaying());
+  }
+
+  // custom seekbar for yt player, since video_player one is binded into another controller
+  // and needs more info for general abstract impl
+  void _seekTo(Offset localPosition, double width) {
+    if (widget.player.getDuration() <= 0) return;
+    final double relative = (localPosition.dx - 15) / (width - 30);
+    final double posSeconds =
+        relative.clamp(0.0, 1.0) * widget.player.getDuration();
+    final newPos = Duration(milliseconds: (posSeconds * 1000).toInt());
+    setState(() {
+      _position = newPos;
+    });
+    widget.player.seekTo(newPos);
+    widget.player.sendPlayerState(widget.player.isPlaying());
+  }
+
+  String _timeText() {
+    final p = _stringDuration(_position);
+    final d = _stringDuration(
+      Duration(milliseconds: (widget.player.getDuration() * 1000).toInt()),
+    );
     return '$p / $d';
   }
 
@@ -168,6 +216,7 @@ class _PlayPauseOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final player = widget.player;
     return AnimatedOpacity(
       opacity: player.showControls ? 1 : 0,
       duration: const Duration(milliseconds: 200),
@@ -197,7 +246,7 @@ class _PlayPauseOverlay extends StatelessWidget {
               alignment: Alignment.bottomLeft,
               child: Padding(
                 padding: const EdgeInsets.only(bottom: 32, left: 15),
-                child: Text(_timeText(player.controller?.value)),
+                child: Text(_timeText()),
               ),
             ),
           if (player.showControls)
@@ -207,21 +256,73 @@ class _PlayPauseOverlay extends StatelessWidget {
               },
               child: Align(
                 alignment: Alignment.bottomCenter,
-                child: VideoProgressIndicator(
-                  player.controller!,
-                  padding: const EdgeInsets.only(
-                    bottom: 15,
-                    top: 5,
-                    left: 15,
-                    right: 15,
-                  ),
-                  colors: VideoProgressColors(
-                    playedColor: const Color.fromRGBO(200, 0, 0, 0.75),
-                    bufferedColor: const Color.fromRGBO(200, 200, 200, 0.5),
-                    backgroundColor: const Color.fromRGBO(200, 200, 200, 0.2),
-                  ),
-                  allowScrubbing: true,
-                ),
+                child: player.player is RawPlayer
+                    ? VideoProgressIndicator(
+                        (player.player as RawPlayer).controller!,
+                        padding: const EdgeInsets.only(
+                          bottom: 15,
+                          top: 5,
+                          left: 15,
+                          right: 15,
+                        ),
+                        colors: VideoProgressColors(
+                          playedColor: const Color.fromRGBO(200, 0, 0, 0.75),
+                          bufferedColor: const Color.fromRGBO(
+                            200,
+                            200,
+                            200,
+                            0.5,
+                          ),
+                          backgroundColor: const Color.fromRGBO(
+                            200,
+                            200,
+                            200,
+                            0.2,
+                          ),
+                        ),
+                        allowScrubbing: true,
+                      )
+                    : LayoutBuilder(
+                        builder: (context, constraints) {
+                          return GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onHorizontalDragUpdate: (details) {
+                              _seekTo(
+                                details.localPosition,
+                                constraints.maxWidth,
+                              );
+                            },
+                            onTapDown: (details) {
+                              _seekTo(
+                                details.localPosition,
+                                constraints.maxWidth,
+                              );
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: 15,
+                                left: 15,
+                                right: 15,
+                              ),
+                              child: LinearProgressIndicator(
+                                value: player.getDuration() > 0
+                                    ? _position.inMilliseconds /
+                                          (player.getDuration() * 1000)
+                                    : 0,
+                                backgroundColor: const Color.fromRGBO(
+                                  200,
+                                  200,
+                                  200,
+                                  0.2,
+                                ),
+                                valueColor: const AlwaysStoppedAnimation(
+                                  Color.fromRGBO(200, 0, 0, 0.75),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
               ),
             ),
           if (player.showControls)
