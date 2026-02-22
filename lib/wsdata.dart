@@ -840,7 +840,7 @@ class GetTime {
     time = json['time'].toDouble();
     paused = json['paused'] ?? false;
     pausedByServer = json['pausedByServer'] ?? false;
-    rate = json['rate'] ?? 1;
+    rate = json['rate']?.toDouble() ?? 1;
   }
 
   Map<String, dynamic> toJson() {
@@ -859,7 +859,7 @@ class SetRate {
   SetRate({required this.rate});
 
   SetRate.fromJson(Map<String, dynamic> json) {
-    rate = json['rate'];
+    rate = json['rate'].toDouble();
   }
 
   Map<String, dynamic> toJson() {

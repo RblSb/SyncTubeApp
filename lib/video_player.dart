@@ -248,6 +248,69 @@ class _PlayPauseOverlay extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    PopupMenuButton<double>(
+                      padding: EdgeInsets.zero,
+                      child: GestureDetector(
+                        onLongPress: () {
+                          player.setPlaybackSpeed(1.0);
+                          HapticFeedback.mediumImpact();
+                        },
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
+                              child: Icon(
+                                Icons.speed_outlined,
+                                color: Theme.of(context).playerIcon,
+                                size: 30,
+                              ),
+                            ),
+                            if (player.player.state.rate != 1.0)
+                              Positioned(
+                                top: -2,
+                                right: 4,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                    vertical: 1,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Color.fromRGBO(0, 0, 0, 0.75),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    player.player.state.rate
+                                        .toString()
+                                        .replaceAll('.0', ''),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      initialValue: player.player.state.rate,
+                      onSelected: (double speed) {
+                        player.setPlaybackSpeed(speed);
+                      },
+                      itemBuilder: (BuildContext context) {
+                        return [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0].map(
+                          (double speed) {
+                            return PopupMenuItem<double>(
+                              value: speed,
+                              child: Text('${speed}x'),
+                            );
+                          },
+                        ).toList();
+                      },
+                    ),
                     IconButton(
                       icon: Icon(
                         player.isFitWidth

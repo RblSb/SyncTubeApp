@@ -58,6 +58,7 @@ class PlayerModel extends ChangeNotifier {
     player.stream.position.listen((_) => notifyListeners());
     player.stream.playing.listen((_) => notifyListeners());
     player.stream.buffer.listen((_) => notifyListeners());
+    player.stream.rate.listen((_) => notifyListeners());
   }
 
   bool isVideoLoaded() {
@@ -113,6 +114,14 @@ class PlayerModel extends ChangeNotifier {
 
   void setPlaybackSpeed(double rate) async {
     await player.setRate(rate);
+    notifyListeners();
+    if (!app.isLeader()) return;
+    app.send(
+      WsData(
+        type: 'SetRate',
+        setRate: SetRate(rate: rate),
+      ),
+    );
   }
 
   double getDuration() {
