@@ -4,7 +4,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
-import 'package:video_player/video_player.dart';
+import 'package:media_kit/media_kit.dart';
+import 'package:media_kit_video/media_kit_video.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart' as youtube;
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
@@ -13,10 +14,12 @@ import '../subs/ass.dart';
 import '../subs/raw.dart';
 import '../wsdata.dart';
 import './app.dart';
+import './captions.dart';
 import './playlist.dart';
 
 class PlayerModel extends ChangeNotifier {
-  VideoPlayerController? controller;
+  late final Player player;
+  late final VideoController controller;
   Future<void>? initPlayerFuture;
   final AppModel app;
   final PlaylistModel playlist;
@@ -42,14 +45,27 @@ class PlayerModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  PlayerModel(this.app, this.playlist);
+  PlayerModel(this.app, this.playlist) {
+    player = Player();
+    controller = VideoController(player);
+
+    player.stream.completed.listen((completed) {
+      if (completed) {
+        // sync with server?
+      }
+    });
+
+    player.stream.position.listen((_) => notifyListeners());
+    player.stream.playing.listen((_) => notifyListeners());
+    player.stream.buffer.listen((_) => notifyListeners());
+  }
 
   bool isVideoLoaded() {
-    return controller?.value.isInitialized ?? false;
+    return player.state.width != null && player.state.height != null;
   }
 
   bool isPlaying() {
-    return controller?.value.isPlaying ?? false;
+    return player.state.playing;
   }
 
   void toggleControls(bool flag) {
@@ -73,38 +89,30 @@ class PlayerModel extends ChangeNotifier {
   }
 
   Future<Duration> getPosition() async {
-    if (!isVideoLoaded()) return Duration();
-    final posD = await controller?.position;
-    if (posD == null) return Duration();
-    return posD;
+    return player.state.position;
   }
 
   void pause() async {
-    if (!isVideoLoaded()) return;
-    await controller?.pause();
+    await player.pause();
   }
 
   void play() async {
-    if (!isVideoLoaded()) return;
     if (app.isInBackground) {
       if (!app.hasBackgroundAudio) return;
     }
-    await controller?.play();
+    await player.play();
   }
 
   void seekTo(Duration duration) async {
-    if (!isVideoLoaded()) return;
-    await controller?.seekTo(duration);
+    await player.seek(duration);
   }
 
   Future<double> getPlaybackSpeed() async {
-    if (!isVideoLoaded()) return 1.0;
-    return controller?.value.playbackSpeed ?? 1.0;
+    return player.state.rate;
   }
 
   void setPlaybackSpeed(double rate) async {
-    if (!isVideoLoaded()) return;
-    await controller?.setPlaybackSpeed(rate);
+    await player.setRate(rate);
   }
 
   double getDuration() {
@@ -131,13 +139,8 @@ class PlayerModel extends ChangeNotifier {
     final item = playlist.getItem(playlist.pos);
     if (item == null) return;
     if (isIframe()) {
-      final old = controller;
-      controller = null;
       initPlayerFuture = Future.microtask(() => null);
       notifyListeners();
-      initPlayerFuture?.whenComplete(() {
-        Future.delayed(const Duration(seconds: 1), () => old?.dispose());
-      });
       return;
     }
     var url = item.url;
@@ -145,22 +148,24 @@ class PlayerModel extends ChangeNotifier {
       final relativeHost = app.getChannelLink();
       url = '$relativeHost${url}';
     }
-    if (url.contains('youtu')) url = await getYoutubeVideoUrl(url);
+    String? audioUrl;
+    if (url.contains('youtu')) {
+      final ytData = await getYoutubeVideoUrl(url);
+      url = ytData.video;
+      audioUrl = ytData.audio;
+    }
     pause();
-    final prevController = controller;
-    controller = VideoPlayerController.networkUrl(
-      Uri.parse(url),
-      // closedCaptionFile: _loadCaptions(item),
-      videoPlayerOptions: VideoPlayerOptions(
-        mixWithOthers: true,
-        allowBackgroundPlayback: true,
-      ),
-    );
-    controller?.addListener(notifyListeners);
-    initPlayerFuture = controller?.initialize();
+
+    initPlayerFuture = () async {
+      await player.open(Media(url));
+      if (audioUrl != null) {
+        await player.setAudioTrack(AudioTrack.uri(audioUrl));
+      }
+    }();
+
     initPlayerFuture?.whenComplete(() {
-      prevController?.dispose();
-      controller?.setClosedCaptionFile(_loadCaptions(item)).whenComplete(() {
+      _loadCaptions(item)?.then((subs) {
+        _currentCaptions = subs;
         notifyListeners();
       });
       app.send(
@@ -174,14 +179,21 @@ class PlayerModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  LocalClosedCaptionFile? _currentCaptions;
+  LocalClosedCaptionFile? get currentCaptions => _currentCaptions;
+
   Future<double> getVideoDuration(String url) async {
-    if (url.contains('youtu')) url = await getYoutubeVideoUrl(url);
-    final controller = VideoPlayerController.networkUrl(Uri.parse(url));
+    if (url.contains('youtu')) {
+      url = (await getYoutubeVideoUrl(url)).video;
+    }
+    final tempPlayer = Player();
     Duration? duration;
     try {
-      await controller.initialize();
-      duration = controller.value.duration;
-      controller.dispose();
+      await tempPlayer.open(Media(url), play: false);
+      // Wait a bit for duration to be parsed
+      await Future.delayed(const Duration(milliseconds: 500));
+      duration = tempPlayer.state.duration;
+      await tempPlayer.dispose();
     } catch (e) {
       print(e.toString());
     }
@@ -206,7 +218,7 @@ class PlayerModel extends ChangeNotifier {
     return r.firstMatch(url)!.group(1)!;
   }
 
-  Future<String> getYoutubeVideoUrl(String url) async {
+  Future<({String video, String? audio})> getYoutubeVideoUrl(String url) async {
     final yt = youtube.YoutubeExplode();
     try {
       final id = extractVideoId(url);
@@ -219,30 +231,58 @@ class PlayerModel extends ChangeNotifier {
       } catch (e) {
         print(e);
         app.chat.addItem(ChatItem('', e.toString()));
-        return '';
+        return (video: '', audio: null);
       }
-      yt.close();
-      // final stream = manifest.muxed.withHighestBitrate();
-      final qualities = manifest.muxed.getAllVideoQualities().toList();
+
+      final videoStreams = manifest.videoOnly.toList();
       final values = youtube.VideoQuality.values;
-      qualities.sort((a, b) {
-        return values.indexOf(a).compareTo(values.indexOf(b));
+      videoStreams.sort((a, b) {
+        return values
+            .indexOf(a.videoQuality)
+            .compareTo(values.indexOf(b.videoQuality));
       });
-      while (values.indexOf(qualities.last) >
-          values.indexOf(youtube.VideoQuality.high1080)) {
-        qualities.removeLast();
+
+      // Filter to max 1080p
+      final filteredVideo = videoStreams.where((s) {
+        return values.indexOf(s.videoQuality) <=
+            values.indexOf(youtube.VideoQuality.high1080);
+      }).toList();
+
+      final audioStream = manifest.audioOnly.isEmpty
+          ? null
+          : manifest.audioOnly.withHighestBitrate();
+
+      if (filteredVideo.isNotEmpty && audioStream != null) {
+        yt.close();
+        return (
+          video: filteredVideo.last.url.toString(),
+          audio: audioStream.url.toString(),
+        );
       }
-      // print(qualities);
-      final stream = manifest.muxed.firstWhere((element) {
-        return element.videoQuality == qualities.last;
+
+      // fallback to muxed
+      final muxedStreams = manifest.muxed.toList();
+      muxedStreams.sort((a, b) {
+        return values
+            .indexOf(a.videoQuality)
+            .compareTo(values.indexOf(b.videoQuality));
       });
-      final streamUrl = stream.url.toString();
-      return streamUrl;
+      final filteredMuxed = muxedStreams.where((s) {
+        return values.indexOf(s.videoQuality) <=
+            values.indexOf(youtube.VideoQuality.high1080);
+      }).toList();
+
+      yt.close();
+      if (filteredMuxed.isNotEmpty) {
+        return (video: filteredMuxed.last.url.toString(), audio: null);
+      }
+
+      return (video: '', audio: null);
     } catch (e) {
       print('getYoutubeVideoUrl error for url $url');
       print(e);
       yt.close();
-      return '';
+      return (video: '', audio: null);
     }
   }
 
@@ -326,7 +366,7 @@ class PlayerModel extends ChangeNotifier {
     return total == 0 ? 356400.0 : total.toDouble();
   }
 
-  Future<ClosedCaptionFile>? _loadCaptions(VideoList item) {
+  Future<LocalClosedCaptionFile>? _loadCaptions(VideoList item) {
     if (item.url.contains('youtu')) {
       item.subs = item.url;
       return compute(_loadYoutubeCaptionsFuture, item);
@@ -343,7 +383,7 @@ class PlayerModel extends ChangeNotifier {
     return compute(_loadCaptionsFuture, subsUrl);
   }
 
-  static Future<ClosedCaptionFile> _loadYoutubeCaptionsFuture(
+  static Future<LocalClosedCaptionFile> _loadYoutubeCaptionsFuture(
     VideoList item,
   ) async {
     final subs = await getYoutubeSubtitles(item.url);
@@ -351,7 +391,7 @@ class PlayerModel extends ChangeNotifier {
     return subs;
   }
 
-  static Future<ClosedCaptionFile> _loadCaptionsFuture(String url) async {
+  static Future<LocalClosedCaptionFile> _loadCaptionsFuture(String url) async {
     Response response;
     try {
       response = await http.get(Uri.parse(url)).timeout(Duration(seconds: 5));
@@ -445,7 +485,7 @@ class PlayerModel extends ChangeNotifier {
     return blocks;
   }
 
-  static Future<ClosedCaptionFile> getYoutubeSubtitles(String url) async {
+  static Future<LocalClosedCaptionFile> getYoutubeSubtitles(String url) async {
     final yt = youtube.YoutubeExplode();
     try {
       final id = extractVideoId(url);
@@ -465,7 +505,7 @@ class PlayerModel extends ChangeNotifier {
       }
       var i = 0;
       final items = track.captions.map((e) {
-        final caption = Caption(
+        final caption = LocalCaption(
           number: i,
           start: e.offset,
           end: e.offset + e.duration,
@@ -496,7 +536,7 @@ class PlayerModel extends ChangeNotifier {
   void sendPlayerState(bool state) async {
     if (!isVideoLoaded()) return;
     if (!app.isLeader()) return;
-    final posD = await controller?.position ?? Duration();
+    final posD = player.state.position;
     final time = posD.inMilliseconds / 1000;
     if (state) {
       app.send(
@@ -518,8 +558,7 @@ class PlayerModel extends ChangeNotifier {
   @override
   void dispose() async {
     print('PlayerModel disposed');
-    await controller?.dispose();
-    controller = null;
+    await player.dispose();
     super.dispose();
   }
 }

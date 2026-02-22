@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:collection/collection.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/status.dart' as status;
@@ -41,7 +41,6 @@ class AppModel extends ChangeNotifier {
   Timer? _disconnectNotificationTimer;
 
   int synchThreshold = 2;
-  int _prefferedOrientation = 0;
   bool _isChatVisible = true;
   bool _showSubtitles = true;
   bool _hasSystemUi = false;
@@ -49,6 +48,16 @@ class AppModel extends ChangeNotifier {
   bool isInBackground = false;
   Config? config;
   List<String> playersCacheSupport = [];
+
+  Orientation? _prefferedOrientation = null;
+
+  Orientation? get prefferedOrientation => _prefferedOrientation;
+
+  set prefferedOrientation(Orientation orientation) {
+    if (_prefferedOrientation == orientation) return;
+    _prefferedOrientation = orientation;
+    notifyListeners();
+  }
 
   bool get hasBackgroundAudio => _hasBackgroundAudio;
 
@@ -501,20 +510,6 @@ class AppModel extends ChangeNotifier {
 
   void inForeground() {
     isInBackground = false;
-  }
-
-  void setPrefferedOrientation(int state) {
-    _prefferedOrientation = state;
-    notifyListeners();
-  }
-
-  String prefferedOrientationType() {
-    switch (_prefferedOrientation) {
-      case 0:
-        return 'Auto';
-      default:
-        return 'Landscape';
-    }
   }
 
   void sendVideoItem(AddVideo data) async {

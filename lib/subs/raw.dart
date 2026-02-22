@@ -1,10 +1,10 @@
-import 'package:video_player/video_player.dart';
+import '../models/captions.dart';
 
-class RawCaptionFile extends ClosedCaptionFile {
+class RawCaptionFile extends LocalClosedCaptionFile {
   RawCaptionFile(this._captions);
 
-  final List<Caption> _captions;
+  final List<LocalCaption> _captions;
 
   @override
-  List<Caption> get captions => _captions;
+  List<LocalCaption> get captions => _captions;
 }

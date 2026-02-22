@@ -1,28 +1,28 @@
 import 'dart:convert';
 
-import 'package:video_player/video_player.dart';
+import '../models/captions.dart';
 
 final _assTimeStamp = RegExp(r'\d+:\d\d:\d\d.\d\d');
-final _blockTags = RegExp(r'\{\\[^}]*\}');
+final _blockTags = RegExp(r'\{\\+[^}]*\}');
 final _spaceTags = RegExp(r'\\(n|h)');
 final _newLineTag = RegExp(r'\\N');
 final _manyNewLineTags = RegExp(r'\\N(\\N)+');
 final _drawingMode = RegExp(r'\\p[124]');
 
-/// Represents a [ClosedCaptionFile], parsed from the ASS file format.
-class AssCaptionFile extends ClosedCaptionFile {
+/// Represents a [LocalClosedCaptionFile], parsed from the ASS file format.
+class AssCaptionFile extends LocalClosedCaptionFile {
   AssCaptionFile(this.fileContents)
     : _captions = _parseCaptionsFromAssString(fileContents);
 
   final String fileContents;
-  final List<Caption> _captions;
+  final List<LocalCaption> _captions;
 
   @override
-  List<Caption> get captions => _captions;
+  List<LocalCaption> get captions => _captions;
 }
 
-List<Caption> _parseCaptionsFromAssString(String file) {
-  final List<Caption> captions = [];
+List<LocalCaption> _parseCaptionsFromAssString(String file) {
+  final List<LocalCaption> captions = [];
   if (file.isEmpty) return captions;
 
   final List<String> lines = LineSplitter.split(file).toList();
@@ -57,7 +57,7 @@ List<Caption> _parseCaptionsFromAssString(String file) {
     text = text.replaceAll(_spaceTags, ' ');
     text = text.replaceAll(_manyNewLineTags, '\\N');
     text = text.replaceAll(_newLineTag, '\n');
-    final caption = Caption(
+    final caption = LocalCaption(
       number: captionNumber,
       start: _parseAssTimestamp(list[ids['Start']!]),
       end: _parseAssTimestamp(list[ids['End']!]),

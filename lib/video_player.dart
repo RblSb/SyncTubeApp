@@ -1,10 +1,12 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:media_kit_video/media_kit_video.dart';
 // import 'package:perfect_volume_control/perfect_volume_control.dart';
 import 'package:provider/provider.dart';
+import 'package:synctube/models/app.dart';
+import 'package:synctube/utils/multi_tap_recognizer.dart';
 import 'package:url_launcher/url_launcher_string.dart';
-import 'package:video_player/video_player.dart';
 
 import 'chat_panel.dart';
 import 'color_scheme.dart';
@@ -23,32 +25,31 @@ class VideoPlayerScreen extends StatelessWidget {
       future: player.initPlayerFuture,
       builder: (context, snapshot) {
         switch (snapshot.connectionState) {
-          case ConnectionState.waiting:
-          case ConnectionState.active:
+          case .waiting:
+          case .active:
             return const Center(child: CircularProgressIndicator());
 
-          case ConnectionState.done:
+          case .done:
             if (Settings.isTV) {
               return TvControls(
                 child: buildPlayer(player),
               );
             }
             return buildPlayer(player);
-          default:
+          case .none:
             return GestureDetector(
               child: Settings.isTV
                   ? tvEmptyPlayerWidget(context)
                   : const SizedBox.expand(),
               behavior: HitTestBehavior.translucent,
+              // don't allow to go fullscreen on empty player, only enter landscape
               onDoubleTap: () {
-                if (player.app.prefferedOrientationType() == 'Landscape')
-                  return;
-                Settings.nextOrientationView(player.app);
+                if (player.app.prefferedOrientation == .landscape) return;
+                goLandscapeOrFullscreen(player.app);
               },
               onLongPress: () {
-                if (player.app.prefferedOrientationType() == 'Landscape')
-                  return;
-                Settings.nextOrientationView(player.app);
+                if (player.app.prefferedOrientation == .landscape) return;
+                goLandscapeOrFullscreen(player.app);
               },
             );
         }
@@ -58,50 +59,80 @@ class VideoPlayerScreen extends StatelessWidget {
 
   Widget buildPlayer(PlayerModel player) {
     if (player.isIframe()) return iframeWidget(player);
-    final captionText = player.controller?.value.caption.text;
-    return GestureDetector(
-      onDoubleTap: () => Settings.nextOrientationView(player.app),
-      onLongPress: () {
-        if (player.showControls) return;
-        Settings.nextOrientationView(player.app);
-      },
-      child: Stack(
-        children: [
-          Stack(
-            fit: StackFit.expand,
-            children: [
-              FittedBox(
-                fit: player.isFitWidth ? BoxFit.fitWidth : BoxFit.contain,
-                child: SizedBox(
-                  width: player.controller?.value.aspectRatio ?? 16 / 9,
-                  height: 1,
-                  child: VideoPlayer(player.controller!),
+    final captionText = player.currentCaptions
+        ?.getCaptionFor(player.player.state.position)
+        ?.text;
+    return MultiTapListener(
+      // recognitionWindow: new Duration(milliseconds: 1000),
+      onDoubleTap: () => goLandscapeOrFullscreen(player.app),
+      // onDoubleTap: () => goLandscapeOrFullscreen(player.app),
+      child: GestureDetector(
+        // onDoubleTap: () => goLandscapeOrFullscreen(player.app),
+        onLongPress: () {
+          if (player.showControls) return;
+          goLandscapeOrFullscreen(player.app);
+        },
+        child: Stack(
+          children: [
+            Stack(
+              fit: StackFit.expand,
+              children: [
+                FittedBox(
+                  fit: player.isFitWidth ? BoxFit.fitWidth : BoxFit.contain,
+                  child: SizedBox(
+                    width: player.player.state.width?.toDouble() ?? 1280,
+                    height: player.player.state.height?.toDouble() ?? 720,
+                    child: Video(controller: player.controller),
+                  ),
+                ),
+              ],
+            ),
+            if (player.app.showSubtitles &&
+                captionText != null &&
+                captionText.isNotEmpty)
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 50),
+                  child: Text(
+                    captionText,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.white,
+                      backgroundColor: Colors.black54,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ),
-            ],
-          ),
-          if (player.app.showSubtitles &&
-              captionText != null &&
-              captionText.isNotEmpty)
-            ClosedCaption(
-              text: captionText,
-              textStyle: const TextStyle(fontSize: 16),
-            ),
-          _PlayPauseOverlay(player: player),
-          AnimatedOpacity(
-            opacity: player.showMessageIcon ? 0.7 : 0,
-            duration: const Duration(milliseconds: 200),
-            child: const Align(
-              alignment: Alignment.topRight,
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: Icon(Icons.mail),
+            _PlayPauseOverlay(player: player),
+            AnimatedOpacity(
+              opacity: player.showMessageIcon ? 0.7 : 0,
+              duration: const Duration(milliseconds: 200),
+              child: const Align(
+                alignment: Alignment.topRight,
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Icon(Icons.mail),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
+  }
+
+  void goLandscapeOrFullscreen(AppModel app) {
+    final orientation = app.prefferedOrientation;
+    switch (orientation) {
+      case .portrait:
+        Settings.setPrefferedOrientation(app, .landscape);
+      case .landscape:
+        app.isChatVisible = !app.isChatVisible;
+      case null:
+    }
+    SystemChrome.restoreSystemUIOverlays();
   }
 
   Widget iframeWidget(PlayerModel player) {
@@ -150,10 +181,10 @@ class _PlayPauseOverlay extends StatelessWidget {
     player.userSetPlayerState(!player.isPlaying());
   }
 
-  String _timeText(VideoPlayerValue? value) {
-    if (value == null) return '';
-    final p = _stringDuration(value.position);
-    final d = _stringDuration(value.duration);
+  String _timeText(PlayerModel player) {
+    final state = player.player.state;
+    final p = _stringDuration(state.position);
+    final d = _stringDuration(state.duration);
     return '$p / $d';
   }
 
@@ -197,33 +228,10 @@ class _PlayPauseOverlay extends StatelessWidget {
               alignment: Alignment.bottomLeft,
               child: Padding(
                 padding: const EdgeInsets.only(bottom: 32, left: 15),
-                child: Text(_timeText(player.controller?.value)),
+                child: Text(_timeText(player)),
               ),
             ),
-          if (player.showControls)
-            GestureDetector(
-              onHorizontalDragDown: (details) {
-                player.cancelControlsHide();
-              },
-              child: Align(
-                alignment: Alignment.bottomCenter,
-                child: VideoProgressIndicator(
-                  player.controller!,
-                  padding: const EdgeInsets.only(
-                    bottom: 15,
-                    top: 5,
-                    left: 15,
-                    right: 15,
-                  ),
-                  colors: VideoProgressColors(
-                    playedColor: const Color.fromRGBO(200, 0, 0, 0.75),
-                    bufferedColor: const Color.fromRGBO(200, 200, 200, 0.5),
-                    backgroundColor: const Color.fromRGBO(200, 200, 200, 0.2),
-                  ),
-                  allowScrubbing: true,
-                ),
-              ),
-            ),
+          if (player.showControls) buildVideoProgress(context),
           if (player.showControls)
             Align(
               alignment: Alignment.topLeft,
@@ -267,15 +275,26 @@ class _PlayPauseOverlay extends StatelessWidget {
                       ),
                     IconButton(
                       icon: Icon(
-                        player.app.isChatVisible
-                            ? Icons.fullscreen
-                            : Icons.fullscreen_exit,
+                        Icons.screen_rotation,
                         color: Theme.of(context).playerIcon,
-                        size: 30,
+                        size: 25,
                       ),
                       tooltip: 'Double-tap or long-tap for fullscreen',
                       onPressed: () {
-                        Settings.nextOrientationView(player.app);
+                        final orientation = MediaQuery.of(context).orientation;
+                        switch (orientation) {
+                          case .portrait:
+                            Settings.setPrefferedOrientation(
+                              player.app,
+                              .landscape,
+                            );
+                          case .landscape:
+                            player.app.isChatVisible = true;
+                            Settings.setPrefferedOrientation(
+                              player.app,
+                              .portrait,
+                            );
+                        }
                       },
                     ),
                   ],
@@ -283,6 +302,59 @@ class _PlayPauseOverlay extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  GestureDetector buildVideoProgress(BuildContext context) {
+    var durationMs = player.player.state.duration.inMilliseconds.toDouble();
+    if (durationMs == 0) durationMs = 1;
+    var posMs = player.player.state.position.inMilliseconds.toDouble();
+    var bufMs = player.player.state.buffer.inMilliseconds.toDouble();
+    posMs = posMs.clamp(0, durationMs);
+
+    return GestureDetector(
+      onHorizontalDragDown: (details) {
+        player.cancelControlsHide();
+      },
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: Padding(
+          padding: const EdgeInsets.only(
+            bottom: 15,
+            top: 5,
+            left: 15,
+            right: 15,
+          ),
+          child: SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              trackHeight: 2,
+              thumbShape: const RoundSliderThumbShape(
+                enabledThumbRadius: 6,
+              ),
+              overlayShape: const RoundSliderOverlayShape(
+                overlayRadius: 12,
+              ),
+            ),
+            child: SizedBox(
+              height: 15,
+              child: Slider(
+                value: posMs,
+                min: 0,
+                max: durationMs,
+                secondaryTrackValue: bufMs,
+                onChanged: (value) {
+                  player.seekTo(
+                    Duration(milliseconds: value.toInt()),
+                  );
+                },
+                activeColor: const Color.fromRGBO(200, 0, 0, 0.75),
+                inactiveColor: const Color.fromRGBO(200, 200, 200, 0.2),
+                secondaryActiveColor: const Color.fromRGBO(255, 255, 255, 0.3),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

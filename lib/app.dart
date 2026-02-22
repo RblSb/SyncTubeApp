@@ -42,7 +42,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     super.initState();
     app = AppModel(widget.url);
     fileUploader = FileUploader(widget.url);
-    Settings.applySettings(app);
+    Settings.load(app);
     WakelockPlus.enable();
     WidgetsBinding.instance.addObserver(this);
     final nativeOrientation = NativeDeviceOrientationCommunicator();
@@ -124,33 +124,37 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           direction: orientation == Orientation.landscape
               ? Axis.horizontal
               : Axis.vertical,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Selector<AppModel, bool>(
               selector: (context, app) => app.isChatVisible,
               builder: (context, isChatVisible, child) {
                 return Selector<PlayerModel, double>(
                   selector: (context, player) {
-                    final isInit =
-                        player.controller?.value.isInitialized ?? false;
-                    if (!isInit) return 16 / 9;
-                    return player.controller?.value.aspectRatio ?? 16 / 9;
+                    if (!player.isVideoLoaded()) return 16 / 9;
+                    final width = player.player.state.width;
+                    final height = player.player.state.height;
+                    if (width == null || height == null || height == 0)
+                      return 16 / 9;
+                    return width / height;
                   },
                   builder: (context, ratio, child) {
                     final media = MediaQuery.of(context);
+                    final isLandscape = orientation == Orientation.landscape;
                     return Container(
                       color: Colors.black,
                       padding: EdgeInsets.only(
                         top: _isKeyboardVisible() ? media.padding.top : 0,
                       ),
-                      width: orientation == Orientation.landscape
+                      width: isLandscape
                           ? isChatVisible
                                 ? media.size.width / 1.5
                                 : media.size.width
                           : double.infinity,
-                      height: playerHeight(ratio),
+                      height: isLandscape ? null : playerHeight(ratio),
                       child: Column(
                         children: [
-                          if (orientation == Orientation.landscape &&
+                          if (isLandscape &&
                               !_isKeyboardVisible() &&
                               isChatVisible)
                             ChatPanel(),

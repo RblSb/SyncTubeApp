@@ -45,10 +45,10 @@
             android:name="flutterEmbedding"
             android:value="2" />
         <!-- todo remove when video_player will be fixed -->
-        <meta-data
+        <!-- <meta-data
             android:name="io.flutter.embedding.android.EnableImpeller"
             android:value="false"
-        />
+        /> -->
         <!-- custom: for ota update -->
         <provider
                 android:name="sk.fourq.otaupdate.OtaUpdateFileProvider"
