@@ -292,6 +292,9 @@ class _ChatState extends State<Chat> {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisSize: MainAxisSize.max,
           children: [
+            SizedBox(
+              width: 10,
+            ),
             Expanded(
               child: TextField(
                 inputFormatters: [
@@ -308,6 +311,16 @@ class _ChatState extends State<Chat> {
                   contentPadding: const EdgeInsets.all(14),
                   hintText: _hintText(chat),
                   border: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      width: 2,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      width: 2,
+                      color: Theme.of(context).focusColor,
+                    ),
                     borderRadius: BorderRadius.circular(20),
                   ),
                 ),
@@ -362,35 +375,37 @@ class _ChatState extends State<Chat> {
             if (!chat.isUnknownClient)
               GestureDetector(
                 onLongPress: () {
+                  HapticFeedback.mediumImpact();
                   setState(() => showRewindMenu = !showRewindMenu);
                 },
-                child: IconButton(
-                  padding: const EdgeInsets.only(left: 10, right: 20),
-                  onPressed: () {
-                    if (showRewindMenu) {
-                      setState(() => showRewindMenu = false);
-                      return;
-                    }
-                    setState(() {
-                      showEmotesTab = !showEmotesTab;
-                      if (showEmotesTab) {
-                        reopenKeyboard = inputFocus.hasFocus;
-                        inputFocus.unfocus();
-                      } else {
-                        if (reopenKeyboard && textController.text.isNotEmpty)
-                          inputFocus.requestFocus();
-                        reopenKeyboard = false;
+                child: Padding(
+                  padding: const EdgeInsets.all(5),
+                  child: IconButton(
+                    onPressed: () {
+                      if (showRewindMenu) {
+                        setState(() => showRewindMenu = false);
+                        return;
                       }
-                    });
-                    SystemChrome.restoreSystemUIOverlays();
-                  },
-                  // tooltip: 'Show emotes',
-                  icon: Icon(
-                    showRewindMenu ? Icons.close : Icons.mood,
-                    size: 35,
-                    color: showEmotesTab
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).icon,
+                      setState(() {
+                        showEmotesTab = !showEmotesTab;
+                        if (showEmotesTab) {
+                          reopenKeyboard = inputFocus.hasFocus;
+                          inputFocus.unfocus();
+                        } else {
+                          if (reopenKeyboard && textController.text.isNotEmpty)
+                            inputFocus.requestFocus();
+                          reopenKeyboard = false;
+                        }
+                      });
+                      SystemChrome.restoreSystemUIOverlays();
+                    },
+                    icon: Icon(
+                      showRewindMenu ? Icons.close : Icons.mood,
+                      size: 35,
+                      color: showEmotesTab
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).icon,
+                    ),
                   ),
                 ),
               ),
