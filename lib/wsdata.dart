@@ -826,13 +826,20 @@ class Pause {
 class GetTime {
   late double time;
   late bool paused;
+  late bool pausedByServer;
   late double rate;
 
-  GetTime({required this.time, required this.paused, required this.rate});
+  GetTime({
+    required this.time,
+    required this.paused,
+    required this.pausedByServer,
+    required this.rate,
+  });
 
   GetTime.fromJson(Map<String, dynamic> json) {
     time = json['time'].toDouble();
     paused = json['paused'] ?? false;
+    pausedByServer = json['pausedByServer'] ?? false;
     rate = json['rate'] ?? 1;
   }
 
@@ -840,6 +847,7 @@ class GetTime {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['time'] = this.time;
     data['paused'] = this.paused;
+    data['pausedByServer'] = this.pausedByServer;
     data['rate'] = this.rate;
     return data;
   }

@@ -119,7 +119,7 @@ class ChatPanel extends StatelessWidget {
   }
 
   Widget _onlineButton(ChatPanelModel panel, BuildContext context) {
-    final isPlayerIconVisible = !panel.serverPlay || panel.hasLeader();
+    final isPlayerIconVisible = panel.lastState.paused || panel.hasLeader();
     return Row(
       children: [
         Text(
@@ -130,7 +130,7 @@ class ChatPanel extends StatelessWidget {
         ),
         if (isPlayerIconVisible)
           Icon(
-            panel.serverPlay ? Icons.play_arrow : Icons.pause,
+            panel.lastState.paused ? Icons.pause : Icons.play_arrow,
             color: Theme.of(context).icon,
           )
         else

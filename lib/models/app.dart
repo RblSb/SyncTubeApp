@@ -22,6 +22,20 @@ enum MainTab {
   settings,
 }
 
+class LastState {
+  double time;
+  double rate;
+  bool paused;
+  bool pausedByServer;
+
+  LastState({
+    this.time = 0,
+    this.rate = 1.0,
+    this.paused = false,
+    this.pausedByServer = false,
+  });
+}
+
 class AppModel extends ChangeNotifier {
   String get personalName => _personal.name;
   String wsUrl;
@@ -32,6 +46,8 @@ class AppModel extends ChangeNotifier {
   late ChatModel chat;
   late ChatPanelModel chatPanel;
   MainTab mainTab = MainTab.chat;
+
+  final lastState = LastState();
 
   Client _personal = Client(name: 'Unknown', group: 0);
   List<Client> clients = [];
@@ -303,7 +319,6 @@ class AppModel extends ChangeNotifier {
         if (!player.isVideoLoaded()) return;
         if (playlist.isEmpty()) {
           player.pause();
-          chatPanel.serverPlay = true;
         }
         break;
       case 'SkipVideo':
@@ -318,6 +333,10 @@ class AppModel extends ChangeNotifier {
         if (playlist.isEmpty()) player.pause();
         break;
       case 'VideoLoaded':
+        lastState.time = 0;
+        lastState.paused = false;
+        lastState.pausedByServer = false;
+        chatPanel.notifyListeners();
         if (!player.isVideoLoaded()) return;
         player.seekTo(
           Duration(milliseconds: 0),
@@ -325,23 +344,25 @@ class AppModel extends ChangeNotifier {
         player.play();
         break;
       case 'Pause':
-        chatPanel.serverPlay = false;
+        final type = data.pause!;
+        lastState.time = type.time;
+        lastState.paused = true;
+        chatPanel.notifyListeners();
         if (!player.isVideoLoaded()) return;
         if (_personal.isLeader) return;
-        final type = data.pause!;
         final ms = (type.time * 1000).round();
         player.pause();
-        player.seekTo(
-          Duration(milliseconds: ms),
-        );
+        player.seekTo(Duration(milliseconds: ms));
         player.toggleControls(true);
         player.hideControlsWithDelay();
         break;
       case 'Play':
-        chatPanel.serverPlay = true;
+        final type = data.play!;
+        lastState.time = type.time;
+        lastState.paused = false;
+        chatPanel.notifyListeners();
         if (!player.isVideoLoaded()) return;
         if (_personal.isLeader) return;
-        final type = data.play!;
         onPlay(type);
         break;
       case 'GetTime':
@@ -351,6 +372,7 @@ class AppModel extends ChangeNotifier {
       case 'SetTime':
         if (_personal.isLeader) return;
         final type = data.setTime!;
+        lastState.time = type.time;
         onTimeSet(type);
         break;
       case 'SetRate':
@@ -360,10 +382,9 @@ class AppModel extends ChangeNotifier {
       case 'Rewind':
         if (!player.isVideoLoaded()) return;
         final type = data.rewind!;
+        lastState.time = type.time;
         final ms = (type.time * 1000 + 500).round();
-        player.seekTo(
-          Duration(milliseconds: ms),
-        );
+        player.seekTo(Duration(milliseconds: ms));
         break;
       case 'SetLeader':
         final type = data.setLeader!;
@@ -448,7 +469,12 @@ class AppModel extends ChangeNotifier {
     if (duration <= time + synchThreshold) return;
     if (player.isPlaying() && type.paused) player.pause();
     if (!player.isPlaying() && !type.paused) player.play();
-    chatPanel.serverPlay = !type.paused;
+    final isPaused = type.paused || type.pausedByServer;
+    if (lastState.paused != isPaused) {
+      lastState.paused = isPaused;
+      chatPanel.notifyListeners();
+    }
+
     if ((time - newTime).abs() < synchThreshold) return;
     var ms = (newTime * 1000).round();
     if (!type.paused) ms += 500;

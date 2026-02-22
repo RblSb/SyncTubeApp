@@ -7,13 +7,12 @@ class ChatPanelModel extends ChangeNotifier {
   ChatPanelModel(this._app);
 
   final AppModel _app;
-  bool _serverPlay = true;
-
-  bool get serverPlay => _serverPlay;
 
   MainTab get mainTab => _app.mainTab;
 
   List<Client> get clients => _app.clients;
+
+  LastState get lastState => _app.lastState;
 
   bool _isConnected = false;
 
@@ -46,10 +45,4 @@ class ChatPanelModel extends ChangeNotifier {
   }
 
   togglePanel(MainTab newTab) => _app.togglePanel(newTab);
-
-  set serverPlay(bool serverPlay) {
-    if (_serverPlay == serverPlay) return;
-    _serverPlay = serverPlay;
-    notifyListeners();
-  }
 }
