@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -106,17 +108,7 @@ class VideoPlayerScreen extends StatelessWidget {
                 ),
               ),
             _PlayPauseOverlay(player: player),
-            AnimatedOpacity(
-              opacity: player.showMessageIcon ? 0.7 : 0,
-              duration: const Duration(milliseconds: 200),
-              child: const Align(
-                alignment: Alignment.topRight,
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Icon(Icons.mail),
-                ),
-              ),
-            ),
+            _ChatToggleButton(player: player),
           ],
         ),
       ),
@@ -340,9 +332,9 @@ class _PlayPauseOverlay extends StatelessWidget {
                       icon: Icon(
                         Icons.screen_rotation,
                         color: Theme.of(context).playerIcon,
-                        size: 25,
+                        size: 23,
                       ),
-                      tooltip: 'Double-tap or long-tap for fullscreen',
+                      tooltip: player.fullscreenTooltipText,
                       onPressed: () {
                         final orientation = MediaQuery.of(context).orientation;
                         switch (orientation) {
@@ -475,6 +467,97 @@ class TvControls extends StatelessWidget {
         },
         child: child,
       ),
+    );
+  }
+}
+
+class _ChatToggleButton extends StatelessWidget {
+  const _ChatToggleButton({
+    Key? key,
+    required this.player,
+  }) : super(key: key);
+
+  final PlayerModel player;
+
+  @override
+  Widget build(BuildContext context) {
+    if (MediaQuery.of(context).orientation == Orientation.portrait) {
+      return const SizedBox.shrink();
+    }
+
+    final app = player.app;
+    final bool showControls = player.showControls;
+    final bool showMessageIcon = player.showMessageIcon;
+    // final bool showMessageIcon = true;
+
+    return AnimatedOpacity(
+      opacity: (showControls || showMessageIcon) ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 200),
+      child: Align(
+        alignment: Alignment.topRight,
+        child: Padding(
+          padding: const EdgeInsets.only(top: 5),
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: showControls
+                ? IconButton(
+                    icon: _buildChatIcon(context, app.isChatVisible),
+                    tooltip: player.fullscreenTooltipText,
+                    onPressed: () {
+                      app.isChatVisible = !app.isChatVisible;
+                      player.hideControlsWithDelay();
+                    },
+                  )
+                : Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Icon(
+                      Icons.chat_bubble_outline,
+                      color: Theme.of(
+                        context,
+                      ).playerIcon.withValues(alpha: 0.5),
+                      size: 24,
+                      shadows: [
+                        Shadow(
+                          color: Color.fromRGBO(0, 0, 0, 0.1),
+                          blurRadius: 10,
+                        ),
+                      ],
+                    ),
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChatIcon(BuildContext context, bool isVisible) {
+    final color = Theme.of(context).playerIcon;
+    const icon = Icons.chat_bubble_outline;
+    const size = 24.0;
+
+    if (!isVisible) {
+      return const Icon(icon, color: Colors.white, size: size);
+    }
+
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Icon(icon, color: color, size: size),
+        Transform.translate(
+          offset: Offset(0, -1.5),
+          child: Transform.rotate(
+            angle: -45 * (math.pi / 180.0),
+            child: Container(
+              width: 2,
+              height: 28,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(1),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -189,6 +189,8 @@ class PlayerModel extends ChangeNotifier {
   }
 
   LocalClosedCaptionFile? _currentCaptions;
+
+  String fullscreenTooltipText = 'Double-tap or long-tap to toggle fullscreen';
   LocalClosedCaptionFile? get currentCaptions => _currentCaptions;
 
   Future<double> getVideoDuration(String url) async {
