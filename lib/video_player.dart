@@ -61,13 +61,12 @@ class VideoPlayerScreen extends StatelessWidget {
 
   Widget buildPlayer(PlayerModel player) {
     if (player.isIframe()) return iframeWidget(player);
+
     final captionText = player.currentCaptions
         ?.getCaptionFor(player.player.state.position)
         ?.text;
     return MultiTapListener(
-      // recognitionWindow: new Duration(milliseconds: 1000),
       onDoubleTap: () => goLandscapeOrFullscreen(player.app),
-      // onDoubleTap: () => goLandscapeOrFullscreen(player.app),
       child: GestureDetector(
         // onDoubleTap: () => goLandscapeOrFullscreen(player.app),
         onLongPress: () {
@@ -82,8 +81,8 @@ class VideoPlayerScreen extends StatelessWidget {
                 FittedBox(
                   fit: player.isFitWidth ? BoxFit.fitWidth : BoxFit.contain,
                   child: SizedBox(
-                    width: player.player.state.width?.toDouble() ?? 1280,
-                    height: player.player.state.height?.toDouble() ?? 720,
+                    width: player.player.state.width?.toDouble() ?? (1280 / 2),
+                    height: player.player.state.height?.toDouble() ?? (720 / 2),
                     child: Video(controller: player.controller),
                   ),
                 ),
@@ -223,7 +222,7 @@ class _PlayPauseOverlay extends StatelessWidget {
                 child: Text(_timeText(player)),
               ),
             ),
-          if (player.showControls) buildVideoProgress(context),
+          if (player.showControls) _buildVideoProgress(context),
           if (player.showControls)
             Align(
               alignment: Alignment.topLeft,
@@ -240,69 +239,7 @@ class _PlayPauseOverlay extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    PopupMenuButton<double>(
-                      padding: EdgeInsets.zero,
-                      child: GestureDetector(
-                        onLongPress: () {
-                          player.setPlaybackSpeed(1.0);
-                          HapticFeedback.mediumImpact();
-                        },
-                        child: Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                              ),
-                              child: Icon(
-                                Icons.speed_outlined,
-                                color: Theme.of(context).playerIcon,
-                                size: 30,
-                              ),
-                            ),
-                            if (player.player.state.rate != 1.0)
-                              Positioned(
-                                top: -2,
-                                right: 4,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 4,
-                                    vertical: 1,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Color.fromRGBO(0, 0, 0, 0.75),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    player.player.state.rate
-                                        .toString()
-                                        .replaceAll('.0', ''),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      initialValue: player.player.state.rate,
-                      onSelected: (double speed) {
-                        player.setPlaybackSpeed(speed);
-                      },
-                      itemBuilder: (BuildContext context) {
-                        return [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0].map(
-                          (double speed) {
-                            return PopupMenuItem<double>(
-                              value: speed,
-                              child: Text('${speed}x'),
-                            );
-                          },
-                        ).toList();
-                      },
-                    ),
+                    _buildPlaybackRateButton(context),
                     IconButton(
                       icon: Icon(
                         player.isFitWidth
@@ -361,7 +298,74 @@ class _PlayPauseOverlay extends StatelessWidget {
     );
   }
 
-  GestureDetector buildVideoProgress(BuildContext context) {
+  PopupMenuButton<double> _buildPlaybackRateButton(BuildContext context) {
+    return PopupMenuButton<double>(
+      padding: EdgeInsets.zero,
+      child: GestureDetector(
+        onLongPress: () {
+          player.setPlaybackSpeed(1.0);
+          HapticFeedback.mediumImpact();
+        },
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+              ),
+              child: Icon(
+                Icons.speed_outlined,
+                color: Theme.of(context).playerIcon,
+                size: 30,
+              ),
+            ),
+            if (player.player.state.rate != 1.0)
+              Positioned(
+                top: -2,
+                right: 4,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 1,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Color.fromRGBO(0, 0, 0, 0.75),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    player.player.state.rate.toString().replaceAll('.0', ''),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+      initialValue: player.player.state.rate,
+      onSelected: (double speed) {
+        player.setPlaybackSpeed(speed);
+        player.hideControlsWithDelay();
+      },
+      onOpened: () => player.cancelControlsHide(),
+      onCanceled: () => player.hideControlsWithDelay(),
+      itemBuilder: (BuildContext context) {
+        return [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0].map(
+          (double speed) {
+            return PopupMenuItem<double>(
+              value: speed,
+              child: Text('${speed}'),
+            );
+          },
+        ).toList();
+      },
+    );
+  }
+
+  GestureDetector _buildVideoProgress(BuildContext context) {
     var durationMs = player.player.state.duration.inMilliseconds.toDouble();
     if (durationMs == 0) durationMs = 1;
     var posMs = player.player.state.position.inMilliseconds.toDouble();
@@ -481,51 +485,55 @@ class _ChatToggleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (MediaQuery.of(context).orientation == Orientation.portrait) {
+    if (MediaQuery.of(context).orientation == .portrait) {
       return const SizedBox.shrink();
     }
 
     final app = player.app;
-    final bool showControls = player.showControls;
-    final bool showMessageIcon = player.showMessageIcon;
-    // final bool showMessageIcon = true;
+    final showControls = player.showControls;
+    final showMessageIcon = player.showMessageIcon;
+    // final showMessageIcon = true;
 
-    return AnimatedOpacity(
-      opacity: (showControls || showMessageIcon) ? 1.0 : 0.0,
-      duration: const Duration(milliseconds: 200),
-      child: Align(
-        alignment: Alignment.topRight,
-        child: Padding(
-          padding: const EdgeInsets.only(top: 5),
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 200),
-            child: showControls
-                ? IconButton(
-                    icon: _buildChatIcon(context, app.isChatVisible),
-                    tooltip: player.fullscreenTooltipText,
-                    onPressed: () {
-                      app.isChatVisible = !app.isChatVisible;
-                      player.hideControlsWithDelay();
-                    },
-                  )
-                : Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Icon(
-                      Icons.chat_bubble_outline,
-                      color: Theme.of(
-                        context,
-                      ).playerIcon.withValues(alpha: 0.5),
-                      size: 24,
-                      shadows: [
-                        Shadow(
-                          color: Color.fromRGBO(0, 0, 0, 0.1),
-                          blurRadius: 10,
-                        ),
-                      ],
-                    ),
-                  ),
-          ),
+    if (!showControls && !showMessageIcon) {
+      return const SizedBox.shrink();
+    }
+
+    return Align(
+      alignment: Alignment.topRight,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 5),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          child: showControls
+              ? IconButton(
+                  icon: _buildChatIcon(context, app.isChatVisible),
+                  tooltip: player.fullscreenTooltipText,
+                  onPressed: () {
+                    app.isChatVisible = !app.isChatVisible;
+                    player.hideControlsWithDelay();
+                  },
+                )
+              : _buildUnreadIcon(context),
         ),
+      ),
+    );
+  }
+
+  Widget _buildUnreadIcon(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Icon(
+        Icons.chat_bubble,
+        color: Theme.of(
+          context,
+        ).playerIcon.withValues(alpha: 0.5),
+        size: 24,
+        shadows: [
+          Shadow(
+            color: Color.fromRGBO(0, 0, 0, 0.1),
+            blurRadius: 10,
+          ),
+        ],
       ),
     );
   }
