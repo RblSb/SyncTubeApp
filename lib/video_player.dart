@@ -66,9 +66,6 @@ class VideoPlayerScreen extends StatelessWidget {
     final playerWidth = playerState.width?.toDouble() ?? (1280 / 2);
     final playerHeight = playerState.height?.toDouble() ?? (1280 / 2);
 
-    final captionText = player.currentCaptions
-        ?.getCaptionFor(playerState.position)
-        ?.text;
     return MultiTapListener(
       onDoubleTap: () => goLandscapeOrFullscreen(player.app),
       child: GestureDetector(
@@ -89,27 +86,13 @@ class VideoPlayerScreen extends StatelessWidget {
                   height: playerHeight,
                   pauseUponEnteringBackgroundMode:
                       !player.app.hasBackgroundAudio,
+                  subtitleViewConfiguration: SubtitleViewConfiguration(
+                    textScaler: .linear(0.55),
+                    visible: player.app.showSubtitles,
+                  ),
                 ),
               ],
             ),
-            if (player.app.showSubtitles &&
-                captionText != null &&
-                captionText.isNotEmpty)
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 50),
-                  child: Text(
-                    captionText,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.white,
-                      backgroundColor: Colors.black54,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
             _PlayPauseOverlay(player: player),
             _ChatToggleButton(player: player),
           ],

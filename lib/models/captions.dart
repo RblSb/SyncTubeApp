@@ -24,6 +24,31 @@ abstract class LocalClosedCaptionFile {
     }
     return null;
   }
+
+  String toSRT() {
+    final buffer = StringBuffer();
+    for (int i = 0; i < captions.length; i++) {
+      final caption = captions[i];
+      buffer.writeln(i + 1);
+      buffer.writeln(
+        '${_formatSRTTimestamp(caption.start)} --> ${_formatSRTTimestamp(caption.end)}',
+      );
+      buffer.writeln(caption.text);
+      buffer.writeln(); // blank line between entries
+    }
+    return buffer.toString();
+  }
+
+  static String _formatSRTTimestamp(Duration duration) {
+    final hours = duration.inHours.toString().padLeft(2, '0');
+    final minutes = (duration.inMinutes % 60).toString().padLeft(2, '0');
+    final seconds = (duration.inSeconds % 60).toString().padLeft(2, '0');
+    final milliseconds = (duration.inMilliseconds % 1000).toString().padLeft(
+      3,
+      '0',
+    );
+    return '$hours:$minutes:$seconds,$milliseconds';
+  }
 }
 
 class WebVTTCaptionFile extends LocalClosedCaptionFile {

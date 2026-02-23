@@ -25,6 +25,7 @@ class PlayerModel extends ChangeNotifier {
   final PlaylistModel playlist;
 
   bool showControls = false;
+  bool hasSubtitleTrack = false;
   Timer? controlsTimer;
 
   bool _showMessageIcon = false;
@@ -179,8 +180,15 @@ class PlayerModel extends ChangeNotifier {
     }();
 
     initPlayerFuture?.whenComplete(() {
+      hasSubtitleTrack = false;
       _loadCaptions(item)?.then((subs) {
-        _currentCaptions = subs;
+        var srt = subs.toSRT();
+        hasSubtitleTrack = srt.isNotEmpty;
+        player.setSubtitleTrack(
+          SubtitleTrack.data(
+            srt,
+          ),
+        );
         notifyListeners();
       });
       app.send(
@@ -194,10 +202,7 @@ class PlayerModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  LocalClosedCaptionFile? _currentCaptions;
-
   String fullscreenTooltipText = 'Double-tap or long-tap to toggle fullscreen';
-  LocalClosedCaptionFile? get currentCaptions => _currentCaptions;
 
   Future<double> getVideoDuration(String url) async {
     // mediakit will parse segment durations for a minute while loading them,
@@ -454,8 +459,7 @@ class PlayerModel extends ChangeNotifier {
 
   Future<LocalClosedCaptionFile>? _loadCaptions(VideoList item) {
     if (item.url.contains('youtu')) {
-      item.subs = item.url;
-      return compute(_loadYoutubeCaptionsFuture, item);
+      return compute(_loadYoutubeCaptionsFuture, item.url);
     }
     var subsUrl = item.subs ?? '';
     if (subsUrl.isEmpty) return null;
@@ -470,10 +474,9 @@ class PlayerModel extends ChangeNotifier {
   }
 
   static Future<LocalClosedCaptionFile> _loadYoutubeCaptionsFuture(
-    VideoList item,
+    String url,
   ) async {
-    final subs = await getYoutubeSubtitles(item.url);
-    if (subs.captions.isEmpty) item.subs = '';
+    final subs = await getYoutubeSubtitles(url);
     return subs;
   }
 
@@ -609,6 +612,7 @@ class PlayerModel extends ChangeNotifier {
   }
 
   bool hasCaptions() {
+    if (hasSubtitleTrack) return true;
     final item = playlist.getItem(playlist.pos);
     final subs = item?.subs;
     return subs != null && subs.isNotEmpty;
