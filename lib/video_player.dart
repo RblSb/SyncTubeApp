@@ -62,8 +62,12 @@ class VideoPlayerScreen extends StatelessWidget {
   Widget buildPlayer(PlayerModel player) {
     if (player.isIframe()) return iframeWidget(player);
 
+    final playerState = player.player.state;
+    final playerWidth = playerState.width?.toDouble() ?? (1280 / 2);
+    final playerHeight = playerState.height?.toDouble() ?? (1280 / 2);
+
     final captionText = player.currentCaptions
-        ?.getCaptionFor(player.player.state.position)
+        ?.getCaptionFor(playerState.position)
         ?.text;
     return MultiTapListener(
       onDoubleTap: () => goLandscapeOrFullscreen(player.app),
@@ -78,17 +82,13 @@ class VideoPlayerScreen extends StatelessWidget {
             Stack(
               fit: StackFit.expand,
               children: [
-                FittedBox(
+                Video(
+                  controller: player.controller,
                   fit: player.isFitWidth ? BoxFit.fitWidth : BoxFit.contain,
-                  child: SizedBox(
-                    width: player.player.state.width?.toDouble() ?? (1280 / 2),
-                    height: player.player.state.height?.toDouble() ?? (720 / 2),
-                    child: Video(
-                      controller: player.controller,
-                      pauseUponEnteringBackgroundMode:
-                          !player.app.hasBackgroundAudio,
-                    ),
-                  ),
+                  width: playerWidth,
+                  height: playerHeight,
+                  pauseUponEnteringBackgroundMode:
+                      !player.app.hasBackgroundAudio,
                 ),
               ],
             ),
