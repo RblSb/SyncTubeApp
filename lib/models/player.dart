@@ -47,7 +47,13 @@ class PlayerModel extends ChangeNotifier {
 
   PlayerModel(this.app, this.playlist) {
     player = Player();
-    controller = VideoController(player);
+    controller = VideoController(
+      player,
+      // configuration: VideoControllerConfiguration(
+      //   androidAttachSurfaceAfterVideoParameters: false,
+      //   enableHardwareAcceleration: false,
+      // ),
+    );
 
     player.stream.completed.listen((completed) {
       if (completed) {
@@ -194,6 +200,18 @@ class PlayerModel extends ChangeNotifier {
   LocalClosedCaptionFile? get currentCaptions => _currentCaptions;
 
   Future<double> getVideoDuration(String url) async {
+    // mediakit will parse segment durations for a minute while loading them,
+    // so we need to parse times itself (or make better exoplayer fork)
+    if (url.contains('.m3u8')) {
+      try {
+        final duration = await _getHlsDuration(url);
+        print('[getVideoDuration] HLS parsed duration=$duration');
+        return duration;
+      } catch (e) {
+        print('[getVideoDuration] HLS parse failed: $e');
+        return 0;
+      }
+    }
     if (url.contains('youtu')) {
       url = (await getYoutubeVideoUrl(url)).video;
     }
@@ -210,6 +228,63 @@ class PlayerModel extends ChangeNotifier {
     }
     if (duration == null) return 0;
     return duration.inMilliseconds / 1000;
+  }
+
+  Future<double> _getHlsDuration(String url) async {
+    final response = await http
+        .get(Uri.parse(url))
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode != 200) {
+      // print('[_getHlsDuration] bad status: ${response.statusCode}');
+      return 0;
+    }
+
+    final body = response.body;
+    // print('[_getHlsDuration] manifest length=${body.length}');
+
+    // Master playlist — find and follow the first variant stream
+    if (body.contains('#EXT-X-STREAM-INF')) {
+      // print('[_getHlsDuration] master playlist detected, following first variant');
+      final lines = body
+          .split('\n')
+          .map((l) => l.trim())
+          .where((l) => l.isNotEmpty)
+          .toList();
+      for (var i = 0; i < lines.length; i++) {
+        if (lines[i].startsWith('#EXT-X-STREAM-INF') && i + 1 < lines.length) {
+          var variantUrl = lines[i + 1];
+          if (!variantUrl.startsWith('http')) {
+            final base = Uri.parse(url);
+            variantUrl = base.resolve(variantUrl).toString();
+          }
+          // print('[_getHlsDuration] variant url=$variantUrl');
+          return _getHlsDuration(variantUrl);
+        }
+      }
+      // print('[_getHlsDuration] no variant found in master playlist');
+      return 0;
+    }
+
+    // Media playlist — sum #EXTINF durations
+    // Also check for #EXT-X-ENDLIST (VOD vs live)
+    final isVod = body.contains('#EXT-X-ENDLIST');
+
+    if (!isVod) {
+      // Live stream — return sentinel value
+      // print('[_getHlsDuration] live stream, returning sentinel 356400');
+      return 356400.0;
+    }
+
+    double total = 0;
+    final extinfReg = RegExp(r'#EXTINF:([\d.]+)');
+    for (final match in extinfReg.allMatches(body)) {
+      final seg = double.tryParse(match.group(1)!) ?? 0;
+      total += seg;
+    }
+
+    // print('[_getHlsDuration] summed ${extinfReg.allMatches(body).length} segments, total=$total');
+    return total;
   }
 
   static String extractVideoId(String url) {
