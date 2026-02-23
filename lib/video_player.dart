@@ -83,7 +83,11 @@ class VideoPlayerScreen extends StatelessWidget {
                   child: SizedBox(
                     width: player.player.state.width?.toDouble() ?? (1280 / 2),
                     height: player.player.state.height?.toDouble() ?? (720 / 2),
-                    child: Video(controller: player.controller),
+                    child: Video(
+                      controller: player.controller,
+                      pauseUponEnteringBackgroundMode:
+                          !player.app.hasBackgroundAudio,
+                    ),
                   ),
                 ),
               ],

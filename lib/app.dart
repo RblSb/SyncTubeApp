@@ -234,12 +234,10 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
-      case AppLifecycleState.paused:
+      case .paused:
         app.inBackground();
-        break;
-      case AppLifecycleState.resumed:
+      case .resumed:
         app.inForeground();
-        break;
       default:
     }
   }
