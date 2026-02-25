@@ -1,8 +1,11 @@
+import 'dart:math' as math;
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 // import 'package:perfect_volume_control/perfect_volume_control.dart';
 import 'package:provider/provider.dart';
+import 'package:synctube/models/app.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:video_player/video_player.dart';
 
@@ -23,32 +26,31 @@ class VideoPlayerScreen extends StatelessWidget {
       future: player.initPlayerFuture,
       builder: (context, snapshot) {
         switch (snapshot.connectionState) {
-          case ConnectionState.waiting:
-          case ConnectionState.active:
+          case .waiting:
+          case .active:
             return const Center(child: CircularProgressIndicator());
 
-          case ConnectionState.done:
+          case .done:
             if (Settings.isTV) {
               return TvControls(
                 child: buildPlayer(player),
               );
             }
             return buildPlayer(player);
-          default:
+          case .none:
             return GestureDetector(
               child: Settings.isTV
                   ? tvEmptyPlayerWidget(context)
                   : const SizedBox.expand(),
               behavior: HitTestBehavior.translucent,
+              // don't allow to go fullscreen on empty player, only enter landscape
               onDoubleTap: () {
-                if (player.app.prefferedOrientationType() == 'Landscape')
-                  return;
-                Settings.nextOrientationView(player.app);
+                if (player.app.prefferedOrientation == .landscape) return;
+                goLandscapeOrFullscreen(player.app);
               },
               onLongPress: () {
-                if (player.app.prefferedOrientationType() == 'Landscape')
-                  return;
-                Settings.nextOrientationView(player.app);
+                if (player.app.prefferedOrientation == .landscape) return;
+                goLandscapeOrFullscreen(player.app);
               },
             );
         }
@@ -60,10 +62,11 @@ class VideoPlayerScreen extends StatelessWidget {
     if (player.isIframe()) return iframeWidget(player);
     final captionText = player.controller?.value.caption.text;
     return GestureDetector(
-      onDoubleTap: () => Settings.nextOrientationView(player.app),
+      // todo wrap with listener and add custom ui showing delay
+      onDoubleTap: () => goLandscapeOrFullscreen(player.app),
       onLongPress: () {
         if (player.showControls) return;
-        Settings.nextOrientationView(player.app);
+        goLandscapeOrFullscreen(player.app);
       },
       child: Stack(
         children: [
@@ -88,20 +91,22 @@ class VideoPlayerScreen extends StatelessWidget {
               textStyle: const TextStyle(fontSize: 16),
             ),
           _PlayPauseOverlay(player: player),
-          AnimatedOpacity(
-            opacity: player.showMessageIcon ? 0.7 : 0,
-            duration: const Duration(milliseconds: 200),
-            child: const Align(
-              alignment: Alignment.topRight,
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: Icon(Icons.mail),
-              ),
-            ),
-          ),
+          _ChatToggleButton(player: player),
         ],
       ),
     );
+  }
+
+  void goLandscapeOrFullscreen(AppModel app) {
+    final orientation = app.prefferedOrientation;
+    switch (orientation) {
+      case .portrait:
+        Settings.setPrefferedOrientation(app, .landscape);
+      case .landscape:
+        app.isChatVisible = !app.isChatVisible;
+      case null:
+    }
+    SystemChrome.restoreSystemUIOverlays();
   }
 
   Widget iframeWidget(PlayerModel player) {
@@ -200,30 +205,7 @@ class _PlayPauseOverlay extends StatelessWidget {
                 child: Text(_timeText(player.controller?.value)),
               ),
             ),
-          if (player.showControls)
-            GestureDetector(
-              onHorizontalDragDown: (details) {
-                player.cancelControlsHide();
-              },
-              child: Align(
-                alignment: Alignment.bottomCenter,
-                child: VideoProgressIndicator(
-                  player.controller!,
-                  padding: const EdgeInsets.only(
-                    bottom: 15,
-                    top: 5,
-                    left: 15,
-                    right: 15,
-                  ),
-                  colors: VideoProgressColors(
-                    playedColor: const Color.fromRGBO(200, 0, 0, 0.75),
-                    bufferedColor: const Color.fromRGBO(200, 200, 200, 0.5),
-                    backgroundColor: const Color.fromRGBO(200, 200, 200, 0.2),
-                  ),
-                  allowScrubbing: true,
-                ),
-              ),
-            ),
+          if (player.showControls) _buildVideoProgress(context),
           if (player.showControls)
             Align(
               alignment: Alignment.topLeft,
@@ -240,6 +222,7 @@ class _PlayPauseOverlay extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    _buildPlaybackRateButton(context),
                     IconButton(
                       icon: Icon(
                         player.isFitWidth
@@ -267,15 +250,26 @@ class _PlayPauseOverlay extends StatelessWidget {
                       ),
                     IconButton(
                       icon: Icon(
-                        player.app.isChatVisible
-                            ? Icons.fullscreen
-                            : Icons.fullscreen_exit,
+                        Icons.screen_rotation,
                         color: Theme.of(context).playerIcon,
-                        size: 30,
+                        size: 23,
                       ),
-                      tooltip: 'Double-tap or long-tap for fullscreen',
+                      tooltip: player.fullscreenTooltipText,
                       onPressed: () {
-                        Settings.nextOrientationView(player.app);
+                        final orientation = MediaQuery.of(context).orientation;
+                        switch (orientation) {
+                          case .portrait:
+                            Settings.setPrefferedOrientation(
+                              player.app,
+                              .landscape,
+                            );
+                          case .landscape:
+                            player.app.isChatVisible = true;
+                            Settings.setPrefferedOrientation(
+                              player.app,
+                              .portrait,
+                            );
+                        }
                       },
                     ),
                   ],
@@ -283,6 +277,131 @@ class _PlayPauseOverlay extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  PopupMenuButton<double> _buildPlaybackRateButton(BuildContext context) {
+    final speed = player.controller?.value.playbackSpeed ?? 1;
+    return PopupMenuButton<double>(
+      padding: EdgeInsets.zero,
+      child: GestureDetector(
+        onLongPress: () {
+          player.setPlaybackSpeed(1.0);
+          HapticFeedback.mediumImpact();
+        },
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+              ),
+              child: Icon(
+                Icons.speed_outlined,
+                color: Theme.of(context).playerIcon,
+                size: 30,
+              ),
+            ),
+            if (speed != 1)
+              Positioned(
+                top: -2,
+                right: 4,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 1,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Color.fromRGBO(0, 0, 0, 0.75),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    speed.toString().replaceAll('.0', ''),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+      initialValue: speed,
+      onSelected: (double speed) {
+        player.setPlaybackSpeed(speed);
+        player.hideControlsWithDelay();
+      },
+      onOpened: () => player.cancelControlsHide(),
+      onCanceled: () => player.hideControlsWithDelay(),
+      itemBuilder: (BuildContext context) {
+        return [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0].map(
+          (double speed) {
+            return PopupMenuItem<double>(
+              value: speed,
+              child: Text('${speed}'),
+            );
+          },
+        ).toList();
+      },
+    );
+  }
+
+  GestureDetector _buildVideoProgress(BuildContext context) {
+    var durationMs = player.controller!.value.duration.inMilliseconds
+        .toDouble();
+    // var durationMs = player.player.state.duration.inMilliseconds.toDouble();
+    if (durationMs == 0) durationMs = 1;
+    var posMs = player.controller!.value.position.inMilliseconds.toDouble();
+    final lastBufEnd =
+        player.controller!.value.buffered.lastOrNull?.end ?? Duration.zero;
+    var bufMs = lastBufEnd.inMilliseconds.toDouble();
+    posMs = posMs.clamp(0, durationMs);
+
+    return GestureDetector(
+      onHorizontalDragDown: (details) {
+        player.cancelControlsHide();
+      },
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: Padding(
+          padding: const EdgeInsets.only(
+            bottom: 15,
+            top: 5,
+            left: 15,
+            right: 15,
+          ),
+          child: SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              trackHeight: 2,
+              thumbShape: const RoundSliderThumbShape(
+                enabledThumbRadius: 6,
+              ),
+              overlayShape: const RoundSliderOverlayShape(
+                overlayRadius: 12,
+              ),
+            ),
+            child: SizedBox(
+              height: 15,
+              child: Slider(
+                value: posMs,
+                min: 0,
+                max: durationMs,
+                secondaryTrackValue: bufMs,
+                onChanged: (value) {
+                  player.seekTo(
+                    Duration(milliseconds: value.toInt()),
+                  );
+                },
+                activeColor: const Color.fromRGBO(200, 0, 0, 0.75),
+                inactiveColor: const Color.fromRGBO(200, 200, 200, 0.2),
+                secondaryActiveColor: const Color.fromRGBO(255, 255, 255, 0.3),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -340,6 +459,101 @@ class TvControls extends StatelessWidget {
         },
         child: child,
       ),
+    );
+  }
+}
+
+class _ChatToggleButton extends StatelessWidget {
+  const _ChatToggleButton({
+    Key? key,
+    required this.player,
+  }) : super(key: key);
+
+  final PlayerModel player;
+
+  @override
+  Widget build(BuildContext context) {
+    if (MediaQuery.of(context).orientation == .portrait) {
+      return const SizedBox.shrink();
+    }
+
+    final app = player.app;
+    final showControls = player.showControls;
+    final showMessageIcon = player.showMessageIcon;
+    // final showMessageIcon = true;
+
+    if (!showControls && !showMessageIcon) {
+      return const SizedBox.shrink();
+    }
+
+    return Align(
+      alignment: Alignment.topRight,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 5),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          child: showControls
+              ? IconButton(
+                  icon: _buildChatIcon(context, app.isChatVisible),
+                  tooltip: player.fullscreenTooltipText,
+                  onPressed: () {
+                    app.isChatVisible = !app.isChatVisible;
+                    player.hideControlsWithDelay();
+                  },
+                )
+              : _buildUnreadIcon(context),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUnreadIcon(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Icon(
+        Icons.chat_bubble,
+        color: Theme.of(
+          context,
+        ).playerIcon.withValues(alpha: 0.5),
+        size: 24,
+        shadows: [
+          Shadow(
+            color: Color.fromRGBO(0, 0, 0, 0.1),
+            blurRadius: 10,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChatIcon(BuildContext context, bool isVisible) {
+    final color = Theme.of(context).playerIcon;
+    const icon = Icons.chat_bubble_outline;
+    const size = 24.0;
+
+    if (!isVisible) {
+      return const Icon(icon, color: Colors.white, size: size);
+    }
+
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Icon(icon, color: color, size: size),
+        Transform.translate(
+          offset: Offset(0, -1.5),
+          child: Transform.rotate(
+            angle: -45 * (math.pi / 180.0),
+            child: Container(
+              width: 2,
+              height: 28,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(1),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

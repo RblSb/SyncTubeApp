@@ -257,41 +257,14 @@ class _ChatState extends State<Chat> {
         AnimatedOpacity(
           duration: const Duration(milliseconds: 100),
           opacity: showRewindMenu ? 1 : 0,
-          child: showRewindMenu
-              ? SizedBox(
-                  height: 60,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      for (final time in rewindOptions)
-                        Expanded(
-                          child: TextButton(
-                            style: TextButton.styleFrom(
-                              // primary: Theme.of(context).rewindButton,
-                              padding: EdgeInsets.zero,
-                            ),
-                            child: Align(
-                              alignment: Alignment.center,
-                              child: Text(time.toString(), maxLines: 1),
-                            ),
-                            onPressed: () {
-                              chat.sendMessage('/$time');
-                              setState(() => showRewindMenu = false);
-                            },
-                          ),
-                        ),
-                    ],
-                  ),
-                )
-              : null,
+          child: showRewindMenu ? _buildRewindMenu(chat) : null,
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisSize: MainAxisSize.max,
           children: [
+            SizedBox(width: 10),
             Expanded(
               child: TextField(
                 inputFormatters: [
@@ -308,6 +281,16 @@ class _ChatState extends State<Chat> {
                   contentPadding: const EdgeInsets.all(14),
                   hintText: _hintText(chat),
                   border: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      width: 2,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      width: 2,
+                      color: Theme.of(context).focusColor,
+                    ),
                     borderRadius: BorderRadius.circular(20),
                   ),
                 ),
@@ -359,41 +342,9 @@ class _ChatState extends State<Chat> {
                 },
               ),
             ),
-            if (!chat.isUnknownClient)
-              GestureDetector(
-                onLongPress: () {
-                  setState(() => showRewindMenu = !showRewindMenu);
-                },
-                child: IconButton(
-                  padding: const EdgeInsets.only(left: 10, right: 20),
-                  onPressed: () {
-                    if (showRewindMenu) {
-                      setState(() => showRewindMenu = false);
-                      return;
-                    }
-                    setState(() {
-                      showEmotesTab = !showEmotesTab;
-                      if (showEmotesTab) {
-                        reopenKeyboard = inputFocus.hasFocus;
-                        inputFocus.unfocus();
-                      } else {
-                        if (reopenKeyboard && textController.text.isNotEmpty)
-                          inputFocus.requestFocus();
-                        reopenKeyboard = false;
-                      }
-                    });
-                    SystemChrome.restoreSystemUIOverlays();
-                  },
-                  // tooltip: 'Show emotes',
-                  icon: Icon(
-                    showRewindMenu ? Icons.close : Icons.mood,
-                    size: 35,
-                    color: showEmotesTab
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).icon,
-                  ),
-                ),
-              ),
+            chat.isUnknownClient
+                ? SizedBox(width: 10)
+                : _buildEmotesButton(context),
           ],
         ),
         if (showEmotesTab)
@@ -402,6 +353,75 @@ class _ChatState extends State<Chat> {
             input: textController,
           ),
       ],
+    );
+  }
+
+  SizedBox _buildRewindMenu(ChatModel chat) {
+    return SizedBox(
+      height: 60,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final time in rewindOptions)
+            Expanded(
+              child: TextButton(
+                style: TextButton.styleFrom(
+                  // primary: Theme.of(context).rewindButton,
+                  padding: EdgeInsets.zero,
+                ),
+                child: Align(
+                  alignment: Alignment.center,
+                  child: Text(time.toString(), maxLines: 1),
+                ),
+                onPressed: () {
+                  chat.sendMessage('/$time');
+                  setState(() => showRewindMenu = false);
+                },
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  GestureDetector _buildEmotesButton(BuildContext context) {
+    return GestureDetector(
+      onLongPress: () {
+        HapticFeedback.mediumImpact();
+        setState(() => showRewindMenu = !showRewindMenu);
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(5),
+        child: IconButton(
+          onPressed: () {
+            if (showRewindMenu) {
+              setState(() => showRewindMenu = false);
+              return;
+            }
+            setState(() {
+              showEmotesTab = !showEmotesTab;
+              if (showEmotesTab) {
+                reopenKeyboard = inputFocus.hasFocus;
+                inputFocus.unfocus();
+              } else {
+                if (reopenKeyboard && textController.text.isNotEmpty)
+                  inputFocus.requestFocus();
+                reopenKeyboard = false;
+              }
+            });
+            SystemChrome.restoreSystemUIOverlays();
+          },
+          icon: Icon(
+            showRewindMenu ? Icons.close : Icons.mood,
+            size: 35,
+            color: showEmotesTab
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).icon,
+          ),
+        ),
+      ),
     );
   }
 }

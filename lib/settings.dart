@@ -31,6 +31,16 @@ class ChannelPreferences {
 }
 
 class Settings extends StatelessWidget {
+  static void load(AppModel app) async {
+    final prefs = await SharedPreferencesAsync();
+    final orientationI = await prefs.getInt('prefferedOrientation') ?? 0;
+    setPrefferedOrientation(app, Orientation.values[orientationI], save: false);
+    setSystemUi(app, await prefs.getBool('hasSystemUi') ?? false);
+    app.hasBackgroundAudio = await prefs.getBool('backgroundAudio') ?? true;
+    checkedCache = await prefs.getStringList('checkedCache') ?? [];
+    // ChannelPreferences are per-channel, so not loaded globally here
+  }
+
   @override
   Widget build(BuildContext context) {
     final app = context.watch<AppModel>();
@@ -38,15 +48,12 @@ class Settings extends StatelessWidget {
       children: [
         ListTile(
           title: const Text('Orientation'),
-          trailing: Text('${app.prefferedOrientationType()}'),
+          trailing: Text('${prefferedOrientationText(app)}'),
           onTap: () async {
-            final prefs = await SharedPreferencesAsync();
-            final key = 'prefferedOrientation';
-            var state = await prefs.getInt(key) ?? 0;
-            state++;
-            if (state > 1) state = 0;
-            setPrefferedOrientation(app, state);
-            await prefs.setInt(key, state);
+            var orientationI = app.prefferedOrientation?.index ?? 0;
+            orientationI++;
+            if (orientationI > 1) orientationI = 0;
+            setPrefferedOrientation(app, Orientation.values[orientationI]);
           },
         ),
         SwitchListTile(
@@ -76,6 +83,17 @@ class Settings extends StatelessWidget {
           ),
       ],
     );
+  }
+
+  String prefferedOrientationText(AppModel app) {
+    switch (app.prefferedOrientation) {
+      case null:
+        return 'Auto';
+      case .portrait:
+        return 'Portrait';
+      case .landscape:
+        return 'Landscape';
+    }
   }
 
   /// Get ChannelPreferences for a given channelUrl (server list key)
@@ -111,34 +129,21 @@ class Settings extends StatelessWidget {
     await prefs.remove('channelPrefs_$channelUrl');
   }
 
-  static void nextOrientationView(AppModel app) async {
-    final prefs = await SharedPreferencesAsync();
-    final key = 'prefferedOrientation';
-    var state = await prefs.getInt(key) ?? 0;
-    switch (state) {
-      case 0:
-        state++;
-        setPrefferedOrientation(app, state);
-        await prefs.setInt(key, state);
-        break;
-      case 1:
-        app.isChatVisible = !app.isChatVisible;
-        break;
-    }
-    SystemChrome.restoreSystemUIOverlays();
-  }
-
   static var isTV = false;
   static List<String> checkedCache = [];
 
   static List<DeviceOrientation> prefferedOrientations = [];
 
-  static void setPrefferedOrientation(AppModel app, int state) async {
-    switch (state) {
-      case 0:
+  static void setPrefferedOrientation(
+    AppModel app,
+    Orientation orientation, {
+    save = true,
+  }) async {
+    switch (orientation) {
+      case .portrait:
         prefferedOrientations = [];
         break;
-      case 1:
+      case .landscape:
         prefferedOrientations = [
           DeviceOrientation.landscapeRight,
           DeviceOrientation.landscapeLeft,
@@ -154,7 +159,11 @@ class Settings extends StatelessWidget {
         break;
     }
     SystemChrome.setPreferredOrientations(prefferedOrientations);
-    app.setPrefferedOrientation(state);
+    app.prefferedOrientation = orientation;
+
+    if (!save) return;
+    final prefs = await SharedPreferencesAsync();
+    prefs.setInt('prefferedOrientation', orientation.index);
   }
 
   static void setSystemUi(AppModel app, bool flag) {
@@ -177,17 +186,5 @@ class Settings extends StatelessWidget {
     checkedCache.remove(playerType);
     if (checked) checkedCache.add(playerType);
     await prefs.setStringList('checkedCache', checkedCache);
-  }
-
-  static void applySettings(AppModel app) async {
-    final prefs = await SharedPreferencesAsync();
-    setPrefferedOrientation(
-      app,
-      await prefs.getInt('prefferedOrientation') ?? 0,
-    );
-    setSystemUi(app, await prefs.getBool('hasSystemUi') ?? false);
-    app.hasBackgroundAudio = await prefs.getBool('backgroundAudio') ?? true;
-    checkedCache = await prefs.getStringList('checkedCache') ?? [];
-    // ChannelPreferences are per-channel, so not loaded globally here
   }
 }

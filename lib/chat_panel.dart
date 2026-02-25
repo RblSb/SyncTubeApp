@@ -32,16 +32,10 @@ class ChatPanel extends StatelessWidget {
                 ),
               ),
               const Spacer(flex: 2),
-              TextButton(
-                onPressed: () => showUsersSnackBar(context),
-                style: ButtonStyle(
-                  padding: WidgetStateProperty.all(
-                    EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-                  ),
-                ),
+              Flexible(
+                flex: 100,
                 child: _onlineButton(panel, context),
               ),
-              const Spacer(flex: 100),
               leaderButton(panel, context, parentW),
               const Spacer(flex: 5),
               IconButton(
@@ -119,23 +113,35 @@ class ChatPanel extends StatelessWidget {
   }
 
   Widget _onlineButton(ChatPanelModel panel, BuildContext context) {
-    final isPlayerIconVisible = !panel.serverPlay || panel.hasLeader();
-    return Row(
-      children: [
-        Text(
-          !panel.isConnected
-              ? 'Connection...'
-              : '${panel.clients.length} online',
-          style: TextStyle(color: Theme.of(context).icon),
+    final isPlayerIconVisible = panel.lastState.paused || panel.hasLeader();
+    final clientsOnlineText = !panel.isConnected
+        ? 'Connection...'
+        : '${panel.clients.length} online';
+
+    return TextButton(
+      onPressed: () => showUsersSnackBar(context),
+      style: ButtonStyle(
+        padding: WidgetStateProperty.all(
+          EdgeInsets.symmetric(horizontal: 5, vertical: 5),
         ),
-        if (isPlayerIconVisible)
-          Icon(
-            panel.serverPlay ? Icons.play_arrow : Icons.pause,
-            color: Theme.of(context).icon,
-          )
-        else
-          const Text('     '),
-      ],
+      ),
+      child: Row(
+        children: [
+          Flexible(
+            child: Text(
+              clientsOnlineText,
+              style: TextStyle(color: Theme.of(context).icon),
+              overflow: .ellipsis,
+              maxLines: 1,
+            ),
+          ),
+          if (isPlayerIconVisible)
+            Icon(
+              panel.lastState.paused ? Icons.pause : Icons.play_arrow,
+              color: Theme.of(context).icon,
+            ),
+        ],
+      ),
     );
   }
 }

@@ -544,6 +544,7 @@ class VideoList {
   late String author;
   late double duration;
   late String? subs;
+  late String? voiceOverTrack;
   late bool isTemp;
   late bool doCache;
   late String playerType;
@@ -554,6 +555,7 @@ class VideoList {
     required this.author,
     required this.duration,
     this.subs,
+    this.voiceOverTrack,
     required this.isTemp,
     required this.doCache,
     required this.playerType,
@@ -565,6 +567,7 @@ class VideoList {
     author = json['author'];
     duration = json['duration'].toDouble();
     subs = json['subs'];
+    voiceOverTrack = json['voiceOverTrack'];
     isTemp = json['isTemp'];
     doCache = json['doCache'] ?? false;
     playerType = json['playerType'] ?? 'RawType';
@@ -581,6 +584,7 @@ class VideoList {
     data['author'] = this.author;
     data['duration'] = this.duration;
     data['subs'] = this.subs;
+    data['voiceOverTrack'] = this.voiceOverTrack;
     data['isTemp'] = this.isTemp;
     if (WsData.version == 2) {
       data['doCache'] = this.doCache;
@@ -826,20 +830,28 @@ class Pause {
 class GetTime {
   late double time;
   late bool paused;
+  late bool pausedByServer;
   late double rate;
 
-  GetTime({required this.time, required this.paused, required this.rate});
+  GetTime({
+    required this.time,
+    required this.paused,
+    required this.pausedByServer,
+    required this.rate,
+  });
 
   GetTime.fromJson(Map<String, dynamic> json) {
     time = json['time'].toDouble();
     paused = json['paused'] ?? false;
-    rate = json['rate'] ?? 1;
+    pausedByServer = json['pausedByServer'] ?? false;
+    rate = json['rate']?.toDouble() ?? 1;
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['time'] = this.time;
     data['paused'] = this.paused;
+    data['pausedByServer'] = this.pausedByServer;
     data['rate'] = this.rate;
     return data;
   }
@@ -851,7 +863,7 @@ class SetRate {
   SetRate({required this.rate});
 
   SetRate.fromJson(Map<String, dynamic> json) {
-    rate = json['rate'];
+    rate = json['rate'].toDouble();
   }
 
   Map<String, dynamic> toJson() {

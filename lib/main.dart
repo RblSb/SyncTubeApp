@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:app_links/app_links.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -63,7 +64,10 @@ class ServerListPage extends StatefulWidget {
 class _ServerListPageState extends State<ServerListPage> {
   final List<ServerListItem> items = [];
   Offset? _tapPosition;
-  final latestApkUrl = 'http://synctube.nya.pub/SyncTubeApp/SyncTube.apk';
+  late String latestApkUrl;
+  final latestApkUrlArm7 = 'http://synctube.nya.pub/SyncTubeApp/SyncTube.apk';
+  final latestApkUrlArm8 =
+      'http://synctube.nya.pub/SyncTubeApp/SyncTube-arm8.apk';
   final pubspecUrl = 'http://synctube.nya.pub/SyncTubeApp/pubspec.yaml';
 
   @override
@@ -75,9 +79,11 @@ class _ServerListPageState extends State<ServerListPage> {
   void init() async {
     Settings.isTV = await _checkTvMode();
 
+    final isArm8 = await isArm64();
+    latestApkUrl = isArm8 ? latestApkUrlArm8 : latestApkUrl;
+
     final prefs = await SharedPreferencesAsync();
     var strings = await prefs.getStringList('serverListItems') ?? [];
-    print(strings);
     if (strings.length == 0) {
       strings = ['Example', 'https://synctube.onrender.com/'];
     }
@@ -341,6 +347,17 @@ class _ServerListPageState extends State<ServerListPage> {
     } catch (e) {
       showAlert('Failed to make OTA update. Details: $e');
     }
+  }
+
+  Future<bool> isArm64() async {
+    final plugin = DeviceInfoPlugin();
+    if (Platform.isAndroid) {
+      final info = await plugin.androidInfo;
+      final abis = info.supportedAbis;
+      return abis.contains('arm64-v8a');
+    }
+    if (Platform.isIOS) return true;
+    return false;
   }
 
   void showAlert(String text) {

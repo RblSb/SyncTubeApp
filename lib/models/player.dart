@@ -22,6 +22,7 @@ class PlayerModel extends ChangeNotifier {
   final PlaylistModel playlist;
 
   bool showControls = false;
+  bool hasSubtitleTrack = false;
   Timer? controlsTimer;
 
   bool _showMessageIcon = false;
@@ -41,6 +42,8 @@ class PlayerModel extends ChangeNotifier {
     _isFitWidth = isFitWidth;
     notifyListeners();
   }
+
+  String fullscreenTooltipText = 'Double-tap or long-tap to toggle fullscreen';
 
   PlayerModel(this.app, this.playlist);
 
@@ -105,6 +108,14 @@ class PlayerModel extends ChangeNotifier {
   void setPlaybackSpeed(double rate) async {
     if (!isVideoLoaded()) return;
     await controller?.setPlaybackSpeed(rate);
+    notifyListeners();
+    if (!app.isLeader()) return;
+    app.send(
+      WsData(
+        type: 'SetRate',
+        setRate: SetRate(rate: rate),
+      ),
+    );
   }
 
   double getDuration() {
@@ -145,7 +156,13 @@ class PlayerModel extends ChangeNotifier {
       final relativeHost = app.getChannelLink();
       url = '$relativeHost${url}';
     }
-    if (url.contains('youtu')) url = await getYoutubeVideoUrl(url);
+    // String? audioUrl;
+    if (url.contains('youtu')) {
+      final ytData = await getYoutubeVideoUrl(url);
+      url = ytData.video;
+      // audioUrl = ytData.audio;
+      // todo audioUrl
+    }
     pause();
     final prevController = controller;
     controller = VideoPlayerController.networkUrl(
@@ -175,7 +192,7 @@ class PlayerModel extends ChangeNotifier {
   }
 
   Future<double> getVideoDuration(String url) async {
-    if (url.contains('youtu')) url = await getYoutubeVideoUrl(url);
+    if (url.contains('youtu')) url = (await getYoutubeVideoUrl(url)).video;
     final controller = VideoPlayerController.networkUrl(Uri.parse(url));
     Duration? duration;
     try {
@@ -206,7 +223,10 @@ class PlayerModel extends ChangeNotifier {
     return r.firstMatch(url)!.group(1)!;
   }
 
-  Future<String> getYoutubeVideoUrl(String url) async {
+  Future<({String video, String? audio})> getYoutubeVideoUrl(
+    String url, {
+    bool mutexOnly = true,
+  }) async {
     final yt = youtube.YoutubeExplode();
     try {
       final id = extractVideoId(url);
@@ -219,31 +239,71 @@ class PlayerModel extends ChangeNotifier {
       } catch (e) {
         print(e);
         app.chat.addItem(ChatItem('', e.toString()));
-        return '';
+        return (video: '', audio: null);
       }
-      yt.close();
-      // final stream = manifest.muxed.withHighestBitrate();
-      final qualities = manifest.muxed.getAllVideoQualities().toList();
+
       final values = youtube.VideoQuality.values;
-      qualities.sort((a, b) {
-        return values.indexOf(a).compareTo(values.indexOf(b));
-      });
-      while (values.indexOf(qualities.last) >
-          values.indexOf(youtube.VideoQuality.high1080)) {
-        qualities.removeLast();
+
+      if (mutexOnly) {
+        return (video: _getMutexStream(yt, manifest, values), audio: null);
       }
-      // print(qualities);
-      final stream = manifest.muxed.firstWhere((element) {
-        return element.videoQuality == qualities.last;
+
+      final videoStreams = manifest.videoOnly.toList();
+      videoStreams.sort((a, b) {
+        return values
+            .indexOf(a.videoQuality)
+            .compareTo(values.indexOf(b.videoQuality));
       });
-      final streamUrl = stream.url.toString();
-      return streamUrl;
+
+      // Filter to max 1080p
+      final filteredVideo = videoStreams.where((s) {
+        return values.indexOf(s.videoQuality) <=
+            values.indexOf(youtube.VideoQuality.high1080);
+      }).toList();
+
+      final audioStream = manifest.audioOnly.isEmpty
+          ? null
+          : manifest.audioOnly.withHighestBitrate();
+
+      if (filteredVideo.isNotEmpty && audioStream != null) {
+        yt.close();
+        return (
+          video: filteredVideo.last.url.toString(),
+          audio: audioStream.url.toString(),
+        );
+      }
+
+      // fallback to muxed
+      return (video: _getMutexStream(yt, manifest, values), audio: null);
     } catch (e) {
       print('getYoutubeVideoUrl error for url $url');
       print(e);
       yt.close();
-      return '';
+      return (video: '', audio: null);
     }
+  }
+
+  String _getMutexStream(
+    youtube.YoutubeExplode yt,
+    youtube.StreamManifest manifest,
+    List<youtube.VideoQuality> values,
+  ) {
+    final muxedStreams = manifest.muxed.toList();
+    muxedStreams.sort((a, b) {
+      return values
+          .indexOf(a.videoQuality)
+          .compareTo(values.indexOf(b.videoQuality));
+    });
+    final filteredMuxed = muxedStreams.where((s) {
+      return values.indexOf(s.videoQuality) <=
+          values.indexOf(youtube.VideoQuality.high1080);
+    }).toList();
+
+    yt.close();
+    if (filteredMuxed.isNotEmpty) {
+      return filteredMuxed.last.url.toString();
+    }
+    return '';
   }
 
   Future<String> getVideoTitle(String url) async {
@@ -328,8 +388,7 @@ class PlayerModel extends ChangeNotifier {
 
   Future<ClosedCaptionFile>? _loadCaptions(VideoList item) {
     if (item.url.contains('youtu')) {
-      item.subs = item.url;
-      return compute(_loadYoutubeCaptionsFuture, item);
+      return compute(_loadYoutubeCaptionsFuture, item.url);
     }
     var subsUrl = item.subs ?? '';
     if (subsUrl.isEmpty) return null;
@@ -344,10 +403,9 @@ class PlayerModel extends ChangeNotifier {
   }
 
   static Future<ClosedCaptionFile> _loadYoutubeCaptionsFuture(
-    VideoList item,
+    String url,
   ) async {
-    final subs = await getYoutubeSubtitles(item.url);
-    if (subs.captions.isEmpty) item.subs = '';
+    final subs = await getYoutubeSubtitles(url);
     return subs;
   }
 
@@ -483,6 +541,7 @@ class PlayerModel extends ChangeNotifier {
   }
 
   bool hasCaptions() {
+    if (hasSubtitleTrack) return true;
     final item = playlist.getItem(playlist.pos);
     final subs = item?.subs;
     return subs != null && subs.isNotEmpty;
