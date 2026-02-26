@@ -11,6 +11,7 @@ import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 import '../chat.dart';
 import '../subs/ass.dart';
 import '../subs/raw.dart';
+import '../utils/youtube_explode_webview.dart';
 import '../wsdata.dart';
 import './app.dart';
 import './playlist.dart';
@@ -242,7 +243,8 @@ class PlayerModel extends ChangeNotifier {
     String url, {
     bool mutexOnly = true,
   }) async {
-    final yt = youtube.YoutubeExplode();
+    final solver = await WebviewEJSSolver.init();
+    final yt = youtube.YoutubeExplode(jsSolver: solver);
     try {
       final id = extractVideoId(url);
       StreamManifest manifest;
@@ -336,7 +338,8 @@ class PlayerModel extends ChangeNotifier {
   }
 
   Future<String> getYoutubeVideoTitle(String url) async {
-    final yt = youtube.YoutubeExplode();
+    final solver = await WebviewEJSSolver.init();
+    final yt = youtube.YoutubeExplode(jsSolver: solver);
     try {
       final id = extractVideoId(url);
       final manifest = await yt.videos.get(id);
@@ -403,7 +406,7 @@ class PlayerModel extends ChangeNotifier {
 
   Future<ClosedCaptionFile>? _loadCaptions(VideoList item) {
     if (item.url.contains('youtu')) {
-      return compute(_loadYoutubeCaptionsFuture, item.url);
+      return _loadYoutubeCaptionsFuture(item.url);
     }
     var subsUrl = item.subs ?? '';
     if (subsUrl.isEmpty) return null;
@@ -519,7 +522,9 @@ class PlayerModel extends ChangeNotifier {
   }
 
   static Future<ClosedCaptionFile> getYoutubeSubtitles(String url) async {
-    final yt = youtube.YoutubeExplode();
+    // cannot call in isolate (compute)
+    final solver = await WebviewEJSSolver.init();
+    final yt = youtube.YoutubeExplode(jsSolver: solver);
     try {
       final id = extractVideoId(url);
       final manifest = await yt.videos.closedCaptions.getManifest(id);

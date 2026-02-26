@@ -3,7 +3,7 @@ description: SyncTube Android client
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.0+38
+version: 1.0.0+39
 
 environment:
   sdk: ^3.10.0
@@ -49,9 +49,11 @@ dependencies:
 
   http: ^1.6.0
 
-  # youtube_explode_dart: ^3.0.5
-  youtube_explode_dart:
-    git: https://github.com/Hexer10/youtube_explode_dart
+  youtube_explode_dart: ^3.0.5
+
+  webview_flutter: ^4.13.1
+
+  youtube_explode_webview: ^0.0.2
 
   url_launcher: ^6.3.2
 

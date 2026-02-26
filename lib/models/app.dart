@@ -10,6 +10,7 @@ import 'package:youtube_explode_dart/youtube_explode_dart.dart' as youtube;
 
 import '../chat.dart';
 import '../settings.dart';
+import '../utils/youtube_explode_webview.dart';
 import '../wsdata.dart';
 import './chat.dart';
 import './chat_panel.dart';
@@ -588,7 +589,8 @@ class AppModel extends ChangeNotifier {
   }
 
   void sendYoutubePlaylist(AddVideo data) async {
-    final yt = youtube.YoutubeExplode();
+    final solver = await WebviewEJSSolver.init();
+    final yt = youtube.YoutubeExplode(jsSolver: solver);
     final playlist = await yt.playlists
         .getVideos(data.item.url)
         .take(50)
