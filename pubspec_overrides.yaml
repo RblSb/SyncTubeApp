@@ -1,0 +1,11 @@
+# dependency_overrides:
+#   video_player:
+#     path: ../packages/packages/video_player/video_player
+#   video_player_android:
+#     path: ../packages/packages/video_player/video_player_android
+#   video_player_avfoundation:
+#     path: ../packages/packages/video_player/video_player_avfoundation
+#   video_player_platform_interface:
+#     path: ../packages/packages/video_player/video_player_platform_interface
+#   video_player_web:
+#     path: ../packages/packages/video_player/video_player_web

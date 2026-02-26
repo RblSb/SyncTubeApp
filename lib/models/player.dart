@@ -156,12 +156,17 @@ class PlayerModel extends ChangeNotifier {
       final relativeHost = app.getChannelLink();
       url = '$relativeHost${url}';
     }
-    // String? audioUrl;
+    // external audio doesn't support mixing with video
+    // var voiceOverTrack = item.voiceOverTrack ?? '';
+    // if (voiceOverTrack.startsWith('/')) {
+    //   final relativeHost = app.getChannelLink();
+    //   voiceOverTrack = '$relativeHost${voiceOverTrack}';
+    // }
+    String? audioUrl;
     if (url.contains('youtu')) {
-      final ytData = await getYoutubeVideoUrl(url);
+      final ytData = await getYoutubeVideoUrl(url, mutexOnly: false);
       url = ytData.video;
-      // audioUrl = ytData.audio;
-      // todo audioUrl
+      audioUrl = ytData.audio;
     }
     pause();
     final prevController = controller;
@@ -175,11 +180,21 @@ class PlayerModel extends ChangeNotifier {
     );
     controller?.addListener(notifyListeners);
     initPlayerFuture = controller?.initialize();
-    initPlayerFuture?.whenComplete(() {
+    initPlayerFuture?.whenComplete(() async {
       prevController?.dispose();
       controller?.setClosedCaptionFile(_loadCaptions(item)).whenComplete(() {
         notifyListeners();
       });
+      List<String> audioUrls = [];
+      if (audioUrl != null) {
+        audioUrls.add(audioUrl);
+      }
+      // if (voiceOverTrack.isNotEmpty) {
+      //   audioUrls.add(voiceOverTrack);
+      // }
+      if (audioUrls.isNotEmpty) {
+        await controller?.setExternalAudioTracks(audioUrls);
+      }
       app.send(
         WsData(
           type: 'VideoLoaded',

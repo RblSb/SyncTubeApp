@@ -8,6 +8,24 @@ version: 1.0.0+38
 environment:
   sdk: ^3.10.0
 
+dependency_overrides:
+  video_player_android:
+    git:
+      url: https://github.com/RblSb/packages
+      path: packages/video_player/video_player_android
+  video_player_platform_interface:
+    git:
+      url: https://github.com/RblSb/packages
+      path: packages/video_player/video_player_platform_interface
+  video_player_avfoundation:
+    git:
+      url: https://github.com/RblSb/packages
+      path: packages/video_player/video_player_avfoundation
+  video_player_web:
+    git:
+      url: https://github.com/RblSb/packages
+      path: packages/video_player/video_player_web
+
 dependencies:
   flutter:
     sdk: flutter
@@ -20,7 +38,10 @@ dependencies:
 
   shared_preferences: ^2.5.3
 
-  video_player: ^2.11.0
+  video_player:
+    git:
+      url: https://github.com/RblSb/packages
+      path: packages/video_player/video_player
 
   # perfect_volume_control: ^1.0.5
 
@@ -28,7 +49,9 @@ dependencies:
 
   http: ^1.6.0
 
-  youtube_explode_dart: ^3.0.5
+  # youtube_explode_dart: ^3.0.5
+  youtube_explode_dart:
+    git: https://github.com/Hexer10/youtube_explode_dart
 
   url_launcher: ^6.3.2
 

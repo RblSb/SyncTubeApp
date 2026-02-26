@@ -616,42 +616,47 @@ packages:
   video_player:
     dependency: "direct main"
     description:
-      name: video_player
-      sha256: "08bfba72e311d48219acad4e191b1f9c27ff8cf928f2c7234874592d9c9d7341"
-      url: "https://pub.dev"
-    source: hosted
+      path: "packages/video_player/video_player"
+      ref: HEAD
+      resolved-ref: ed3ff303c99579519d06ffa89254b327471b134a
+      url: "https://github.com/RblSb/packages"
+    source: git
     version: "2.11.0"
   video_player_android:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
-      name: video_player_android
-      sha256: "9862c67c4661c98f30fe707bc1a4f97d6a0faa76784f485d282668e4651a7ac3"
-      url: "https://pub.dev"
-    source: hosted
+      path: "packages/video_player/video_player_android"
+      ref: HEAD
+      resolved-ref: ed3ff303c99579519d06ffa89254b327471b134a
+      url: "https://github.com/RblSb/packages"
+    source: git
     version: "2.9.4"
   video_player_avfoundation:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
-      name: video_player_avfoundation
-      sha256: f93b93a3baa12ca0ff7d00ca8bc60c1ecd96865568a01ff0c18a99853ee201a5
-      url: "https://pub.dev"
-    source: hosted
+      path: "packages/video_player/video_player_avfoundation"
+      ref: HEAD
+      resolved-ref: ed3ff303c99579519d06ffa89254b327471b134a
+      url: "https://github.com/RblSb/packages"
+    source: git
     version: "2.9.3"
   video_player_platform_interface:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
-      name: video_player_platform_interface
-      sha256: "57c5d73173f76d801129d0531c2774052c5a7c11ccb962f1830630decd9f24ec"
-      url: "https://pub.dev"
-    source: hosted
+      path: "packages/video_player/video_player_platform_interface"
+      ref: HEAD
+      resolved-ref: ed3ff303c99579519d06ffa89254b327471b134a
+      url: "https://github.com/RblSb/packages"
+    source: git
     version: "6.6.0"
   video_player_web:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
-      name: video_player_web
-      sha256: "9f3c00be2ef9b76a95d94ac5119fb843dca6f2c69e6c9968f6f2b6c9e7afbdeb"
-      url: "https://pub.dev"
-    source: hosted
+      path: "packages/video_player/video_player_web"
+      ref: HEAD
+      resolved-ref: ed3ff303c99579519d06ffa89254b327471b134a
+      url: "https://github.com/RblSb/packages"
+    source: git
     version: "2.4.0"
   vm_service:
     dependency: transitive
@@ -736,10 +741,11 @@ packages:
   youtube_explode_dart:
     dependency: "direct main"
     description:
-      name: youtube_explode_dart
-      sha256: "3d731d71df9901b1915bae806781df519cff32517e36db279f844ae619669e45"
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: HEAD
+      resolved-ref: "94a82565030cd8a2a50b21c904fba722f05e2468"
+      url: "https://github.com/Hexer10/youtube_explode_dart"
+    source: git
     version: "3.0.5"
 sdks:
   dart: ">=3.10.0 <4.0.0"
