@@ -4,8 +4,7 @@ import 'dart:convert';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:web_socket_channel/io.dart';
-import 'package:web_socket_channel/status.dart' as status;
+import 'package:web_socket/web_socket.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart' as youtube;
 
 import '../chat.dart';
@@ -40,13 +39,14 @@ class LastState {
 class AppModel extends ChangeNotifier {
   String get personalName => _personal.name;
   String wsUrl;
-  late IOWebSocketChannel _channel;
-  late StreamSubscription<dynamic> _wsSubscription;
+  WebSocket? _channel;
+  StreamSubscription<dynamic>? _wsSubscription;
   late PlaylistModel playlist;
   late PlayerModel player;
   late ChatModel chat;
   late ChatPanelModel chatPanel;
   MainTab mainTab = MainTab.chat;
+  bool _isConnecting = false;
 
   final lastState = LastState();
 
@@ -121,30 +121,59 @@ class AppModel extends ChangeNotifier {
   }
 
   void connect() async {
+    if (_isConnecting || chatPanel.isConnected) return;
+    _isConnecting = true;
     final prefs = await SharedPreferencesAsync();
     final uuid = await prefs.getString('uuid');
     var url = wsUrl;
     if (uuid != null) url += '?uuid=$uuid';
-    _channel = IOWebSocketChannel.connect(url);
-    _wsSubscription = _channel.stream.listen(
-      onMessage,
-      onDone: () {
-        chatPanel.isConnected = false;
-        _disconnectNotificationTimer ??= Timer(const Duration(seconds: 5), () {
-          if (chatPanel.isConnected) return;
-          player.pause();
-        });
-        reconnect();
-      },
-      onError: (error) {
-        print(error);
+    try {
+      _channel = await WebSocket.connect(Uri.parse(url));
+      _wsSubscription = _channel!.events.listen(
+        (e) {
+          switch (e) {
+            case TextDataReceived(text: final text):
+              onMessage(text);
+            case BinaryDataReceived():
+              throw 'Unexpected binary response from server';
+            case CloseReceived():
+              tryToReconnectOrPause();
+          }
+        },
+        onError: (err) {
+          print('Connection error: $err');
+          tryToReconnectOrPause();
+        },
+        onDone: () {
+          print('Connection closed');
+          tryToReconnectOrPause();
+        },
+      );
+    } catch (e) {
+      print('Failed to connect: $e');
+      tryToReconnectOrPause();
+    } finally {
+      _isConnecting = false;
+    }
+  }
+
+  void tryToReconnectOrPause() {
+    chatPanel.isConnected = false;
+    _disconnectNotificationTimer ??= Timer(
+      const Duration(seconds: 5),
+      () {
+        if (chatPanel.isConnected) return;
+        player.pause();
       },
     );
+    reconnect();
   }
 
   void reconnect() {
     if (chatPanel.isConnected) return;
-    _wsSubscription.cancel();
+    _wsSubscription?.cancel();
+    _wsSubscription = null;
+    _reconnectionTimer?.cancel();
     _reconnectionTimer = Timer(const Duration(seconds: 1), () {
       print('Try to reconnect...');
       connect();
@@ -158,8 +187,8 @@ class AppModel extends ChangeNotifier {
   }
 
   void send(WsData data) {
-    if (!chatPanel.isConnected) return;
-    _channel.sink.add(jsonEncode(data));
+    if (!chatPanel.isConnected || _channel == null) return;
+    _channel?.sendText(jsonEncode(data));
   }
 
   bool isAdmin() => _personal.isAdmin;
@@ -624,12 +653,13 @@ class AppModel extends ChangeNotifier {
   @override
   void dispose() {
     print('AppModel disposed');
+    _reconnectionTimer?.cancel();
+    _wsSubscription?.cancel();
+    _channel?.close();
+
     player.dispose();
     playlist.dispose();
     _getTimeTimer?.cancel();
-    _reconnectionTimer?.cancel();
-    _wsSubscription.cancel();
-    _channel.sink.close(status.normalClosure);
     super.dispose();
   }
 

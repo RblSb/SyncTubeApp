@@ -315,14 +315,13 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     TextEditingController urlController,
   ) async {
     try {
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFile(
         type: FileType.video,
-        allowMultiple: false,
       );
 
-      if (result == null || result.files.isEmpty) return;
+      if (result == null) return;
 
-      final file = File(result.files.first.path!);
+      final file = File(result.path!);
 
       setState(() {
         // Show uploading state

@@ -1,9 +1,9 @@
 name: synctube
 description: SyncTube Android client
 
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: 'none'
 
-version: 1.0.0+39
+version: 1.0.0+40
 
 environment:
   sdk: ^3.10.0
@@ -45,7 +45,7 @@ dependencies:
 
   # perfect_volume_control: ^1.0.5
 
-  web_socket_channel: ^3.0.3
+  web_socket: ^1.0.1
 
   http: ^1.6.0
 
@@ -61,18 +61,16 @@ dependencies:
 
   native_device_orientation: ^2.0.4
 
-  device_info_plus: ^12.2.0
+  device_info_plus: ^13.1.0
 
-  package_info_plus: ^9.0.0
+  package_info_plus: ^10.1.0
 
   app_links: ^7.0.0
 
   ota_update: ^7.0.2
 
-  file_picker: ^10.3.10
+  file_picker: ^12.0.0-beta.7
 
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
   # cupertino_icons: ^1.0.0
 
 dev_dependencies:
