@@ -547,6 +547,7 @@ class VideoList {
   late String? voiceOverTrack;
   late bool isTemp;
   late bool doCache;
+  bool? isIncomplete;
   late String playerType;
 
   VideoList({
@@ -558,8 +559,15 @@ class VideoList {
     this.voiceOverTrack,
     required this.isTemp,
     required this.doCache,
+    this.isIncomplete,
     required this.playerType,
   });
+
+  // if item is uploading instead of caching, it's playable
+  bool isPlayable() {
+    if (isIncomplete == true && doCache) return false;
+    return true;
+  }
 
   VideoList.fromJson(Map<String, dynamic> json) {
     url = json['url'];
@@ -570,6 +578,7 @@ class VideoList {
     voiceOverTrack = json['voiceOverTrack'];
     isTemp = json['isTemp'];
     doCache = json['doCache'] ?? false;
+    isIncomplete = json['isIncomplete'];
     playerType = json['playerType'] ?? 'RawType';
     if (WsData.version == 1) {
       final isIframe = json['isIframe'] ?? false;
@@ -588,6 +597,7 @@ class VideoList {
     data['isTemp'] = this.isTemp;
     if (WsData.version == 2) {
       data['doCache'] = this.doCache;
+      if (this.isIncomplete != null) data['isIncomplete'] = this.isIncomplete;
       data['playerType'] = this.playerType;
     } else if (WsData.version == 1) {
       data['isIframe'] = false;
@@ -736,13 +746,15 @@ class ServerMessage {
 class Progress {
   late String type;
   late double ratio;
-  late String? data;
+  String? url;
+  String? data;
 
-  Progress({required this.type, required this.ratio, required this.data});
+  Progress({required this.type, required this.ratio, this.url, this.data});
 
   Progress.fromJson(Map<String, dynamic> json) {
     type = json['type'];
     ratio = json['ratio'].toDouble();
+    url = json['url'];
     data = json['data'];
   }
 
@@ -750,7 +762,8 @@ class Progress {
     final Map<String, dynamic> json = new Map<String, dynamic>();
     json['type'] = this.type;
     json['ratio'] = this.ratio;
-    json['data'] = this.data;
+    if (this.url != null) json['url'] = this.url;
+    if (this.data != null) json['data'] = this.data;
     return json;
   }
 }

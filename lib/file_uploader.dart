@@ -4,6 +4,9 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:video_player/video_player.dart';
+
+import 'models/app.dart';
 
 class UploadResponse {
   final String? url;
@@ -22,47 +25,54 @@ class UploadResponse {
 }
 
 class FileUploader {
+  final AppModel app;
   final String baseUrl;
-  final ValueNotifier<double> uploadProgress = ValueNotifier<double>(0.0);
 
-  FileUploader(String baseUrl) : baseUrl = baseUrl.replaceFirst('ws', 'http');
+  FileUploader(this.app, String baseUrl)
+    : baseUrl = baseUrl.replaceFirst('ws', 'http');
 
   String _sanitizeFileName(String filename) {
     var name = filename.replaceAll(RegExp(r'[?#%\/\\]'), '').trim();
     if (name.isEmpty) name = "video";
-    return Uri.encodeComponent(name);
+    return name;
   }
 
-  Future<UploadResponse?> uploadFile(
+  Future<void> uploadFile(
     File file, {
-    required Function(String url) onLastChunkUploaded,
+    required bool isTemp,
     required Function(String message, bool isError) onMessage,
   }) async {
     try {
-      final filename = _sanitizeFileName(file.path.split('/').last);
+      final title = _sanitizeFileName(file.path.split('/').last);
+      final name = Uri.encodeComponent(title);
       final fileSize = await file.length();
 
-      // Upload last chunk first (read only the last chunk)
-      final lastChunkResponse = await _uploadLastChunk(
-        file,
-        fileSize,
-        filename,
-      );
+      // send last chunk separately to allow server file streaming while uploading
+      final lastChunk = await _uploadLastChunk(file, fileSize, name);
+      if (lastChunk.errorId != null) {
+        onMessage(lastChunk.info ?? 'Upload failed', true);
+        return;
+      }
+      final url = lastChunk.url!;
 
-      if (lastChunkResponse.errorId != null) {
-        onMessage(lastChunkResponse.info ?? 'Upload failed', true);
-        return lastChunkResponse;
-      } else {
-        onLastChunkUploaded(lastChunkResponse.url!);
+      final duration = await _getFileDuration(file);
+      if (duration == 0 || duration.isNaN || duration.isInfinite) {
+        onMessage('Failed to add video.', true);
+        return;
       }
 
-      // Upload full file with streaming
-      await _uploadFullFile(file, fileSize, filename, onMessage);
-
-      return lastChunkResponse;
+      await _uploadFullFile(
+        file: file,
+        fileSize: fileSize,
+        name: name,
+        url: url,
+        title: title,
+        duration: duration,
+        isTemp: isTemp,
+        onMessage: onMessage,
+      );
     } catch (e) {
       onMessage('Upload error: $e', true);
-      return null;
     }
   }
 
@@ -108,31 +118,66 @@ class FileUploader {
     }
   }
 
-  Future<void> _uploadFullFile(
-    File file,
-    int fileSize,
-    String filename,
-    Function(String message, bool isError)? onMessage,
-  ) async {
+  Future<double> _getFileDuration(File file) async {
+    final controller = VideoPlayerController.file(file);
+    Duration? duration;
     try {
-      final client = HttpClient();
-      final request = await client.postUrl(Uri.parse('$baseUrl/upload'));
+      await controller.initialize();
+      duration = controller.value.duration;
+    } catch (e) {
+      print(e);
+    } finally {
+      await controller.dispose();
+    }
+    if (duration == null) return 0;
+    return duration.inMilliseconds / 1000;
+  }
 
-      request.headers.set('content-name', filename);
+  Future<void> _uploadFullFile({
+    required File file,
+    required int fileSize,
+    required String name,
+    required String url,
+    required String title,
+    required double duration,
+    required bool isTemp,
+    required Function(String message, bool isError) onMessage,
+  }) async {
+    final client = HttpClient();
+    var canceled = false;
+
+    var added = false;
+    void ensureAdded() {
+      if (added) return;
+      added = true;
+      app.addUploadedVideo(url, title, duration, true, isTemp);
+      app.registerUpload(url, () {
+        canceled = true;
+        client.close(force: true);
+      });
+    }
+
+    try {
+      final request = await client.postUrl(Uri.parse('$baseUrl/upload'));
+      request.headers.set('content-name', name);
       request.headers.set('content-type', 'application/octet-stream');
       request.contentLength = fileSize;
 
-      // Stream file with progress tracking
       var uploadedBytes = 0;
+      var lastSentRatio = 0.0;
       final stream = file.openRead();
 
       await request.addStream(
         stream.transform(
           StreamTransformer.fromHandlers(
             handleData: (data, sink) {
+              ensureAdded();
               uploadedBytes += data.length;
-              final progress = uploadedBytes / fileSize;
-              uploadProgress.value = progress.clamp(0.0, 1.0);
+              final ratio = (uploadedBytes / fileSize).clamp(0.0, 1.0);
+              if (ratio - lastSentRatio >= 0.01 || ratio >= 1) {
+                lastSentRatio = ratio;
+                app.sendProgress('Uploading', ratio, url);
+              }
               sink.add(data);
             },
           ),
@@ -141,32 +186,28 @@ class FileUploader {
 
       final response = await request.close();
       final responseBody = await response.transform(utf8.decoder).join();
+      app.unregisterUpload(url);
 
-      if (response.statusCode == 200) {
-        try {
-          final data = UploadResponse.fromJson(json.decode(responseBody));
-          if (data.errorId != null) {
-            onMessage?.call(data.info ?? 'Upload completed with error', true);
-          }
-        } catch (e) {
-          // Response might not be JSON, that's okay
-        }
-      } else {
-        onMessage?.call('Upload failed: ${response.statusCode}', true);
+      UploadResponse data;
+      try {
+        data = UploadResponse.fromJson(json.decode(responseBody));
+      } catch (e) {
+        print(e);
+        app.sendProgress('Canceled', 0, url);
+        return;
       }
-
-      client.close();
+      if (data.errorId != null) {
+        onMessage(data.info ?? 'Upload failed', true);
+        app.sendProgress('Canceled', 0, url);
+        return;
+      }
+      ensureAdded();
+      app.sendProgress('Completed', 1, url);
     } catch (e) {
-      onMessage?.call('Upload error: $e', true);
+      app.unregisterUpload(url);
+      if (!canceled) app.sendProgress('Canceled', 0, url);
+    } finally {
+      client.close();
     }
-
-    // Reset progress after a delay
-    Future.delayed(const Duration(milliseconds: 500), () {
-      uploadProgress.value = 0.0;
-    });
-  }
-
-  void dispose() {
-    uploadProgress.dispose();
   }
 }

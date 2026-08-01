@@ -8,11 +8,14 @@ class PlaylistModel extends ChangeNotifier {
 
   final AppModel _app;
   List<VideoList> _videoList = [];
+  final Map<String, double> _progress = {};
   int _pos = 0;
   // ignore: unused_field
   bool _isOpen = true;
   int get length => _videoList.length;
   int get pos => _pos;
+
+  double itemProgress(String url) => _progress[url] ?? 0;
 
   void sendPlayItem(int pos) {
     _app.send(
@@ -80,6 +83,7 @@ class PlaylistModel extends ChangeNotifier {
 
   void clear() {
     _pos = 0;
+    _progress.clear();
     update([]);
   }
 
@@ -88,10 +92,35 @@ class PlaylistModel extends ChangeNotifier {
   }
 
   void removeItem(int index) {
+    _progress.remove(_videoList[index].url);
     if (index < _pos) _pos--;
     _videoList.remove(_videoList[index]);
     if (_pos >= _videoList.length) _pos = 0;
     notifyListeners();
+  }
+
+  void removeItemByUrl(String url) {
+    final index = indexWhere((item) => item.url == url);
+    if (index == -1) return;
+    removeItem(index);
+  }
+
+  void setItemProgress(String url, double ratio) {
+    if (indexWhere((item) => item.url == url) == -1) return;
+    _progress[url] = ratio;
+    notifyListeners();
+  }
+
+  void completeItem(String url) {
+    final index = indexWhere((item) => item.url == url);
+    if (index == -1) return;
+    final item = _videoList[index];
+    if (item.isIncomplete != true) return;
+    final wasPlayable = item.isPlayable();
+    item.isIncomplete = false;
+    _progress.remove(url);
+    notifyListeners();
+    if (index == _pos && !wasPlayable) _app.player.loadVideo(index);
   }
 
   void skipItem() {
@@ -99,6 +128,7 @@ class PlaylistModel extends ChangeNotifier {
     if (!item.isTemp) {
       _pos++;
     } else {
+      _progress.remove(item.url);
       _videoList.remove(item);
     }
     if (_pos >= _videoList.length) _pos = 0;

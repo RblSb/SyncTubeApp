@@ -191,6 +191,56 @@ class AppModel extends ChangeNotifier {
     _channel?.sendText(jsonEncode(data));
   }
 
+  final Map<String, void Function()> _activeUploads = {};
+
+  void registerUpload(String url, void Function() cancel) {
+    _activeUploads[url] = cancel;
+  }
+
+  void unregisterUpload(String url) {
+    _activeUploads.remove(url);
+  }
+
+  void cancelUpload(String url) {
+    _activeUploads.remove(url)?.call();
+  }
+
+  void sendProgress(String type, double ratio, String url) {
+    send(
+      WsData(
+        type: 'Progress',
+        progress: Progress(type: type, ratio: ratio, url: url),
+      ),
+    );
+  }
+
+  void addUploadedVideo(
+    String url,
+    String title,
+    double duration,
+    bool atEnd,
+    bool isTemp,
+  ) {
+    send(
+      WsData(
+        type: 'AddVideo',
+        addVideo: AddVideo(
+          item: VideoList(
+            url: url,
+            title: title,
+            author: personalName,
+            duration: duration,
+            isTemp: isTemp,
+            doCache: false,
+            isIncomplete: true,
+            playerType: 'RawType',
+          ),
+          atEnd: atEnd,
+        ),
+      ),
+    );
+  }
+
   bool isAdmin() => _personal.isAdmin;
 
   bool isLeader() => _personal.isLeader;
@@ -220,6 +270,8 @@ class AppModel extends ChangeNotifier {
           Timer timer,
         ) {
           if (playlist.isEmpty()) return;
+          final item = playlist.getItem(playlist.pos);
+          if (item == null || !item.isPlayable()) return;
           send(WsData(type: 'GetTime'));
         });
         final prevActiveUrl = playlist.getItem(playlist.pos)?.url ?? '';
@@ -310,19 +362,15 @@ class AppModel extends ChangeNotifier {
         break;
       case 'Progress':
         final type = data.progress!;
-        if (type.type == 'Canceled') {
-          chat.removeProgressItem();
-          return;
-        }
-        final percent = type.ratio * 100;
-        var text = '${type.type}...';
-        if (percent != 0) text += ' ${percent.toStringAsFixed(1)}%';
-        chat.addItem(ChatItem.fromProgress('', text));
-        if (type.ratio == 1) {
-          Future.delayed(
-            const Duration(seconds: 1),
-            () => chat.removeProgressItem(),
-          );
+        final url = type.url;
+        if (url == null) return;
+        switch (type.type) {
+          case 'Completed':
+            playlist.completeItem(url);
+          case 'Canceled':
+            playlist.removeItemByUrl(url);
+          default: // Caching, Downloading, Uploading
+            playlist.setItemProgress(url, type.ratio);
         }
         break;
       case 'UpdateClients':
@@ -340,6 +388,7 @@ class AppModel extends ChangeNotifier {
         break;
       case 'RemoveVideo':
         final type = data.removeVideo!;
+        cancelUpload(type.url);
         final index = playlist.indexWhere((item) => item.url == type.url);
         if (index == -1) return;
         final isCurrent = playlist.getItem(playlist.pos)!.url == type.url;

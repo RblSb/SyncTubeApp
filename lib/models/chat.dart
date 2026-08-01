@@ -50,22 +50,10 @@ class ChatModel extends ChangeNotifier {
   }
 
   ChatItem addItem(ChatItem item) {
-    if (item.isProgressItem) {
-      _items.removeWhere((item) => item.isProgressItem);
-    }
     _items.insert(0, item);
     if (_items.length > 200) _items.removeLast();
     notifyListeners();
     return item;
-  }
-
-  void removeProgressItem() {
-    _items.removeWhere((item) => item.isProgressItem);
-    notifyListeners();
-  }
-
-  ChatItem? findProgressItem() {
-    return _items.firstWhereOrNull((item) => item.isProgressItem);
   }
 
   void setEmotes(List<Emotes> emotes, String relativeHost) {

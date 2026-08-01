@@ -142,6 +142,10 @@ class PlayerModel extends ChangeNotifier {
     initPlayerFuture = null;
     final item = playlist.getItem(playlist.pos);
     if (item == null) return;
+    if (!item.isPlayable()) {
+      notifyListeners();
+      return;
+    }
     if (isIframe()) {
       final old = controller;
       controller = null;
@@ -186,6 +190,11 @@ class PlayerModel extends ChangeNotifier {
       controller?.setClosedCaptionFile(_loadCaptions(item)).whenComplete(() {
         notifyListeners();
       });
+      app.send(
+        WsData(
+          type: 'VideoLoaded',
+        ),
+      );
       List<String> audioUrls = [];
       if (audioUrl != null) {
         audioUrls.add(audioUrl);
@@ -196,13 +205,7 @@ class PlayerModel extends ChangeNotifier {
       if (audioUrls.isNotEmpty) {
         await controller?.setExternalAudioTracks(audioUrls);
       }
-      app.send(
-        WsData(
-          type: 'VideoLoaded',
-        ),
-      );
     });
-    // app.chat.addItem(ChatItem('', 'VideoLoaded'))
     _isFitWidth = false;
     notifyListeners();
   }

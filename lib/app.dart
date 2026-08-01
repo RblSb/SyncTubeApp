@@ -41,7 +41,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     app = AppModel(widget.url);
-    fileUploader = FileUploader(widget.url);
+    fileUploader = FileUploader(app, widget.url);
     Settings.load(app);
     WakelockPlus.enable();
     WidgetsBinding.instance.addObserver(this);
@@ -310,57 +310,35 @@ class _AppState extends State<App> with WidgetsBindingObserver {
 
   Future<void> _pickAndUploadFile(
     BuildContext context,
-    AddVideo data,
-    StateSetter setState,
-    TextEditingController urlController,
+    bool isTemp,
   ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    void showError(String message) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+
     try {
       final result = await FilePicker.pickFile(
         type: FileType.video,
       );
-
       if (result == null) return;
-
       final file = File(result.path!);
-
-      setState(() {
-        // Show uploading state
-      });
-
+      // upload runs in background and auto-adds the playlist item with progress
+      Navigator.of(context).pop();
       await fileUploader.uploadFile(
         file,
-        onLastChunkUploaded: (url) {
-          urlController.text = url;
-          onUrlUpdate(data, url);
-          setState(() {});
-        },
+        isTemp: isTemp,
         onMessage: (message, isError) {
-          if (isError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(message),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
+          if (isError) showError(message);
         },
       );
-
-      // if (response?.url != null) {
-      //   ScaffoldMessenger.of(context).showSnackBar(
-      //     const SnackBar(
-      //       content: Text('File uploaded successfully!'),
-      //       backgroundColor: Colors.green,
-      //     ),
-      //   );
-      // }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error picking file: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showError('Error picking file: $e');
     }
   }
 
@@ -419,38 +397,20 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                       autofocus: url == defaultUrl,
                       decoration: InputDecoration(
                         labelText: 'Video URL',
-                        suffixIcon: ValueListenableBuilder<double>(
-                          valueListenable: fileUploader.uploadProgress,
-                          builder: (context, progress, child) {
-                            // OutlinedButton
-                            return TextButton(
-                              style: TextButton.styleFrom(
-                                foregroundColor: Colors.white,
-                                minimumSize: Size(30, 30),
-                                padding: EdgeInsets.only(top: 16),
-                                // side: BorderSide(
-                                //   color: Theme.of(context).cardColor,
-                                // ),
-                                // shape: RoundedRectangleBorder(
-                                //   borderRadius: BorderRadius.circular(
-                                //     30,
-                                //   ),
-                                // ),
-                              ),
-                              onPressed: progress > 0 && progress < 1
-                                  ? null
-                                  : () => _pickAndUploadFile(
-                                      context,
-                                      data,
-                                      setState,
-                                      urlController,
-                                    ),
-                              child: const Icon(
-                                Icons.upload_rounded,
-                                size: 20,
-                              ),
-                            );
-                          },
+                        suffixIcon: TextButton(
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            minimumSize: Size(30, 30),
+                            padding: EdgeInsets.only(top: 16),
+                          ),
+                          onPressed: () => _pickAndUploadFile(
+                            context,
+                            data.item.isTemp,
+                          ),
+                          child: const Icon(
+                            Icons.upload_rounded,
+                            size: 20,
+                          ),
                         ),
                       ),
                       onChanged: (value) {
@@ -459,24 +419,6 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                       },
                     ),
 
-                    const SizedBox(height: 8),
-                    ValueListenableBuilder<double>(
-                      valueListenable: fileUploader.uploadProgress,
-                      builder: (context, progress, child) {
-                        return Column(
-                          children: [
-                            if (progress > 0 && progress < 1) ...[
-                              const SizedBox(height: 8),
-                              LinearProgressIndicator(value: progress),
-                              Text(
-                                '${(progress * 100).toStringAsFixed(0)}%',
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            ],
-                          ],
-                        );
-                      },
-                    ),
                     const SizedBox(height: 16),
                     TextFormField(
                       decoration: const InputDecoration(
@@ -534,7 +476,6 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     print('app disposed');
     super.dispose();
     app.dispose();
-    fileUploader.dispose();
     orientationListener?.cancel();
     SystemChrome.setPreferredOrientations([]);
     SystemChrome.setEnabledSystemUIMode(

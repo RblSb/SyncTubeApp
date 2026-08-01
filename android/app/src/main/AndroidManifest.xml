@@ -44,6 +44,10 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- custom: app_links handles deep links, disable Flutter's own navigation -->
+        <meta-data
+            android:name="flutter_deeplinking_enabled"
+            android:value="false" />
         <!-- todo remove when video_player will be fixed -->
         <meta-data
             android:name="io.flutter.embedding.android.EnableImpeller"
